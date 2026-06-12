@@ -8,8 +8,8 @@ import {
 	useCheckoutElements,
 } from "@stripe/react-stripe-js/checkout";
 import { Link } from "@tanstack/react-router";
-import { Loader2, Lock } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { Loader2, Lock, Tag } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -52,6 +52,12 @@ export function CheckoutPaymentForm({ amountLabel }: CheckoutPaymentFormProps) {
 		() => defaultUsername(convexUser?.name, user?.fullName ?? null, isGoogle),
 		[convexUser?.name, user?.fullName, isGoogle],
 	);
+
+	const [promotionCode, setPromotionCode] = useState("");
+	const [appliedPromotionCode, setAppliedPromotionCode] = useState<
+		string | null
+	>(null);
+	const [applyingPromotion, setApplyingPromotion] = useState(false);
 
 	const {
 		register,
@@ -99,6 +105,61 @@ export function CheckoutPaymentForm({ amountLabel }: CheckoutPaymentFormProps) {
 		}
 	});
 
+	const handleApplyPromotionCode = async () => {
+		if (checkoutState.type !== "success") return;
+
+		const code = promotionCode.trim();
+		if (!code) {
+			toast.error("Enter a promotion code.");
+			return;
+		}
+
+		setApplyingPromotion(true);
+		try {
+			const result = await checkoutState.checkout.applyPromotionCode(code);
+			if (result.type === "error") {
+				toast.error(
+					result.error.message ?? "That promotion code is not valid.",
+				);
+				return;
+			}
+			setAppliedPromotionCode(code);
+			toast.success("Promotion code applied.");
+		} catch (error) {
+			const message =
+				error instanceof Error
+					? error.message
+					: "Could not apply promotion code.";
+			toast.error(message);
+		} finally {
+			setApplyingPromotion(false);
+		}
+	};
+
+	const handleRemovePromotionCode = async () => {
+		if (checkoutState.type !== "success") return;
+
+		setApplyingPromotion(true);
+		try {
+			const result = await checkoutState.checkout.removePromotionCode();
+			if (result.type === "error") {
+				toast.error(result.error.message ?? "Could not remove promotion code.");
+				return;
+			}
+			setAppliedPromotionCode(null);
+			setPromotionCode("");
+			toast.success("Promotion code removed.");
+		} catch (error) {
+			const message =
+				error instanceof Error
+					? error.message
+					: "Could not remove promotion code.";
+			toast.error(message);
+		} finally {
+			setApplyingPromotion(false);
+		}
+	};
+
 	const inputClass =
 		"h-11 w-full rounded-xl border border-[#e6e6e6] bg-white px-3 text-[#1a1a1a] text-sm outline-none focus-visible:ring-2 focus-visible:ring-[#008080]/30";
 	const readOnlyInputClass =
@@ -118,7 +179,7 @@ export function CheckoutPaymentForm({ amountLabel }: CheckoutPaymentFormProps) {
 		);
 	}
 
-	const paymentDisabled = isSubmitting;
+	const paymentDisabled = isSubmitting || applyingPromotion;
 
 	return (
 		<form onSubmit={onSubmit} className="flex flex-col gap-6">
@@ -173,6 +234,66 @@ export function CheckoutPaymentForm({ amountLabel }: CheckoutPaymentFormProps) {
 						</p>
 					) : null}
 				</label>
+			</div>
+
+			<div className="flex flex-col gap-3">
+				<p className="font-medium text-[#525252] text-sm">Promotion Code</p>
+				{appliedPromotionCode ? (
+					<div className="flex items-center justify-between gap-3 rounded-xl border border-[#e6e6e6] bg-[#f0faf9] px-4 py-3">
+						<p className="inline-flex items-center gap-2 text-[#1a1a1a] text-sm">
+							<Tag className="size-4 text-[#008080]" aria-hidden />
+							<span>
+								<code className="font-medium">{appliedPromotionCode}</code>{" "}
+								applied
+							</span>
+						</p>
+						<button
+							type="button"
+							onClick={() => void handleRemovePromotionCode()}
+							disabled={paymentDisabled}
+							className="shrink-0 font-medium text-[#008080] text-sm underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+						>
+							Remove
+						</button>
+					</div>
+				) : (
+					<div className="flex flex-col gap-2 sm:flex-row">
+						<label className="sr-only" htmlFor="checkout-promotion-code">
+							Promotion code
+						</label>
+						<input
+							id="checkout-promotion-code"
+							type="text"
+							value={promotionCode}
+							onChange={(event) => setPromotionCode(event.target.value)}
+							placeholder="Enter code"
+							autoComplete="off"
+							disabled={paymentDisabled}
+							className={cn(inputClass, "sm:flex-1")}
+							onKeyDown={(event) => {
+								if (event.key === "Enter") {
+									event.preventDefault();
+									void handleApplyPromotionCode();
+								}
+							}}
+						/>
+						<button
+							type="button"
+							onClick={() => void handleApplyPromotionCode()}
+							disabled={paymentDisabled || !promotionCode.trim()}
+							className={cn(
+								"h-11 shrink-0 rounded-xl border border-[#e6e6e6] bg-white px-5 font-medium text-[#1a1a1a] text-sm",
+								"transition-colors hover:bg-[#fafafa] disabled:cursor-not-allowed disabled:opacity-60",
+							)}
+						>
+							{applyingPromotion ? (
+								<Loader2 className="size-4 animate-spin" aria-hidden />
+							) : (
+								"Apply"
+							)}
+						</button>
+					</div>
+				)}
 			</div>
 
 			<div className="flex flex-col gap-3">

@@ -62,3 +62,25 @@ export const setAccountStatus = mutation({
 		await ctx.db.patch(userId, { accountStatus });
 	},
 });
+
+export const setBetaAccess = mutation({
+	args: {
+		userId: v.id("users"),
+		betaAccess: v.boolean(),
+	},
+	handler: async (ctx, { userId, betaAccess }) => {
+		await requireAdmin(ctx);
+
+		const target = await ctx.db.get(userId);
+		if (!target) {
+			throw new ConvexError({
+				code: "NOT_FOUND",
+				message: "User not found.",
+			});
+		}
+
+		await ctx.db.patch(userId, {
+			betaAccess: betaAccess ? true : undefined,
+		});
+	},
+});

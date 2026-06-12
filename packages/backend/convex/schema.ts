@@ -75,6 +75,8 @@ export default defineSchema({
 			}),
 		),
 		accountStatus: v.optional(accountStatusValidator),
+		/** Admin-granted free access; bypasses subscription paywall. */
+		betaAccess: v.optional(v.boolean()),
 	})
 		.index("by_clerk_id", ["clerkId"])
 		.index("by_email", ["email"])

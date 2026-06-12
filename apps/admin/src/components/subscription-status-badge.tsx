@@ -6,6 +6,7 @@ type SubscriptionStatus =
 	| "grace_period"
 	| "canceled"
 	| "none"
+	| "beta"
 	| null;
 
 const LABELS: Record<NonNullable<SubscriptionStatus>, string> = {
@@ -14,6 +15,7 @@ const LABELS: Record<NonNullable<SubscriptionStatus>, string> = {
 	grace_period: "Grace period",
 	canceled: "Canceled",
 	none: "None",
+	beta: "Beta",
 };
 
 const STYLES: Record<NonNullable<SubscriptionStatus>, string> = {
@@ -25,13 +27,29 @@ const STYLES: Record<NonNullable<SubscriptionStatus>, string> = {
 	canceled:
 		"bg-[#f2f2f2] text-[#525252] dark:bg-muted dark:text-muted-foreground",
 	none: "bg-[#f2f2f2] text-[#8a8a8a] dark:bg-muted dark:text-muted-foreground",
+	beta: "bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300",
 };
 
 export function SubscriptionStatusBadge({
 	status,
+	betaAccess,
 }: {
 	status: SubscriptionStatus;
+	betaAccess?: boolean;
 }) {
+	if (betaAccess) {
+		return (
+			<span
+				className={cn(
+					"inline-flex rounded-full px-2.5 py-0.5 font-medium text-xs",
+					STYLES.beta,
+				)}
+			>
+				{LABELS.beta}
+			</span>
+		);
+	}
+
 	if (!status) {
 		return (
 			<span className="inline-flex rounded-full bg-muted px-2.5 py-0.5 font-medium text-muted-foreground text-xs">

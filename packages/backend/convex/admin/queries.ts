@@ -24,6 +24,7 @@ const subscriptionStatusFilterValidator = v.union(
 	v.literal("canceled"),
 	v.literal("none"),
 	v.literal("unset"),
+	v.literal("beta"),
 );
 
 const subscriberStatusFilterValidator = v.union(
@@ -173,6 +174,7 @@ export const platformInsights = query({
 			canceled: 0,
 			none: 0,
 			unset: 0,
+			beta: 0,
 		};
 
 		let subscriptionPaidAccess = 0;
@@ -188,11 +190,15 @@ export const platformInsights = query({
 			if (user.agreedToTermsAt) termsAgreed += 1;
 			if (mirroredPaidJournalAccess(user)) subscriptionPaidAccess += 1;
 
-			const sub = user.subscriptionStatus;
-			if (!sub) {
-				subscriptionBreakdown.unset += 1;
+			if (user.betaAccess === true) {
+				subscriptionBreakdown.beta += 1;
 			} else {
-				subscriptionBreakdown[sub] += 1;
+				const sub = user.subscriptionStatus;
+				if (!sub) {
+					subscriptionBreakdown.unset += 1;
+				} else {
+					subscriptionBreakdown[sub] += 1;
+				}
 			}
 		}
 
@@ -211,6 +217,7 @@ export const platformInsights = query({
 			subscriptionCanceled: subscriptionBreakdown.canceled,
 			subscriptionNone: subscriptionBreakdown.none,
 			subscriptionUnset: subscriptionBreakdown.unset,
+			subscriptionBeta: subscriptionBreakdown.beta,
 			subscriptionPaidAccess,
 		};
 	},

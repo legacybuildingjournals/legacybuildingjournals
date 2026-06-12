@@ -43,6 +43,7 @@ type UserDetailDialogProps = {
 type ConfirmAction =
 	| { type: "role"; role: "admin" | "user" }
 	| { type: "status"; status: "active" | "suspended" }
+	| { type: "beta"; betaAccess: boolean }
 	| null;
 
 function isDestructiveConfirmAction(action: ConfirmAction): boolean {
@@ -56,6 +57,9 @@ function confirmButtonLabel(action: ConfirmAction, pending: boolean): string {
 	if (!action) return "Confirm";
 	if (action.type === "role") {
 		return action.role === "admin" ? "Make admin" : "Remove admin";
+	}
+	if (action.type === "beta") {
+		return action.betaAccess ? "Grant beta" : "Remove beta";
 	}
 	return action.status === "suspended" ? "Suspend" : "Reactivate";
 }
@@ -71,6 +75,7 @@ export function UserDetailDialog({
 	);
 	const setUserRole = useMutation(api.admin.mutations.setUserRole);
 	const setAccountStatus = useMutation(api.admin.mutations.setAccountStatus);
+	const setBetaAccess = useMutation(api.admin.mutations.setBetaAccess);
 
 	const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null);
 	const [pending, setPending] = useState(false);
@@ -87,6 +92,16 @@ export function UserDetailDialog({
 					confirmAction.role === "admin"
 						? "User promoted to admin."
 						: "Admin access removed.",
+				);
+			} else if (confirmAction.type === "beta") {
+				await setBetaAccess({
+					userId,
+					betaAccess: confirmAction.betaAccess,
+				});
+				toast.success(
+					confirmAction.betaAccess
+						? "Beta access granted."
+						: "Beta access removed.",
 				);
 			} else {
 				await setAccountStatus({
@@ -114,18 +129,26 @@ export function UserDetailDialog({
 			? confirmAction.role === "admin"
 				? "Make admin?"
 				: "Remove admin access?"
-			: confirmAction?.status === "suspended"
-				? "Suspend user?"
-				: "Reactivate user?";
+			: confirmAction?.type === "beta"
+				? confirmAction.betaAccess
+					? "Grant beta access?"
+					: "Remove beta access?"
+				: confirmAction?.status === "suspended"
+					? "Suspend user?"
+					: "Reactivate user?";
 
 	const confirmDescription =
 		confirmAction?.type === "role"
 			? confirmAction.role === "admin"
 				? "This user will be able to sign in to the admin panel."
 				: "This user will lose admin panel access."
-			: confirmAction?.status === "suspended"
-				? "This user will be blocked from the web app until reactivated."
-				: "This user will regain access to the web app.";
+			: confirmAction?.type === "beta"
+				? confirmAction.betaAccess
+					? "This user will bypass the subscription paywall and can use all journal features for free."
+					: "This user will lose free beta access and must subscribe to use journal features."
+				: confirmAction?.status === "suspended"
+					? "This user will be blocked from the web app until reactivated."
+					: "This user will regain access to the web app.";
 
 	return (
 		<>
@@ -179,6 +202,7 @@ export function UserDetailDialog({
 										<dd>
 											<SubscriptionStatusBadge
 												status={user.subscriptionStatus}
+												betaAccess={user.betaAccess}
 											/>
 										</dd>
 									</div>
@@ -225,7 +249,7 @@ export function UserDetailDialog({
 					</div>
 
 					{user ? (
-						<div className="flex shrink-0 flex-col gap-2 border-border border-t px-6 py-4 sm:flex-row">
+						<div className="flex shrink-0 flex-col gap-2 border-border border-t px-6 py-4 sm:flex-row sm:flex-wrap">
 							{user.role === "admin" ? (
 								<Button
 									type="button"
@@ -280,6 +304,31 @@ export function UserDetailDialog({
 									}
 								>
 									Suspend account
+								</Button>
+							)}
+							{user.betaAccess ? (
+								<Button
+									type="button"
+									variant="default"
+									size="sm"
+									className={`flex-1 ${adminDestructiveButtonClass}`}
+									onClick={() =>
+										setConfirmAction({ type: "beta", betaAccess: false })
+									}
+								>
+									Remove beta
+								</Button>
+							) : (
+								<Button
+									type="button"
+									variant="default"
+									size="sm"
+									className={`flex-1 ${adminPrimaryButtonSmClass}`}
+									onClick={() =>
+										setConfirmAction({ type: "beta", betaAccess: true })
+									}
+								>
+									Grant beta access
 								</Button>
 							)}
 						</div>
