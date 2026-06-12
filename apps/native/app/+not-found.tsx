@@ -7,22 +7,25 @@ import { Container } from "@/components/container";
 export default function NotFoundScreen() {
 	return (
 		<>
-			<Stack.Screen options={{ title: "Not Found" }} />
-			<Container>
+			<Stack.Screen options={{ title: "Oops!" }} />
+			<Container className="flex-1" isScrollable={false}>
 				<View className="flex-1 items-center justify-center p-4">
 					<Surface
 						variant="secondary"
-						className="max-w-sm items-center rounded-lg p-6"
+						className="w-full max-w-sm rounded-lg p-5"
 					>
-						<Text className="mb-3 text-4xl">🤔</Text>
-						<Text className="mb-1 font-medium text-foreground text-lg">
-							Page Not Found
-						</Text>
-						<Text className="mb-4 text-center text-muted text-sm">
-							The page you're looking for doesn't exist.
-						</Text>
+						<View className="items-center gap-3">
+							<Text className="font-medium text-foreground text-lg">
+								Page not found
+							</Text>
+							<Text className="text-center text-muted text-sm">
+								This screen doesn&apos;t exist or has moved.
+							</Text>
+						</View>
 						<Link href="/" asChild>
-							<Button size="sm">Go Home</Button>
+							<Button className="mt-4 w-full" size="sm">
+								<Button.Label>Go home</Button.Label>
+							</Button>
 						</Link>
 					</Surface>
 				</View>

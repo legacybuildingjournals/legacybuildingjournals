@@ -11,7 +11,6 @@ import { LibraryEmptyState } from "@/components/library/library-empty-state";
 import { StoryTabs } from "@/components/library/story-tabs";
 import { DashboardScreenHeader } from "@/components/navigation/dashboard-screen-header";
 import { useNativeCurrentUser } from "@/hooks/use-native-current-user";
-import { nativeAssets } from "@/lib/assets";
 import {
 	DEFAULT_STORY_TAB,
 	STORY_TABS,
@@ -45,17 +44,9 @@ export default function LibraryScreen() {
 	const storyLabel =
 		STORY_TABS.find((t) => t.id === storyType)?.label ?? "My Story";
 
-	const avatarUrl =
-		convexUser?.profilePictureUrl ??
-		user?.imageUrl ??
-		nativeAssets.defaultAvatar;
-
 	return (
 		<View className="flex-1 bg-secondary/30">
-			<DashboardScreenHeader
-				title={`${displayName}'s Library`}
-				avatarUrl={avatarUrl}
-			/>
+			<DashboardScreenHeader title={`${displayName}'s Library`} />
 
 			<ScrollView
 				className="flex-1"

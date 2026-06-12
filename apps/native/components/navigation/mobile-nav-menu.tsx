@@ -100,9 +100,15 @@ export function MobileNavMenu({ avatarUrl }: MobileNavMenuProps) {
 							return (
 								<Pressable
 									key={item.id}
-									onPress={() =>
-										isExternal ? openBilling() : navigateTo(item.href)
-									}
+									onPress={() => {
+										if (isExternal) {
+											openBilling();
+											return;
+										}
+										if ("href" in item) {
+											navigateTo(item.href);
+										}
+									}}
 									accessibilityRole="button"
 									accessibilityState={{ selected: active }}
 									className="min-h-11 justify-center bg-white px-4 active:opacity-70"

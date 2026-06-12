@@ -20,6 +20,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useJournalPaywall } from "@/components/billing/journal-paywall-provider";
 import { AudioRecorderField } from "@/components/library/audio-recorder-field";
 import { DateField } from "@/components/library/date-field";
 import {
@@ -46,6 +47,7 @@ export default function NewEntryScreen() {
 	);
 
 	const mutationToast = useMutationToast();
+	const { hasPaidAccess, openPaywall } = useJournalPaywall();
 	const [accent, accentForeground, foreground, placeholderColor] =
 		useThemeColor([
 			"accent",
@@ -135,6 +137,12 @@ export default function NewEntryScreen() {
 			return;
 		}
 
+		// Form is valid — gate here so free users fill out the entry first, then hit
+		// the paywall on "Create" (covers both writing and voice entries).
+		if (!hasPaidAccess) {
+			openPaywall();
+			return;
+		}
 		setSubmitting(true);
 		try {
 			let imageId: Id<"_storage"> | undefined;
@@ -180,10 +188,12 @@ export default function NewEntryScreen() {
 		createEntry,
 		dateMs,
 		generateUploadUrl,
+		hasPaidAccess,
 		image,
 		journalId,
 		mode,
 		mutationToast,
+		openPaywall,
 		title,
 	]);
 

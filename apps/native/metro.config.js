@@ -24,4 +24,9 @@ const uniwindConfig = withUniwindConfig(wrapWithReanimatedMetroConfig(config), {
 	dtsFile: "./uniwind-types.d.ts",
 });
 
+uniwindConfig.resolver.assetExts = [
+	...uniwindConfig.resolver.assetExts,
+	"lottie",
+];
+
 module.exports = uniwindConfig;

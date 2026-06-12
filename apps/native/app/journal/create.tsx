@@ -20,6 +20,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useJournalPaywall } from "@/components/billing/journal-paywall-provider";
 import { DateField } from "@/components/library/date-field";
 import {
 	monthDayYearToDate,
@@ -57,6 +58,7 @@ export default function CreateJournalScreen() {
 	const generateUploadUrl = useMutation(
 		api.journal.mutations.generateUploadUrl,
 	);
+	const { hasPaidAccess, openPaywall } = useJournalPaywall();
 
 	const [title, setTitle] = useState("");
 	const [dedication, setDedication] = useState("");
@@ -120,6 +122,13 @@ export default function CreateJournalScreen() {
 		setShowErrors(true);
 		if (formInvalid || startMs === null) return;
 
+		// Form is valid — gate here so free users fill out the journal first, then
+		// hit the paywall on "Create Journal".
+		if (!hasPaidAccess) {
+			openPaywall();
+			return;
+		}
+
 		setSubmitting(true);
 		try {
 			let coverImageId:
@@ -166,6 +175,8 @@ export default function CreateJournalScreen() {
 		entryLog,
 		formInvalid,
 		generateUploadUrl,
+		hasPaidAccess,
+		openPaywall,
 		startMs,
 		storyType,
 		title,

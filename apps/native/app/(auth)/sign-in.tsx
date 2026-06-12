@@ -82,7 +82,7 @@ export default function SignInPage() {
 	const beginSecondFactor = async (): Promise<
 		{ ok: true; method: MfaMethod } | { ok: false; message: string }
 	> => {
-		const factors = signIn.supportedSecondFactors;
+		const factors = signIn.supportedSecondFactors ?? [];
 
 		const emailFactor = factors.find((f) => f.strategy === "email_code");
 		if (emailFactor) {

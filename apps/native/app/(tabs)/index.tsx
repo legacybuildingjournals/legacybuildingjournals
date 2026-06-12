@@ -97,10 +97,7 @@ export default function DeskScreen() {
 
 	return (
 		<View className="flex-1 bg-background">
-			<DashboardScreenHeader
-				title={`${userName}'s Desk`}
-				avatarUrl={avatarUrl}
-			/>
+			<DashboardScreenHeader title={`${userName}'s Desk`} />
 
 			<ImageBackground
 				source={{ uri: nativeAssets.deskHeroBackground }}

@@ -1,19 +1,19 @@
 import { useClerk, useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@legacy-building/backend/convex/_generated/api";
-import { useMutation } from "convex/react";
+import { useAction } from "convex/react";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useThemeColor } from "heroui-native/hooks";
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
-
+import { useJournalPaywall } from "@/components/billing/journal-paywall-provider";
 import { DashboardScreenHeader } from "@/components/navigation/dashboard-screen-header";
 import { useNativeCurrentUser } from "@/hooks/use-native-current-user";
-import { nativeAssets } from "@/lib/assets";
+import { planStatusLabel } from "@/lib/billing/plans";
 import { messageFromError } from "@/lib/error-utils";
 import { nativeLegalRoutes } from "@/lib/legal-routes";
-import { nativeLegalUrl } from "@/lib/native-legal-url";
+import { nativeBillingUrl, nativeLegalUrl } from "@/lib/native-legal-url";
 
 type AccountRowProps = {
 	title: string;
@@ -53,8 +53,9 @@ export default function AccountScreen() {
 	const { user } = useUser();
 	const { signOut } = useClerk();
 	const { convexUser } = useNativeCurrentUser();
+	const { plan, isLoading: planLoading, openPaywall } = useJournalPaywall();
 	const accent = useThemeColor("accent");
-	const deleteMyAccount = useMutation(api.user.mutations.deleteMyAccount);
+	const deleteMyAccount = useAction(api.user.deleteAccount.deleteMyAccount);
 
 	const [busy, setBusy] = useState(false);
 
@@ -63,18 +64,12 @@ export default function AccountScreen() {
 		user?.primaryEmailAddress?.emailAddress ?? convexUser?.email ?? "";
 	const canChangePassword = user?.passwordEnabled ?? false;
 
-	const avatarUrl =
-		convexUser?.profilePictureUrl ??
-		user?.imageUrl ??
-		nativeAssets.defaultAvatar;
-
 	const handleDeleteAccount = async () => {
 		if (busy) return;
 		setBusy(true);
 		try {
-			// Remove app data first, then the Clerk account, then bounce to auth.
+			// Server action removes Convex data, Stripe billing, and the Clerk user.
 			await deleteMyAccount({});
-			await user?.delete();
 			await signOut().catch(() => {});
 			router.replace("/(auth)");
 		} catch (err) {
@@ -110,12 +105,26 @@ export default function AccountScreen() {
 		void WebBrowser.openBrowserAsync(nativeLegalUrl(path));
 	};
 
+	const openBilling = () => {
+		void WebBrowser.openBrowserAsync(nativeBillingUrl());
+	};
+
+	const confirmLogout = () => {
+		Alert.alert("Log out?", "You'll need to sign in again.", [
+			{ text: "Cancel", style: "cancel" },
+			{
+				text: "Logout",
+				style: "destructive",
+				onPress: () => {
+					void signOut().then(() => router.replace("/(auth)"));
+				},
+			},
+		]);
+	};
+
 	return (
 		<View className="flex-1 bg-background">
-			<DashboardScreenHeader
-				title={`${name}'s Account`}
-				avatarUrl={avatarUrl}
-			/>
+			<DashboardScreenHeader title={`${name}'s Account`} />
 
 			<ScrollView
 				className="flex-1"
@@ -126,6 +135,24 @@ export default function AccountScreen() {
 					title="Personal Details"
 					subtitle={convexUser?.name ?? user?.username ?? undefined}
 					onPress={() => router.push("/account/personal-details")}
+					chevronColor={accent}
+				/>
+				<AccountRow
+					title="Subscription"
+					subtitle={
+						planLoading
+							? "Loading…"
+							: plan === "free"
+								? "Free plan — tap to upgrade"
+								: `${planStatusLabel(plan)} plan`
+					}
+					onPress={openPaywall}
+					chevronColor={accent}
+				/>
+				<AccountRow
+					title="Billing"
+					subtitle="Manage subscription and payment"
+					onPress={openBilling}
 					chevronColor={accent}
 				/>
 				<AccountRow
@@ -144,6 +171,17 @@ export default function AccountScreen() {
 				) : null}
 
 				<View className="h-6 bg-secondary/20" />
+
+				<Pressable
+					onPress={confirmLogout}
+					accessibilityRole="button"
+					accessibilityLabel="Logout"
+					className="mx-5 mt-2 rounded-lg border border-border px-4 py-3 active:opacity-70"
+				>
+					<Text className="text-center font-medium text-base text-foreground">
+						Logout
+					</Text>
+				</Pressable>
 
 				<View className="items-center gap-6 px-6 pt-8">
 					<Text className="text-center text-base text-foreground">
