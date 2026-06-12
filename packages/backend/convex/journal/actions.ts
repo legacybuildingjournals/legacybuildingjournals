@@ -470,7 +470,7 @@ async function countPdfPages(pdfUrl: string): Promise<number> {
 		const countRe = /\/Count\s+(\d+)/g;
 		let m: RegExpExecArray | null = countRe.exec(s);
 		while (m !== null) {
-			const n = Number.parseInt(m[1], 10);
+			const n = Number.parseInt(m[1] ?? "0", 10);
 			if (n > max) max = n;
 			m = countRe.exec(s);
 		}

@@ -1,0 +1,33 @@
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+	ignorecase = true
+	precomposeunicode = true
+	hooksPath = .husky/_
+[branch "main"]
+	vscode-merge-base = origin/main
+	remote = origin
+	merge = refs/heads/main
+[remote "origin"]
+	url = https://github.com/sliding-scale/legacybuilding-monorepo.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "staging"]
+	remote = origin
+	merge = refs/heads/staging
+	vscode-merge-base = origin/staging
+[branch "feature/ENG-124"]
+	vscode-merge-base = origin/staging
+[branch "feature/ENG-132"]
+	vscode-merge-base = origin/staging
+[branch "feature/ENG-140"]
+	vscode-merge-base = origin/staging
+[branch "feature/native-journal-export-auth"]
+	vscode-merge-base = origin/staging
+[branch "feature/ENG-141/137/143/138"]
+	vscode-merge-base = origin/main
+[branch "feature/ENG-141_"]
+	vscode-merge-base = origin/main
+[pull]
+	rebase = false

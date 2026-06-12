@@ -83,8 +83,15 @@ export const getMySubscription = query({
 				? pending
 				: null;
 
+		// Which billing system owns this subscription. Today every live sub is
+		// Stripe (web). When Apple/Google IAP lands, those entitlements report
+		// "apple"/"google" so the UI can branch manage/cancel flows. Typed as the
+		// full union now so consumers can write those branches ahead of time.
+		const provider: "stripe" | "apple" | "google" = "stripe";
+
 		return {
 			stripeSubscriptionId: subscription.stripeSubscriptionId,
+			provider,
 			status: subscription.status,
 			interval: product?.interval ?? null,
 			priceId: subscription.priceId,

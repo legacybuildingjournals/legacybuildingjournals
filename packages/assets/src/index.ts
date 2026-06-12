@@ -8,7 +8,6 @@ import headerBackground from "../images/header-background.png";
 import heroBackground from "../images/hero-background.png";
 import heroPanelImage from "../images/hero-panel-image.png";
 import libraryEmptyImage from "../images/library-empty.webp";
-import loaderLottie from "../images/loader.lottie";
 import logo from "../images/logo.png";
 import whiteLogo from "../images/white-logo.png";
 
@@ -19,7 +18,6 @@ export const imageAssets = {
 	heroBackground,
 	heroPanelImage,
 	authPanelBackground,
-	loaderLottie,
 	whiteLogo,
 	digLogo,
 	googleLogo,

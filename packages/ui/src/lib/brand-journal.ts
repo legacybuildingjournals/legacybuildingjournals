@@ -1,5 +1,3 @@
-import { imageAssets } from "@legacy-building/assets";
-
 /** Legacy Building design tokens (from Bubble app) */
 export const brand = {
 	primary: "#008080",
@@ -46,7 +44,7 @@ export const dashboardLayout = {
 	logoHeight: 50,
 } as const;
 
-export const assets = imageAssets;
+export { assets } from "./brand-assets";
 
 /** In-app legal routes (web). Native apps should open the same paths on their web host. */
 export const legalRoutes = {

@@ -1,5 +1,9 @@
 import { useCurrentUser } from "@legacy-building/ui/hooks/use-current-user";
-import { Navigate, useRouterState } from "@tanstack/react-router";
+import {
+	Navigate,
+	type RouterState,
+	useRouterState,
+} from "@tanstack/react-router";
 
 import { ROUTES } from "@/lib/routes";
 
@@ -10,7 +14,9 @@ type WelcomeGuardProps = {
 /** First-time users must watch the welcome video before accessing the dashboard. */
 export function WelcomeGuard({ children }: WelcomeGuardProps) {
 	const { convexUser } = useCurrentUser();
-	const pathname = useRouterState({ select: (s) => s.location.pathname });
+	const pathname = useRouterState({
+		select: (s: RouterState) => s.location.pathname,
+	});
 
 	const needsWelcome = convexUser && !convexUser.welcomeCompletedAt;
 

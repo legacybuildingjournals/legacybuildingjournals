@@ -54,7 +54,7 @@ function SortableJournalCard({
 		transform,
 		transition,
 		isDragging,
-	} = useSortable({ id: journal._id });
+	} = useSortable({ id: journal._id, resizeObserverConfig: {} });
 
 	const style = {
 		transform: CSS.Transform.toString(transform),

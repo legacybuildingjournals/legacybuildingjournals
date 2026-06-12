@@ -4,6 +4,7 @@ import {
 	createRootRouteWithContext,
 	HeadContent,
 	Outlet,
+	type RouterState,
 	useRouterState,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
@@ -38,7 +39,9 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 });
 
 function RootComponent() {
-	const pathname = useRouterState({ select: (s) => s.location.pathname });
+	const pathname = useRouterState({
+		select: (s: RouterState) => s.location.pathname,
+	});
 	const isDashboard = pathname.startsWith("/dashboard");
 	const isLegalPage = pathname === "/terms" || pathname === "/privacy";
 	const isAuthRoute = isAuthPath(pathname);

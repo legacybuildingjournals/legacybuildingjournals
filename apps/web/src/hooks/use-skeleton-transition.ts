@@ -1,4 +1,4 @@
-import { useRouterState } from "@tanstack/react-router";
+import { type RouterState, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { SKELETON_TRANSITION_MS } from "@/lib/journal/constants";
@@ -14,7 +14,8 @@ export function useSkeletonTransition(
 	durationMs = SKELETON_TRANSITION_MS,
 ): boolean {
 	const locationState = useRouterState({
-		select: (s) => s.location.state as SkeletonLocationState | undefined,
+		select: (s: RouterState) =>
+			s.location.state as SkeletonLocationState | undefined,
 	});
 	const [showSkeleton, setShowSkeleton] = useState(
 		() => locationState?.skeleton === true,
