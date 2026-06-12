@@ -1,0 +1,4 @@
+# Force EAS to run expo prebuild on the server so config plugins
+# (e.g. with-google-modular-headers) always patch the Podfile.
+/ios
+/android

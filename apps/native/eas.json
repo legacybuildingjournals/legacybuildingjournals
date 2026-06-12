@@ -1,25 +1,30 @@
 {
 	"cli": {
 		"version": ">= 20.0.0",
-		"appVersionSource": "remote"
+		"appVersionSource": "remote",
+		"corepack": true
 	},
 	"build": {
 		"development": {
 			"developmentClient": true,
-			"distribution": "internal"
+			"distribution": "internal",
+			"prebuildCommand": "npx expo prebuild --no-install"
 		},
 		"development-simulator": {
 			"developmentClient": true,
 			"distribution": "internal",
+			"prebuildCommand": "npx expo prebuild --no-install",
 			"ios": {
 				"simulator": true
 			}
 		},
 		"preview": {
-			"distribution": "internal"
+			"distribution": "internal",
+			"prebuildCommand": "npx expo prebuild --no-install"
 		},
 		"production": {
-			"autoIncrement": true
+			"autoIncrement": true,
+			"prebuildCommand": "npx expo prebuild --no-install"
 		}
 	},
 	"submit": {
