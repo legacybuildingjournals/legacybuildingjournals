@@ -4,11 +4,13 @@
 		"strict": true,
 		"jsx": "react-jsx",
 		"lib": ["DOM", "ESNext"],
+		"ignoreDeprecations": "6.0",
 		"baseUrl": ".",
 		"paths": {
 			"@/*": ["./*"],
 			"@legacy-building/assets": ["../../packages/assets/src/index.ts"],
-			"@legacy-building/assets/*": ["../../packages/assets/*"]
+			"@legacy-building/assets/*": ["../../packages/assets/*"],
+			"@legacy-building/ui/*": ["../../packages/ui/src/*"]
 		}
 	},
 	"include": [
@@ -16,6 +18,7 @@
 		"**/*.tsx",
 		".expo/types/**/*.ts",
 		"expo-env.d.ts",
-		"types/**/*.d.ts"
+		"types/**/*.d.ts",
+		"../../packages/assets/src/vite-env.d.ts"
 	]
 }

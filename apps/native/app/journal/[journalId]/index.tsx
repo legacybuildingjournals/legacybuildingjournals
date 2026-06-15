@@ -21,6 +21,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useJournalPaywall } from "@/components/billing/journal-paywall-provider";
 import { JournalEntryRow } from "@/components/library/journal-entry-row";
 import { formatDateLong } from "@/lib/journal/formatDate";
 import { useMutationToast } from "@/lib/mutation-toast";
@@ -41,6 +42,7 @@ export default function JournalDetailScreen() {
 			"field-placeholder",
 		]);
 	const mutationToast = useMutationToast();
+	const { guardJournalAction } = useJournalPaywall();
 
 	const journal = useQuery(
 		api.journal.queries.getById,
@@ -186,30 +188,35 @@ export default function JournalDetailScreen() {
 		);
 	};
 
-	const handleExportSelected = async () => {
+	const handleExportSelected = () => {
 		if (resolvedSelectedIds.length === 0) return;
-		await runExport(resolvedSelectedIds);
-		exitSelection();
+		// PDF export is a paid feature — gate before generating the download.
+		guardJournalAction(() => {
+			void runExport(resolvedSelectedIds).then(exitSelection);
+		});
 	};
 
 	const handleOrderBook = () => {
 		if (!journalId || ordering) return;
 
-		if (resolvedSelectedIds.length === 0) {
-			Alert.alert(
-				"Select entries",
-				"Choose at least one entry to include in your printed book.",
-				[{ text: "OK" }],
-			);
-			return;
-		}
+		// Ordering a printed book is a paid feature — gate before validating entries.
+		guardJournalAction(() => {
+			if (resolvedSelectedIds.length === 0) {
+				Alert.alert(
+					"Select entries",
+					"Choose at least one entry to include in your printed book.",
+					[{ text: "OK" }],
+				);
+				return;
+			}
 
-		if (resolvedSelectedIds.length < MIN_ORDER_ENTRIES) {
-			showMinimumOrderAlert(resolvedSelectedIds.length);
-			return;
-		}
+			if (resolvedSelectedIds.length < MIN_ORDER_ENTRIES) {
+				showMinimumOrderAlert(resolvedSelectedIds.length);
+				return;
+			}
 
-		void runOrderBook(resolvedSelectedIds);
+			void runOrderBook(resolvedSelectedIds);
+		});
 	};
 
 	const runOrderBook = async (orderEntryIds: Id<"journalEntries">[]) => {
@@ -232,6 +239,7 @@ export default function JournalDetailScreen() {
 
 	const goToCreateEntry = () => {
 		if (!journalId) return;
+		// Open the entry form freely; the paywall gates on the final "Create" press.
 		router.push({
 			pathname: "/journal/[journalId]/new-entry",
 			params: { journalId },

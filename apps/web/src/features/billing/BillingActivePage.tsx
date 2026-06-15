@@ -23,7 +23,6 @@ function formatDate(seconds: number) {
 		day: "numeric",
 	});
 }
-
 function formatMoney(amountInCents: number) {
 	return `$${(amountInCents / 100).toFixed(2)}`;
 }
@@ -130,6 +129,21 @@ export function BillingActivePage({ showWelcome }: BillingActivePageProps) {
 	}, [listInvoicesLive]);
 
 	if (!subscription) return null;
+
+	// Subscriptions bought through Apple/Google can only be changed or cancelled in
+	// their own store — Stripe (and this server) can't touch them. Show a read-only
+	// notice for those and hide the Stripe-only upgrade/cancel controls.
+	const provider = (subscription.provider ?? "stripe") as
+		| "stripe"
+		| "apple"
+		| "google";
+	const isStripe = provider === "stripe";
+	const storeLabel =
+		provider === "apple"
+			? "the App Store"
+			: provider === "google"
+				? "Google Play"
+				: "Stripe";
 
 	const planName = subscription.plan?.name
 		? `${subscription.plan.name} Plan`
@@ -285,57 +299,56 @@ export function BillingActivePage({ showWelcome }: BillingActivePageProps) {
 								</ul>
 							</div>
 
-							<div className="flex flex-col gap-4 border-border border-t pt-6">
-								<div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-									{showUpgrade ? (
-										<Link
-											to={ROUTES.dashboardBillingCompare}
-											className={cn(
-												billingPrimaryButtonClass,
-												"h-11 px-6 font-semibold sm:shrink-0",
-											)}
-										>
-											Upgrade Subscription
-										</Link>
-									) : null}
-									{subscription.cancelAtPeriodEnd ? (
-										<button
-											type="button"
-											onClick={() => void handleReactivate()}
-											disabled={reactivatePending}
-											className={cn(
-												billingOutlineButtonClass,
-												"h-11 px-6 sm:shrink-0",
-											)}
-										>
-											{reactivatePending ? (
-												<>
+							<div className="flex flex-col items-center gap-4 border-border border-t pt-6 md:flex-row md:items-center md:justify-start">
+								{isStripe ? (
+									<>
+										{showUpgrade ? (
+											<Link
+												to={ROUTES.dashboardBillingCompare}
+												className={cn(
+													billingPrimaryButtonClass,
+													"h-11 px-6 font-semibold",
+												)}
+											>
+												Upgrade Subscription
+											</Link>
+										) : null}
+										{subscription.cancelAtPeriodEnd ? (
+											<button
+												type="button"
+												onClick={() => void handleReactivate()}
+												disabled={reactivatePending}
+												className={cn(
+													billingPrimaryButtonClass,
+													"h-11 px-6 font-semibold",
+												)}
+											>
+												{reactivatePending ? (
 													<Loader2
 														className="size-4 animate-spin"
 														aria-hidden
 													/>
-													Resuming…
-												</>
-											) : (
-												"Resume Subscription"
-											)}
-										</button>
-									) : (
-										<button
-											type="button"
-											onClick={() => setCancelModalOpen(true)}
-											className={cn(billingCancelButtonClass, "sm:shrink-0")}
-										>
-											Cancel Plan
-										</button>
-									)}
-								</div>
-								{subscription.cancelAtPeriodEnd ? (
-									<p className="text-muted-foreground text-sm">
-										Your plan is scheduled to cancel on {renewDate}. Resume to
-										keep your subscription.
+												) : null}
+												Reactivate Subscription
+											</button>
+										) : (
+											<button
+												type="button"
+												onClick={() => setCancelModalOpen(true)}
+												disabled={cancelPending}
+												className={billingCancelButtonClass}
+											>
+												Cancel Plan
+											</button>
+										)}
+									</>
+								) : (
+									<p className="text-muted-foreground text-sm leading-relaxed">
+										This subscription is managed through {storeLabel}. To change
+										your plan or cancel, open your subscriptions in {storeLabel}{" "}
+										on the device where you subscribed.
 									</p>
-								) : null}
+								)}
 							</div>
 						</div>
 

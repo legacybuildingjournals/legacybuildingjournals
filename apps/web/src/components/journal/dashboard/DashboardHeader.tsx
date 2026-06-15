@@ -6,7 +6,7 @@ import {
 	dashboardLayout,
 } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, type RouterState, useRouterState } from "@tanstack/react-router";
 
 import { DashboardHeaderProfileMenu } from "@/components/journal/dashboard/DashboardHeaderProfileMenu";
 import { ROUTES } from "@/lib/routes";
@@ -22,7 +22,9 @@ const navLinkClass =
 	"mx-3 text-base leading-[1.4] transition-colors duration-200";
 
 export function DashboardHeader() {
-	const pathname = useRouterState({ select: (s) => s.location.pathname });
+	const pathname = useRouterState({
+		select: (s: RouterState) => s.location.pathname,
+	});
 	const { user } = useUser();
 	const { convexUser } = useCurrentUser();
 	const avatarUrl =

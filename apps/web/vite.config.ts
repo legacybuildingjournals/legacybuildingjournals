@@ -1,7 +1,11 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+
+const webRoot = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
 	assetsInclude: ["**/*.lottie"],
@@ -11,6 +15,9 @@ export default defineConfig({
 	resolve: {
 		tsconfigPaths: true,
 		dedupe: ["react", "react-dom"],
+		alias: {
+			"@legacy-building/assets": path.resolve(webRoot, "../../packages/assets"),
+		},
 	},
 	optimizeDeps: {
 		include: [

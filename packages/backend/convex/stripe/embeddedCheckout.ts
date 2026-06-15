@@ -130,7 +130,8 @@ export async function findResumableCheckoutSession(
 	for (const session of sessions.data) {
 		if (session.status !== "open" || !session.client_secret) continue;
 		// Skip legacy `custom` sessions — Stripe now requires `elements`.
-		if (session.ui_mode === "custom") continue;
+		// Stripe removed `custom` from UiMode typings; still filter legacy sessions.
+		if ((session.ui_mode as string | null) === "custom") continue;
 
 		if (args.stripePriceId) {
 			const lineItems = session.line_items?.data ?? [];

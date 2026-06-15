@@ -262,9 +262,10 @@ export function CheckoutPage({ plan: initialPlan, flow }: CheckoutPageProps) {
 								type="button"
 								variant="outline"
 								className="h-11 rounded-xl"
-								asChild
+								nativeButton={false}
+								render={<Link to={backHref} />}
 							>
-								<Link to={backHref}>Go back</Link>
+								Go back
 							</Button>
 						</div>
 					</div>

@@ -23,17 +23,24 @@
 				{
 					"microphonePermission": "Legacy Building uses your microphone to record journal entries."
 				}
-			]
+			],
+			"expo-router",
+			"./plugins/with-google-modular-headers",
+			"expo-asset"
 		],
 		"experiments": {
 			"typedRoutes": true,
 			"reactCompiler": true
 		},
 		"android": {
-			"package": "com.legacybuilding.app"
+			"package": "com.legacybuildingjournals.app"
 		},
 		"ios": {
-			"bundleIdentifier": "com.legacybuilding.app"
+			"bundleIdentifier": "com.legacybuildingjournals.app",
+			"deploymentTarget": "17.0",
+			"infoPlist": {
+				"ITSAppUsesNonExemptEncryption": false
+			}
 		},
 		"extra": {
 			"eas": {

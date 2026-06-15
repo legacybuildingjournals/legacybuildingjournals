@@ -5,7 +5,11 @@ import type {
 } from "@legacy-building/backend/convex/_generated/dataModel";
 import { Button } from "@legacy-building/ui/components/button";
 import { brand } from "@legacy-building/ui/lib/brand-journal";
-import { useNavigate, useRouterState } from "@tanstack/react-router";
+import {
+	type RouterState,
+	useNavigate,
+	useRouterState,
+} from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { useCallback, useEffect, useState } from "react";
 import { useJournalPaywall } from "@/components/billing/JournalPaywallProvider";
@@ -23,7 +27,7 @@ export function DashboardLibraryPage() {
 	const navigate = useNavigate();
 	const { guardJournalAction, hasPaidAccess } = useJournalPaywall();
 	const locationState = useRouterState({
-		select: (s) => s.location.state,
+		select: (s: RouterState) => s.location.state,
 	});
 	const [storyTab, setStoryTab] = useState<StoryTab>(DEFAULT_STORY_TAB);
 	const [createOpen, setCreateOpen] = useState(false);

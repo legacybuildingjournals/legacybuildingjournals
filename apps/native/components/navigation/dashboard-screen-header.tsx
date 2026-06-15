@@ -1,17 +1,11 @@
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { MobileNavMenu } from "@/components/navigation/mobile-nav-menu";
-
 type DashboardScreenHeaderProps = {
 	title: string;
-	avatarUrl: string;
 };
 
-export function DashboardScreenHeader({
-	title,
-	avatarUrl,
-}: DashboardScreenHeaderProps) {
+export function DashboardScreenHeader({ title }: DashboardScreenHeaderProps) {
 	const insets = useSafeAreaInsets();
 
 	return (
@@ -27,7 +21,7 @@ export function DashboardScreenHeader({
 				>
 					{title}
 				</Text>
-				<MobileNavMenu avatarUrl={avatarUrl} />
+				<View className="size-11" />
 			</View>
 		</View>
 	);

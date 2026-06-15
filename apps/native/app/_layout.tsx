@@ -8,8 +8,10 @@ import { Stack } from "expo-router";
 import { HeroUINativeProvider } from "heroui-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { JournalPaywallProvider } from "@/components/billing/journal-paywall-provider";
 import { NativeAppProviders } from "@/components/native-app-providers";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
+import { RevenueCatProvider } from "@/contexts/revenuecat-context";
 
 export const unstable_settings = {
 	initialRouteName: "index",
@@ -29,17 +31,19 @@ function StackLayout() {
 			<Stack.Screen name="index" />
 			<Stack.Screen name="(tabs)" />
 			<Stack.Screen name="(auth)" />
-			<Stack.Screen
-				name="journal/create"
-				options={{ presentation: "modal", headerShown: false }}
-			/>
+			{/* Not a native modal: the paywall is itself a Modal, and iOS can't
+			    present a modal on top of a modal screen (Android can). Keeping
+			    this a normal pushed screen lets the paywall open on both platforms. */}
+			<Stack.Screen name="journal/create" options={{ headerShown: false }} />
 			<Stack.Screen
 				name="journal/[journalId]/index"
 				options={{ headerShown: false }}
 			/>
+			{/* Same reasoning as journal/create — keep non-modal so the paywall
+			    (a Modal) can present over it on iOS. */}
 			<Stack.Screen
 				name="journal/[journalId]/new-entry"
-				options={{ presentation: "modal", headerShown: false }}
+				options={{ headerShown: false }}
 			/>
 			<Stack.Screen
 				name="journal/entry/[entryId]"
@@ -76,9 +80,13 @@ export default function Layout() {
 					<KeyboardProvider>
 						<AppThemeProvider>
 							<HeroUINativeProvider>
-								<NativeAppProviders>
-									<StackLayout />
-								</NativeAppProviders>
+								<RevenueCatProvider>
+									<NativeAppProviders>
+										<JournalPaywallProvider>
+											<StackLayout />
+										</JournalPaywallProvider>
+									</NativeAppProviders>
+								</RevenueCatProvider>
 							</HeroUINativeProvider>
 						</AppThemeProvider>
 					</KeyboardProvider>

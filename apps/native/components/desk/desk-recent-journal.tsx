@@ -24,18 +24,26 @@ export function DeskRecentJournal() {
 	}
 
 	if (recent === null) {
-		return null;
+		return (
+			<View className="w-full max-w-sm gap-2">
+				<Text className="font-semibold text-base text-foreground">
+					Most Recent...
+				</Text>
+				<View className="rounded-xl bg-card/90 px-5 py-6">
+					<Text className="text-center text-muted-foreground text-sm">
+						You haven&apos;t created anything yet.
+					</Text>
+				</View>
+			</View>
+		);
 	}
-
 	const { journal, slideImageUrls, postedAtMs } = recent;
 	const previewImage = slideImageUrls[0] ?? null;
-
 	return (
 		<View className="w-full max-w-sm gap-2">
 			<Text className="font-semibold text-base text-foreground">
 				Most Recent...
 			</Text>
-
 			<Pressable
 				onPress={() =>
 					router.push({

@@ -15,5 +15,12 @@
 			"@legacy-building/assets": ["../../packages/assets/src/index.ts"],
 			"@legacy-building/assets/*": ["../../packages/assets/*"]
 		}
-	}
+	},
+	"include": [
+		"src/**/*.ts",
+		"src/**/*.tsx",
+		"src/**/*.d.ts",
+		"../../packages/ui/src/dotlottie-wc.d.ts",
+		"../../packages/assets/src/vite-env.d.ts"
+	]
 }

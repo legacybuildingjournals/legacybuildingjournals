@@ -87,7 +87,10 @@ export async function getActiveSubscriptionForUser(
 	if (manageable.length === 0) return null;
 
 	// Prefer the subscription with the furthest period end (the live one).
-	return manageable.sort((a, b) => b.currentPeriodEnd - a.currentPeriodEnd)[0];
+	return (
+		manageable.sort((a, b) => b.currentPeriodEnd - a.currentPeriodEnd)[0] ??
+		null
+	);
 }
 
 /** Require the Stripe secret key from the Convex environment. */
