@@ -1,8 +1,7 @@
 {
 	"cli": {
 		"version": ">= 20.0.0",
-		"appVersionSource": "remote",
-		"corepack": true
+		"appVersionSource": "remote"
 	},
 	"build": {
 		"development": {
