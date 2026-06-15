@@ -3,6 +3,12 @@ import type Stripe from "stripe";
 
 import type { Doc } from "../_generated/dataModel";
 
+/** Checkout accepts card and ACH only — no buy-now-pay-later (e.g. Klarna). */
+export const CHECKOUT_PAYMENT_METHOD_TYPES = [
+	"card",
+	"us_bank_account",
+] as const satisfies readonly Stripe.Checkout.SessionCreateParams.PaymentMethodType[];
+
 export type EmbeddedCheckoutSessionResult = {
 	clientSecret: string;
 };
@@ -50,6 +56,7 @@ export async function createSubscriptionEmbeddedCheckoutSession(
 			line_items: [{ price: args.product.stripePriceId, quantity: 1 }],
 			return_url: args.returnUrl,
 			allow_promotion_codes: true,
+			payment_method_types: [...CHECKOUT_PAYMENT_METHOD_TYPES],
 			metadata: { userId: args.userId },
 			subscription_data: {
 				metadata: { userId: args.userId },
@@ -98,6 +105,7 @@ export async function createProrationPaymentCheckoutSession(
 			],
 			return_url: args.returnUrl,
 			allow_promotion_codes: true,
+			payment_method_types: [...CHECKOUT_PAYMENT_METHOD_TYPES],
 			metadata: {
 				userId: args.userId,
 				stripeInvoiceId: args.invoice.id,

@@ -12,6 +12,7 @@ import { DateField } from "@/components/journal/library/DateField";
 import {
 	fieldInputClass,
 	fieldLabelClass,
+	uploadedImageFitClass,
 } from "@/components/journal/library/libraryFormStyles";
 import { SidebarEditActions } from "@/components/journal/library/SidebarEditActions";
 import { Button } from "@/components/journal/ui/button";
@@ -167,7 +168,7 @@ export function EditJournalSidebarForm({
 						<img
 							src={coverPreview}
 							alt="Cover preview"
-							className="absolute inset-0 size-full object-contain object-center p-3"
+							className={cn(uploadedImageFitClass, "max-h-[140px]")}
 						/>
 					) : null}
 					<span

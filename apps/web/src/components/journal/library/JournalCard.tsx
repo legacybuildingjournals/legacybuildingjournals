@@ -3,6 +3,10 @@ import { brand } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
 import { Plus } from "lucide-react";
 import { JournalCoverImage } from "@/components/journal/library/JournalCoverImage";
+import {
+	journalCardMediaWellClass,
+	journalCardShellClass,
+} from "@/components/journal/library/journalCardStyles";
 import { Button } from "@/components/journal/ui/button";
 import { formatDate } from "@/lib/journal/formatDate";
 
@@ -16,8 +20,8 @@ export function JournalCard({ journal, onOpen, onAddEntry }: JournalCardProps) {
 	return (
 		<article
 			className={cn(
-				"flex w-full max-w-[500px] flex-col overflow-hidden rounded-xl",
-				"shadow-[2px_2px_4px_0_#a6a6a6] transition-shadow hover:shadow-[2px_4px_8px_0_#a6a6a6]",
+				"flex w-full max-w-[500px] flex-col",
+				journalCardShellClass,
 			)}
 		>
 			<button
@@ -25,10 +29,7 @@ export function JournalCard({ journal, onOpen, onAddEntry }: JournalCardProps) {
 				onClick={onOpen}
 				className="flex cursor-pointer flex-col text-left"
 			>
-				<div
-					className="relative flex h-[150px] w-full items-center justify-center bg-white"
-					style={{ borderRadius: "12px 12px 0 0" }}
-				>
+				<div className={cn(journalCardMediaWellClass, "h-[150px]")}>
 					<JournalCoverImage
 						coverImageId={journal.coverImageId}
 						coverImageUrl={journal.coverImageUrl}

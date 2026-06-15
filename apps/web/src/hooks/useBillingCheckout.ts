@@ -6,6 +6,7 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 import type { BillingPlanChoice } from "@/lib/billing/billingContent";
+import { BILLING_SUBSCRIBE_COPY } from "@/lib/billing/billingContent";
 import type { PlanInterval } from "@/lib/billing/plans";
 import { ROUTES } from "@/lib/routes";
 
@@ -136,7 +137,7 @@ export function useBillingCheckout() {
 		if (hasActiveSub) {
 			return selected === "annual" ? "Switch to annual" : "Switch to monthly";
 		}
-		if (selected === "trial") return "Start my free 7-day trial";
+		if (selected === "trial") return BILLING_SUBSCRIBE_COPY.startTrialCta;
 		if (selected === "annual") return "Continue with annual";
 		return "Continue with monthly";
 	})();

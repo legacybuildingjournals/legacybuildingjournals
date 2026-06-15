@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { BillingSubscribePanel } from "@/components/billing/BillingSubscribePanel";
+import { billingSubscribeShellClass } from "@/components/billing/billingLayoutStyles";
 import { BillingActivePage } from "@/features/billing/BillingActivePage";
 
 export function DashboardBillingPage() {
@@ -52,7 +53,7 @@ export function DashboardBillingPage() {
 			className="relative flex min-h-svh w-full flex-col bg-billing-subscribe"
 			style={{ backgroundColor: brand.primary }}
 		>
-			<div className="mx-auto mt-20 flex w-full max-w-[900px] flex-1 flex-col px-5 py-8 sm:px-6 sm:py-10">
+			<div className={billingSubscribeShellClass}>
 				<BillingSubscribePanel />
 			</div>
 		</div>

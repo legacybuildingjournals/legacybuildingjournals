@@ -72,4 +72,8 @@ export const fieldTextareaClass = bubbleTextareaClass;
 export const fieldEntryLogClass = bubbleTextareaClass;
 
 /** Uploaded / preview images scale to fit inside their container without cropping. */
-export const uploadedImageFitClass = "size-full object-contain p-3";
+export const uploadedImageFitClass = "max-h-full max-w-full object-contain";
+
+/** Centered frame for journal entry and cover images. */
+export const journalImageFrameClass =
+	"flex items-center justify-center overflow-hidden";

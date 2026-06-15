@@ -1,5 +1,6 @@
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
+import { cn } from "@legacy-building/ui/lib/utils";
 import { useQuery } from "convex/react";
 import { useState } from "react";
 
@@ -41,8 +42,10 @@ export function EntryCoverImage({
 	if (!src || loadError) {
 		return (
 			<div
-				className={className}
-				style={{ backgroundColor: "#f2f2f2" }}
+				className={cn(
+					"min-h-[120px] w-full max-w-[280px] bg-[#f2f2f2]",
+					className,
+				)}
 				aria-hidden
 			/>
 		);

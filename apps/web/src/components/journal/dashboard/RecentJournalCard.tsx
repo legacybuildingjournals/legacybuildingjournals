@@ -3,6 +3,10 @@ import { cn } from "@legacy-building/ui/lib/utils";
 import { Plus } from "lucide-react";
 
 import { ImageCarousel } from "@/components/journal/dashboard/ImageCarousel";
+import {
+	journalCardMediaWellClass,
+	journalCardShellClass,
+} from "@/components/journal/library/journalCardStyles";
 import { Button } from "@/components/journal/ui/button";
 import { formatDate } from "@/lib/journal/formatDate";
 
@@ -36,18 +40,15 @@ export function RecentJournalCard({
 				Recent Journal
 			</h2>
 
-			<div
-				className={cn(
-					"flex w-full flex-col overflow-hidden rounded-xl bg-white",
-					"shadow-[2px_2px_4px_0px_rgba(166,166,166,0.35)]",
-					"transition-shadow hover:shadow-[2px_4px_8px_0px_rgba(166,166,166,0.4)]",
-				)}
-			>
-				<ImageCarousel
-					imageUrls={slideImageUrls}
-					alt={title}
-					onImageAreaClick={onOpenJournal}
-				/>
+			<div className={cn("flex w-full flex-col", journalCardShellClass)}>
+				<div className={cn(journalCardMediaWellClass, "h-[150px]")}>
+					<ImageCarousel
+						imageUrls={slideImageUrls}
+						alt={title}
+						onImageAreaClick={onOpenJournal}
+						className="size-full h-full"
+					/>
+				</div>
 
 				<div
 					className="flex items-center gap-2 px-3 py-3 sm:px-5"

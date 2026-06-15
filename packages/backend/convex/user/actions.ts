@@ -52,6 +52,21 @@ export const assertEmailAvailableForChange = action({
 		}
 
 		const clerk = createClerkClient({ secretKey });
+		const currentUser = await clerk.users.getUser(identity.subject);
+
+		for (const address of currentUser.emailAddresses) {
+			if (normalizeEmail(address.emailAddress) === normalized) {
+				return null;
+			}
+		}
+
+		for (const account of currentUser.externalAccounts ?? []) {
+			const externalEmail = account.emailAddress?.trim();
+			if (externalEmail && normalizeEmail(externalEmail) === normalized) {
+				return null;
+			}
+		}
+
 		const { data: clerkUsers } = await clerk.users.getUserList({
 			emailAddress: [normalized],
 		});

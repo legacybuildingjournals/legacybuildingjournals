@@ -8,8 +8,15 @@ import { ConvexError } from "convex/values";
 import { Check, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import {
+	billingPageShellClass,
+	billingPageTitleClass,
+} from "@/components/billing/billingLayoutStyles";
 import type { BillingPlanChoice } from "@/lib/billing/billingContent";
-import { BILLING_MANAGE_BG } from "@/lib/billing/billingContent";
+import {
+	BILLING_MANAGE_BG,
+	BILLING_PLAN_ACTION_COPY,
+} from "@/lib/billing/billingContent";
 import { formatAmount } from "@/lib/billing/plans";
 import { ROUTES } from "@/lib/routes";
 
@@ -91,12 +98,14 @@ export function BillingComparePlansPage() {
 	}
 
 	const ctaLabel = (() => {
-		if (isCurrent(selected)) return "Current plan";
-		if (!hasActiveSub) return "Continue to checkout";
+		if (isCurrent(selected)) return BILLING_PLAN_ACTION_COPY.currentPlan;
+		if (!hasActiveSub) return BILLING_PLAN_ACTION_COPY.continueToCheckout;
 		if (currentInterval === "annual" && selected === "monthly") {
-			return "Schedule switch to monthly";
+			return BILLING_PLAN_ACTION_COPY.scheduleSwitchToMonthly;
 		}
-		return selected === "annual" ? "Upgrade to annual" : "Switch to monthly";
+		return selected === "annual"
+			? BILLING_PLAN_ACTION_COPY.switchToAnnual
+			: BILLING_PLAN_ACTION_COPY.switchToMonthly;
 	})();
 
 	return (
@@ -104,24 +113,24 @@ export function BillingComparePlansPage() {
 			className="relative flex min-h-svh w-full flex-col"
 			style={{ backgroundColor: BILLING_MANAGE_BG }}
 		>
-			<div className="mt-20 flex flex-1 flex-col px-4 py-8 sm:px-6 md:px-10">
-				<div className="mx-auto flex w-full max-w-[720px] flex-col gap-8">
-					<header className="flex flex-col gap-2">
+			<div className={billingPageShellClass}>
+				<div className="mx-auto flex w-full max-w-[720px] flex-col gap-6 sm:gap-8">
+					<header className="flex min-w-0 flex-col gap-2">
 						<Link
 							to={ROUTES.dashboardBilling}
 							className="w-fit text-[#008080] text-sm hover:underline"
 						>
 							← Back to billing
 						</Link>
-						<h1 className="font-semibold text-3xl text-[#1a1a1a]">
-							Compare Plans
+						<h1 className={cn(billingPageTitleClass, "text-[#1a1a1a]")}>
+							{BILLING_PLAN_ACTION_COPY.comparePlansTitle}
 						</h1>
-						<p className="text-[#525252] text-sm">
-							Choose the plan that works best for you, then complete checkout.
+						<p className="text-[#525252] text-sm leading-relaxed sm:text-base">
+							{BILLING_PLAN_ACTION_COPY.comparePlansSubtitle}
 						</p>
 					</header>
 
-					<div className="grid gap-4 sm:grid-cols-2">
+					<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
 						{(["monthly", "annual"] as const).map((plan) => {
 							const product =
 								plan === "monthly" ? monthlyProduct : annualProduct;
@@ -133,7 +142,7 @@ export function BillingComparePlansPage() {
 									type="button"
 									onClick={() => setSelected(plan)}
 									className={cn(
-										"relative flex cursor-pointer flex-col gap-3 rounded-2xl border bg-white p-5 text-left shadow-sm transition-colors",
+										"relative flex cursor-pointer flex-col gap-3 rounded-2xl border bg-white p-4 text-left shadow-sm transition-colors sm:p-5",
 										selectedPlan
 											? "border-[#008080] ring-2 ring-[#008080]/20"
 											: "border-[#e6e6e6] hover:border-[#008080]/40",
@@ -161,7 +170,7 @@ export function BillingComparePlansPage() {
 											{plan === "monthly" ? "Monthly Plan" : "Annual Plan"}
 										</span>
 									</div>
-									<p className="font-semibold text-2xl text-[#1a1a1a]">
+									<p className="font-semibold text-[#1a1a1a] text-[clamp(1.375rem,5vw,1.5rem)]">
 										{product
 											? formatAmount(product.amountCents, product.currency)
 											: plan === "annual"
@@ -173,7 +182,7 @@ export function BillingComparePlansPage() {
 									</p>
 									{current ? (
 										<span className="font-medium text-[#008080] text-xs">
-											Current plan
+											{BILLING_PLAN_ACTION_COPY.currentPlan}
 										</span>
 									) : null}
 								</button>
@@ -181,7 +190,7 @@ export function BillingComparePlansPage() {
 						})}
 					</div>
 
-					<ul className="flex flex-col gap-2 rounded-2xl border border-[#e6e6e6] bg-white p-5">
+					<ul className="flex flex-col gap-2 rounded-2xl border border-[#e6e6e6] bg-white p-4 sm:p-5">
 						{[
 							"Unlimited journal entries",
 							"Voice recording",

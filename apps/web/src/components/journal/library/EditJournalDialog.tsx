@@ -10,6 +10,7 @@ import { Camera, X } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { DateField } from "@/components/journal/library/DateField";
 import { JournalTypePicker } from "@/components/journal/library/JournalTypePicker";
+import { uploadedImageFitClass } from "@/components/journal/library/libraryFormStyles";
 import { Button } from "@/components/journal/ui/button";
 import { Dialog, DialogTitle } from "@/components/journal/ui/dialog";
 import { DialogContentWithOverlay } from "@/components/journal/ui/dialog-content-with-overlay";
@@ -272,7 +273,7 @@ export function EditJournalDialog({
 									<img
 										src={coverPreview}
 										alt="Cover preview"
-										className="absolute inset-0 size-full object-contain object-center p-3"
+										className={cn(uploadedImageFitClass, "max-h-[150px]")}
 									/>
 								) : null}
 							</button>

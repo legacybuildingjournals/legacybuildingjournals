@@ -10,6 +10,7 @@ import { toast } from "sonner";
 
 import { CancelSubscriptionModal } from "@/components/billing/CancelSubscriptionModal";
 
+import { BILLING_SUBSCRIBE_COPY } from "@/lib/billing/billingContent";
 import {
 	formatAmount,
 	intervalLabel,
@@ -63,7 +64,7 @@ function describeSubscription(subscription: Subscription) {
 			stateLabel: "Free trial",
 			detail: periodEnd
 				? `Trial ends ${periodEnd}${subscription.cancelAtPeriodEnd ? " — won't renew" : ", then billing begins"}`
-				: "7-day free trial",
+				: BILLING_SUBSCRIBE_COPY.trialStateLabel,
 		};
 	}
 	if (subscription.status === "active") {

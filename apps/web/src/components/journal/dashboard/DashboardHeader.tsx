@@ -7,16 +7,12 @@ import {
 } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
 import { Link, type RouterState, useRouterState } from "@tanstack/react-router";
-
 import { DashboardHeaderProfileMenu } from "@/components/journal/dashboard/DashboardHeaderProfileMenu";
+import {
+	dashboardNavItems,
+	isDashboardNavActive,
+} from "@/components/journal/dashboard/dashboardNavLinks";
 import { ROUTES } from "@/lib/routes";
-
-const navLinks = [
-	{ id: "desk", label: "Desk", to: ROUTES.dashboardDesk },
-	{ id: "library", label: "Library", to: ROUTES.dashboardLibrary },
-	{ id: "account", label: "Account", to: ROUTES.dashboardAccount },
-	{ id: "billing", label: "Billing", to: ROUTES.dashboardBilling },
-] as const;
 
 const navLinkClass =
 	"mx-3 text-base leading-[1.4] transition-colors duration-200";
@@ -59,8 +55,8 @@ export function DashboardHeader() {
 				</Link>
 
 				<nav className="hidden items-center md:flex" aria-label="Main">
-					{navLinks.map((item) => {
-						const isActive = pathname === item.to;
+					{dashboardNavItems.map((item) => {
+						const isActive = isDashboardNavActive(pathname, item.to);
 						return (
 							<Link
 								key={item.id}

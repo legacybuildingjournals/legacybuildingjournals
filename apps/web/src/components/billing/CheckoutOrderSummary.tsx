@@ -48,22 +48,17 @@ export function CheckoutOrderSummary({
 			: formatAmount(activeProduct.amountCents, activeProduct.currency);
 
 	return (
-		<div className="flex flex-col gap-6">
-			<h2 className="font-semibold text-foreground text-xl">Order Summary</h2>
+		<div className="flex min-w-0 flex-col gap-5 sm:gap-6">
+			<h2 className="font-semibold text-foreground text-lg sm:text-xl">
+				Order Summary
+			</h2>
 
-			<div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-				<div className="mb-4 flex items-center gap-2">
-					<h3 className="font-semibold text-foreground text-lg">
-						{isAnnual ? "Annual Plan" : "Monthly Plan"}
-					</h3>
-					{isTrial ? (
-						<span className="rounded-full bg-primary px-2.5 py-0.5 font-medium text-primary-foreground text-xs">
-							Recommended
-						</span>
-					) : null}
-				</div>
+			<div className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+				<h3 className="mb-4 font-semibold text-foreground text-lg">
+					{isAnnual ? "Annual Plan" : "Monthly Plan"}
+				</h3>
 
-				<p className="mb-4 font-semibold text-3xl text-foreground">
+				<p className="mb-4 font-semibold text-[clamp(1.5rem,5vw,1.875rem)] text-foreground">
 					{displayPrice}
 					<span className="font-normal text-base text-muted-foreground">
 						{intervalSuffix}
@@ -85,7 +80,7 @@ export function CheckoutOrderSummary({
 					))}
 				</ul>
 
-				<div className="inline-flex rounded-full border border-border bg-muted p-1">
+				<div className="flex w-full flex-col gap-2 rounded-2xl border border-border bg-muted p-1 sm:inline-flex sm:w-auto sm:flex-row">
 					<button
 						type="button"
 						onClick={() =>
@@ -99,6 +94,7 @@ export function CheckoutOrderSummary({
 						}
 						className={cn(
 							segmentButtonClass,
+							"h-10 w-full sm:w-auto",
 							!isAnnual
 								? "bg-card text-foreground shadow-sm"
 								: "text-muted-foreground hover:bg-card/60 hover:text-foreground",
@@ -111,7 +107,7 @@ export function CheckoutOrderSummary({
 						onClick={() => onPlanChange("annual")}
 						className={cn(
 							segmentButtonClass,
-							"inline-flex items-center gap-1.5",
+							"inline-flex h-10 w-full items-center justify-center gap-1.5 sm:w-auto",
 							isAnnual
 								? "bg-card text-foreground shadow-sm"
 								: "text-muted-foreground hover:bg-card/60 hover:text-foreground",
@@ -134,9 +130,11 @@ export function CheckoutOrderSummary({
 					<span>Taxes</span>
 					<span>Calculated accordingly</span>
 				</div>
-				<div className="mt-1 flex items-center justify-between font-semibold text-foreground">
-					<span>Total Due Today</span>
-					<span>{dueToday}</span>
+				<div className="mt-1 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+					<span className="font-semibold text-foreground">Total Due Today</span>
+					<span className="font-semibold text-foreground text-lg sm:text-base">
+						{dueToday}
+					</span>
 				</div>
 			</div>
 		</div>

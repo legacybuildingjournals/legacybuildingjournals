@@ -48,7 +48,7 @@ export function EntryImageUpload({
 						src={imagePreview}
 						alt="Entry preview"
 						decoding="async"
-						className={cn("absolute inset-0", uploadedImageFitClass)}
+						className={uploadedImageFitClass}
 					/>
 				) : (
 					<Camera
