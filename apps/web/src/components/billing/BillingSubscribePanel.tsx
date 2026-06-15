@@ -152,7 +152,7 @@ export function BillingSubscribePanel() {
 									{trialDays} days free
 								</p>
 								<p className="text-white/70 text-xs leading-relaxed">
-									Then {monthlyPrice}/mo — cancel anytime before day {trialDays}
+									Then {monthlyPrice}/mo, cancel anytime before day {trialDays}
 								</p>
 							</PlanCard>
 
