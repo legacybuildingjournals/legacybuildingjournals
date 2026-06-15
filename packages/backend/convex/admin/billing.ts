@@ -56,13 +56,15 @@ export type AdminUserBillingDetail = {
 	mirroredSubscriptionStatus: NonNullable<
 		Doc<"users">["subscriptionStatus"]
 	> | null;
+	betaAccess: boolean;
 };
 
 /** Mirror-only paid access (cheap; used in list views). */
 export function mirroredPaidJournalAccess(
-	user: Pick<Doc<"users">, "role" | "subscriptionStatus">,
+	user: Pick<Doc<"users">, "role" | "subscriptionStatus" | "betaAccess">,
 ): boolean {
 	if (user.role === "admin") return true;
+	if (user.betaAccess === true) return true;
 	return (
 		user.subscriptionStatus === "active" ||
 		user.subscriptionStatus === "grace_period"
@@ -126,5 +128,6 @@ export async function getAdminUserBillingDetail(
 		plan,
 		pendingPlanChange: user.pendingPlanChange ?? null,
 		mirroredSubscriptionStatus: user.subscriptionStatus ?? null,
+		betaAccess: user.betaAccess === true,
 	};
 }

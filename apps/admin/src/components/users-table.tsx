@@ -30,6 +30,7 @@ export type AdminUserRow = {
 		| "canceled"
 		| "none"
 		| null;
+	betaAccess: boolean;
 	hasPaidJournalAccess: boolean;
 };
 
@@ -157,7 +158,10 @@ export function UsersTable({
 									<AccountStatusBadge status={user.accountStatus} />
 								</td>
 								<td className="px-4 py-3">
-									<SubscriptionStatusBadge status={user.subscriptionStatus} />
+									<SubscriptionStatusBadge
+										status={user.subscriptionStatus}
+										betaAccess={user.betaAccess}
+									/>
 								</td>
 								<td className="px-4 py-3">
 									<PaidAccessBadge hasAccess={user.hasPaidJournalAccess} />

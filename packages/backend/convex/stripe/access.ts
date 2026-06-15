@@ -19,6 +19,7 @@ export async function userHasPaidFeatureAccess(
 
 	if (!user) return false;
 	if (user.role === "admin") return true;
+	if (user.betaAccess === true) return true;
 
 	// Never trust the mirrored `users.subscriptionStatus` alone — it can lag after
 	// cancel/reset. Require a live Stripe subscription instead.

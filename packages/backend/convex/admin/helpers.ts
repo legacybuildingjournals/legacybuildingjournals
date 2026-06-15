@@ -13,7 +13,8 @@ export type SubscriptionStatusFilter =
 	| "grace_period"
 	| "canceled"
 	| "none"
-	| "unset";
+	| "unset"
+	| "beta";
 
 export type AdminUserSummary = ReturnType<typeof toAdminUserSummary>;
 
@@ -56,6 +57,7 @@ export function toAdminUserSummary(user: Doc<"users">) {
 		role: user.role,
 		accountStatus: effectiveAccountStatus(user),
 		subscriptionStatus: user.subscriptionStatus ?? null,
+		betaAccess: user.betaAccess === true,
 		hasPaidJournalAccess: mirroredPaidJournalAccess(user),
 		welcomeCompletedAt: user.welcomeCompletedAt ?? null,
 		agreedToTermsAt: user.agreedToTermsAt ?? null,
@@ -93,11 +95,15 @@ export function buildUserListPredicate(args: {
 		}
 		if (args.role && user.role !== args.role) return false;
 		if (args.subscriptionStatus) {
-			const sub = user.subscriptionStatus;
-			if (args.subscriptionStatus === "unset") {
-				if (sub !== undefined) return false;
-			} else if (sub !== args.subscriptionStatus) {
-				return false;
+			if (args.subscriptionStatus === "beta") {
+				if (user.betaAccess !== true) return false;
+			} else {
+				const sub = user.subscriptionStatus;
+				if (args.subscriptionStatus === "unset") {
+					if (sub !== undefined) return false;
+				} else if (sub !== args.subscriptionStatus) {
+					return false;
+				}
 			}
 		}
 		return true;

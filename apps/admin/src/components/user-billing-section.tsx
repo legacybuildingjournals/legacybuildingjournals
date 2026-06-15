@@ -38,6 +38,7 @@ type BillingDetail = {
 		| "canceled"
 		| "none"
 		| null;
+	betaAccess: boolean;
 };
 
 function formatEpochDate(seconds: number | null) {
@@ -86,9 +87,19 @@ export function UserBillingSection({
 				<div className="flex items-start justify-between gap-4">
 					<dt className="text-muted-foreground">Journal access (live)</dt>
 					<dd className="font-medium text-popover-foreground">
-						{billing.hasPaidFeatureAccess ? "Paid — unlocked" : "Locked"}
+						{billing.hasPaidFeatureAccess
+							? billing.betaAccess
+								? "Beta — unlocked"
+								: "Paid — unlocked"
+							: "Locked"}
 					</dd>
 				</div>
+				{billing.betaAccess ? (
+					<div className="flex items-start justify-between gap-4">
+						<dt className="text-muted-foreground">Beta access</dt>
+						<dd className="font-medium text-popover-foreground">Active</dd>
+					</div>
+				) : null}
 				<div className="flex items-start justify-between gap-4">
 					<dt className="text-muted-foreground">Mirrored status</dt>
 					<dd className="font-medium text-popover-foreground capitalize">
@@ -139,7 +150,13 @@ export function UserBillingSection({
 					</div>
 				) : null}
 			</dl>
-			{billing.mirroredSubscriptionStatus === "trialing" ? (
+			{billing.betaAccess ? (
+				<p className="text-muted-foreground text-xs leading-relaxed">
+					Beta users have full journal access without a Stripe subscription.
+					Remove beta access from the user account dialog when the trial period
+					ends.
+				</p>
+			) : billing.mirroredSubscriptionStatus === "trialing" ? (
 				<p className="text-muted-foreground text-xs leading-relaxed">
 					Trial users have journal access until the trial ends or they cancel.
 				</p>

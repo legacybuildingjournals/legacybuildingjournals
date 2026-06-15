@@ -97,6 +97,7 @@ export async function createProrationPaymentCheckoutSession(
 				},
 			],
 			return_url: args.returnUrl,
+			allow_promotion_codes: true,
 			metadata: {
 				userId: args.userId,
 				stripeInvoiceId: args.invoice.id,

@@ -26,7 +26,14 @@ function UsersPage() {
 		"",
 	);
 	const [subscriptionFilter, setSubscriptionFilter] = useState<
-		"" | "active" | "trialing" | "grace_period" | "canceled" | "none" | "unset"
+		| ""
+		| "active"
+		| "trialing"
+		| "grace_period"
+		| "canceled"
+		| "none"
+		| "unset"
+		| "beta"
 	>("");
 	const [selectedUserId, setSelectedUserId] = useState<Id<"users"> | null>(
 		null,
@@ -123,7 +130,8 @@ function UsersPage() {
 								| "grace_period"
 								| "canceled"
 								| "none"
-								| "unset",
+								| "unset"
+								| "beta",
 						);
 						resetPage();
 					}}
@@ -135,6 +143,7 @@ function UsersPage() {
 					<option value="trialing">Trialing</option>
 					<option value="grace_period">Grace period</option>
 					<option value="canceled">Canceled</option>
+					<option value="beta">Beta</option>
 					<option value="none">None</option>
 					<option value="unset">Not set</option>
 				</select>

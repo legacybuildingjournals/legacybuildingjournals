@@ -111,6 +111,10 @@ function DashboardPage() {
 								icon={XCircle}
 							/>
 							<AdminStatCard
+								label="Beta access"
+								value={insights.subscriptionBeta}
+							/>
+							<AdminStatCard
 								label="No subscription"
 								value={insights.subscriptionNone}
 							/>
