@@ -1,9 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/dashboard/billing/success")({
-	component: RouteComponent,
-});
+import { PaymentSuccessPage } from "@/features/billing/PaymentSuccessPage";
 
-function RouteComponent() {
-	return <div>Hello "/dashboard/billing/success"!</div>;
-}
+export const Route = createFileRoute("/dashboard/billing/success")({
+	component: PaymentSuccessPage,
+});

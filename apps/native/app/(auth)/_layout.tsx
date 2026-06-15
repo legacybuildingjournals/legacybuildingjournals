@@ -1,11 +1,8 @@
 import { useAuth } from "@clerk/expo";
 import { Redirect, Stack } from "expo-router";
-import { useThemeColor } from "heroui-native";
-
+/** Auth screens only — no redirects here (avoids ping-pong with the tabs layout). */
 export default function AuthRoutesLayout() {
 	const { isLoaded, isSignedIn } = useAuth();
-	const foreground = useThemeColor("foreground");
-	const background = useThemeColor("background");
 
 	if (!isLoaded) {
 		return null;
@@ -18,10 +15,9 @@ export default function AuthRoutesLayout() {
 	return (
 		<Stack
 			screenOptions={{
-				headerStyle: { backgroundColor: background },
-				headerTintColor: foreground,
-				headerTitleStyle: { color: foreground, fontWeight: "600" },
-				contentStyle: { backgroundColor: background },
+				headerShown: false,
+				animation: "slide_from_right",
+				contentStyle: { backgroundColor: "transparent" },
 			}}
 		/>
 	);
