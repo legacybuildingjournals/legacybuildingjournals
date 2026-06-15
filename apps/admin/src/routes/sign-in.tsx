@@ -18,15 +18,15 @@ function SignInPage() {
 	const { isLoaded } = useAuth();
 	const { isSignedIn, isLoading, isAdmin } = useAdminAccess();
 
-	if (isLoading) {
+	if (!isLoaded) {
 		return <PageLoader message="Checking session…" />;
 	}
 
-	if (isSignedIn && isAdmin) {
+	if (isSignedIn && isAdmin && !isLoading) {
 		return <Navigate to={ROUTES.dashboard} replace />;
 	}
 
-	if (isSignedIn && !isAdmin) {
+	if (isSignedIn && !isAdmin && !isLoading) {
 		return <AdminForbidden />;
 	}
 

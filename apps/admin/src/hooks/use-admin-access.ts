@@ -5,15 +5,17 @@ import { useQuery } from "convex/react";
 export function useAdminAccess() {
 	const { clerkUser, isSignedIn, isLoading } = useCurrentUser();
 	const clerkMetadataRole = clerkUser?.publicMetadata?.role;
+	const hasClerkAdminRole = clerkMetadataRole === "admin";
 
 	const isCurrentUserAdmin = useQuery(
 		api.user.queries.isCurrentUserAdmin,
-		isSignedIn ? {} : "skip",
+		isSignedIn && !hasClerkAdminRole ? {} : "skip",
 	);
 
-	const isCheckingAdmin = isSignedIn && isCurrentUserAdmin === undefined;
+	const isCheckingAdmin =
+		isSignedIn && !hasClerkAdminRole && isCurrentUserAdmin === undefined;
 
-	const isAdmin = isCurrentUserAdmin === true || clerkMetadataRole === "admin";
+	const isAdmin = isCurrentUserAdmin === true || hasClerkAdminRole;
 
 	return {
 		isSignedIn,
