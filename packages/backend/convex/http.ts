@@ -12,6 +12,13 @@ import {
 	roleFromClerkMetadata,
 	storeClerkProfilePicture,
 } from "./helpers";
+import {
+	eventToStatus,
+	isTrialPeriod,
+	normalizeEnvironment,
+	productToInterval,
+	storeToProvider,
+} from "./revenuecat/helpers";
 
 const handleClerkWebhook = httpAction(async (ctx, request) => {
 	if (request.method !== "POST") {
@@ -84,12 +91,82 @@ const handleClerkWebhook = httpAction(async (ctx, request) => {
 	return new Response(null, { status: 200 });
 });
 
+/**
+ * RevenueCat webhook → mirror Apple/Google subscription state into our
+ * `subscriptions` table so the web app & backend know the user's provider
+ * (and can route "manage in App Store/Play" vs Stripe correctly).
+ * Auth: RevenueCat sends a fixed `Authorization` header we configure in the
+ * dashboard; it must match REVENUECAT_WEBHOOK_SECRET.
+ */
+const handleRevenueCatWebhook = httpAction(async (ctx, request) => {
+	if (request.method !== "POST") {
+		return new Response("Method not allowed", { status: 405 });
+	}
+
+	const secret = process.env.REVENUECAT_WEBHOOK_SECRET;
+	if (!secret) {
+		console.error("Missing REVENUECAT_WEBHOOK_SECRET in Convex env vars.");
+		return new Response("Webhook secret not configured", { status: 500 });
+	}
+	if (request.headers.get("Authorization") !== secret) {
+		return new Response("Unauthorized", { status: 401 });
+	}
+
+	let body: { event?: Record<string, unknown> };
+	try {
+		body = await request.json();
+	} catch {
+		return new Response("Invalid JSON", { status: 400 });
+	}
+
+	const event = body?.event;
+	if (!event) return new Response("Missing event", { status: 400 });
+
+	const provider = storeToProvider(event.store);
+	const status = eventToStatus(event.type, event.period_type);
+	const appUserId = event.app_user_id;
+
+	// Ignore events we don't track (unknown store, TEST/TRANSFER, or missing user).
+	if (!provider || !status || typeof appUserId !== "string") {
+		return new Response(null, { status: 200 });
+	}
+
+	try {
+		await ctx.runMutation(internal.revenuecat.mutations.upsertFromWebhook, {
+			appUserId,
+			provider,
+			status,
+			interval: productToInterval(event.product_id),
+			storeProductId:
+				typeof event.product_id === "string" ? event.product_id : "unknown",
+			currentPeriodEnd:
+				typeof event.expiration_at_ms === "number"
+					? event.expiration_at_ms
+					: undefined,
+			willRenew: status === "active" || status === "trialing",
+			isTrial: isTrialPeriod(event.period_type),
+			environment: normalizeEnvironment(event.environment),
+		});
+	} catch (err) {
+		console.error("RevenueCat webhook handler failed:", err);
+		return new Response("Webhook handler failed", { status: 500 });
+	}
+
+	return new Response(null, { status: 200 });
+});
+
 const http = httpRouter();
 
 http.route({
 	path: "/clerk/register",
 	method: "POST",
 	handler: handleClerkWebhook,
+});
+
+http.route({
+	path: "/revenuecat/webhook",
+	method: "POST",
+	handler: handleRevenueCatWebhook,
 });
 
 /**

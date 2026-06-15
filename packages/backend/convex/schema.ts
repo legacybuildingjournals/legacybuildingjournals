@@ -37,6 +37,23 @@ export const planIntervalValidator = v.union(
 	v.literal("annual"),
 );
 
+/** Where a paid subscription was purchased — determines where it can be managed. */
+export const subscriptionProviderValidator = v.union(
+	v.literal("apple"),
+	v.literal("google"),
+	v.literal("stripe"),
+);
+
+/** Lifecycle of an IAP subscription, mirrored from RevenueCat webhooks. */
+export const iapSubscriptionStatusValidator = v.union(
+	v.literal("active"),
+	v.literal("trialing"),
+	v.literal("grace_period"),
+	// Will not renew, but access remains until currentPeriodEnd.
+	v.literal("canceled"),
+	v.literal("expired"),
+);
+
 export default defineSchema({
 	products: defineTable({
 		interval: planIntervalValidator,
@@ -100,6 +117,31 @@ export default defineSchema({
 	})
 		.index("by_userId", ["userId"])
 		.index("by_userId_and_type", ["userId", "type"]),
+
+	/**
+	 * Server-side record of native IAP subscriptions (Apple / Google), synced from
+	 * RevenueCat webhooks. Stripe subscriptions stay in the Stripe component; a
+	 * unified query merges both. `userId` is the Clerk id (set via Purchases.logIn).
+	 */
+	subscriptions: defineTable({
+		userId: v.string(),
+		provider: subscriptionProviderValidator,
+		status: iapSubscriptionStatusValidator,
+		interval: v.optional(planIntervalValidator),
+		storeProductId: v.string(),
+		/** Unix ms when the current period ends (access cutoff). */
+		currentPeriodEnd: v.optional(v.number()),
+		willRenew: v.optional(v.boolean()),
+		isTrial: v.optional(v.boolean()),
+		/** RevenueCat app user id (== userId once identified). */
+		rcAppUserId: v.optional(v.string()),
+		environment: v.optional(
+			v.union(v.literal("sandbox"), v.literal("production")),
+		),
+		updatedAt: v.number(),
+	})
+		.index("by_userId", ["userId"])
+		.index("by_rcAppUserId", ["rcAppUserId"]),
 
 	journalEntries: defineTable({
 		userId: v.string(),

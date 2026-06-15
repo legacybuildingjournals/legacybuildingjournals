@@ -48,6 +48,34 @@ export function initRevenueCat(): void {
 }
 
 // ──────────────────────────────────────────────────────────
+// User identity
+// ──────────────────────────────────────────────────────────
+
+/**
+ * Associate the RevenueCat customer with our app user (Clerk id). This makes
+ * the webhook's `app_user_id` equal the Clerk id, so the backend can map IAP
+ * subscriptions to the right user. Call right after sign-in.
+ */
+export async function identifyUser(appUserId: string): Promise<void> {
+	if (!isConfigured) return;
+	try {
+		await Purchases.logIn(appUserId);
+	} catch (e) {
+		console.warn("[RevenueCat] logIn failed", e);
+	}
+}
+
+/** Reset to an anonymous customer on sign-out. */
+export async function logoutUser(): Promise<void> {
+	if (!isConfigured) return;
+	try {
+		await Purchases.logOut();
+	} catch {
+		// Throws if already anonymous — safe to ignore.
+	}
+}
+
+// ──────────────────────────────────────────────────────────
 // Entitlement helpers
 // ──────────────────────────────────────────────────────────
 

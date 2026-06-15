@@ -1,5 +1,13 @@
 import { useSSO } from "@clerk/expo";
-import googleLogo from "@legacy-building/assets/images/google logo.jpeg";
+// Local app asset (clean filename, inside projectRoot). Importing from the
+// shared `packages/assets` with a space in the name ("google logo.jpeg") made
+// Metro mangle the cross-package asset URL and fail with ENOENT in dev.
+import googleLogo from "@/assets/images/google-logo.jpeg";
+// Clerk's `useSSO` does `await import("expo-auth-session")` internally. Metro
+// would otherwise split that into an async chunk that fails at runtime with
+// `Requiring unknown module "3503"`. Importing it statically here forces it into
+// the main bundle so Clerk's dynamic import resolves to an already-loaded module.
+import "expo-auth-session";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";

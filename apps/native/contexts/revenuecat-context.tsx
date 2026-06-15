@@ -1,3 +1,4 @@
+import { useAuth } from "@clerk/expo";
 import {
 	createContext,
 	type ReactNode,
@@ -11,7 +12,9 @@ import type { CustomerInfo } from "react-native-purchases";
 import {
 	checkProAccess,
 	hasPro,
+	identifyUser,
 	initRevenueCat,
+	logoutUser,
 	onCustomerInfoUpdated,
 } from "@/lib/billing/revenuecat";
 
@@ -31,9 +34,21 @@ const RevenueCatContext = createContext<RevenueCatContextValue>({
 });
 
 export function RevenueCatProvider({ children }: { children: ReactNode }) {
+	const { isSignedIn, userId } = useAuth();
 	const [isReady, setIsReady] = useState(false);
 	const [isPro, setIsPro] = useState(false);
 	const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
+
+	// Identify the RevenueCat customer with the Clerk id so webhooks can map
+	// IAP subscriptions to this user. Reset to anonymous on sign-out.
+	useEffect(() => {
+		initRevenueCat();
+		if (isSignedIn && userId) {
+			void identifyUser(userId);
+		} else if (isSignedIn === false) {
+			void logoutUser();
+		}
+	}, [isSignedIn, userId]);
 
 	useEffect(() => {
 		// 1. Configure the SDK (no-op if already configured).
