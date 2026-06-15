@@ -1,4 +1,4 @@
-import { useClerk, useSignIn } from "@clerk/react";
+import { useAuth, useClerk, useSignIn } from "@clerk/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import {
@@ -34,6 +34,7 @@ const authFieldClass =
 const NOT_ADMIN_MESSAGE = "This account doesn't have admin access.";
 
 export function AdminSignInForm() {
+	const { isSignedIn } = useAuth();
 	const { signIn, errors, fetchStatus } = useSignIn();
 	const clerk = useClerk();
 	const convex = useConvex();
@@ -46,8 +47,40 @@ export function AdminSignInForm() {
 		defaultValues: { email: "", password: "" },
 	});
 
+	const redirectIfAdmin = async (email: string) => {
+		const isAdmin = await convex.query(api.user.queries.isAdminByEmail, {
+			email: email.trim(),
+		});
+		if (isAdmin) {
+			toast.success("Welcome back.");
+			navigate({ to: ROUTES.dashboard });
+			return true;
+		}
+		return false;
+	};
+
 	const onSubmit = form.handleSubmit(async ({ email, password }) => {
 		form.clearErrors("root");
+
+		if (isSignedIn) {
+			setVerifyingAdmin(true);
+			try {
+				const redirected = await redirectIfAdmin(email);
+				if (!redirected) {
+					form.setError("root", { message: NOT_ADMIN_MESSAGE });
+					toast.error(NOT_ADMIN_MESSAGE);
+				}
+			} catch (err) {
+				const msg =
+					firstClerkErrorMessage(err) ?? "Could not verify admin access.";
+				form.setError("root", { message: msg });
+				toast.error(msg);
+			} finally {
+				setVerifyingAdmin(false);
+			}
+			return;
+		}
+
 		if (!signIn) return;
 
 		const { error: signInError } = await signIn.password({
@@ -57,6 +90,28 @@ export function AdminSignInForm() {
 
 		if (signInError) {
 			const code = firstClerkErrorCode(signInError);
+			const message = firstClerkErrorMessage(signInError);
+			if (
+				code === "session_exists" ||
+				message?.toLowerCase().includes("already signed in")
+			) {
+				setVerifyingAdmin(true);
+				try {
+					const redirected = await redirectIfAdmin(email);
+					if (!redirected) {
+						form.setError("root", { message: NOT_ADMIN_MESSAGE });
+						toast.error(NOT_ADMIN_MESSAGE);
+					}
+				} catch (err) {
+					const msg =
+						firstClerkErrorMessage(err) ?? "Could not verify admin access.";
+					form.setError("root", { message: msg });
+					toast.error(msg);
+				} finally {
+					setVerifyingAdmin(false);
+				}
+				return;
+			}
 			if (code === "form_identifier_not_found") {
 				form.setError("root", {
 					message: "No admin account found for this email.",

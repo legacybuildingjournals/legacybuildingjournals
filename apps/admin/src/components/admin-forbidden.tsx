@@ -1,8 +1,8 @@
-import { Button, buttonVariants } from "@legacy-building/ui/components/button";
+import { SignOutButton } from "@clerk/react";
+import { Button } from "@legacy-building/ui/components/button";
 import { APP_NAME } from "@legacy-building/ui/lib/brand";
 import { cn } from "@legacy-building/ui/lib/utils";
-import { Link } from "@tanstack/react-router";
-import { Home, LogIn, ShieldAlert } from "lucide-react";
+import { LogOut, ShieldAlert } from "lucide-react";
 
 import { ROUTES } from "@/lib/routes";
 
@@ -24,11 +24,11 @@ export function AdminForbidden() {
 				</span>
 
 				<h1 className="mt-4 font-heading font-semibold text-2xl tracking-tight sm:text-3xl">
-					Clearance insufficient
+					Unauthorized
 				</h1>
 				<p className="mt-3 max-w-sm text-muted-foreground text-sm leading-relaxed sm:text-base">
-					This account does not have admin access. Sign in with an admin account
-					or contact your administrator.
+					You do not have permission to access this area. Contact your
+					administrator if you believe this is a mistake.
 				</p>
 
 				<p className="mt-5 font-mono text-[10px] text-muted-foreground/50 uppercase tracking-[0.18em]">
@@ -36,31 +36,23 @@ export function AdminForbidden() {
 				</p>
 
 				<div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-					<Link
-						to={ROUTES.dashboard}
-						className={cn(
-							buttonVariants({ variant: "default", size: "lg" }),
-							"h-11 rounded-full px-7 transition-transform active:scale-[0.97]",
-						)}
-					>
-						<Home className="size-4" aria-hidden />
-						Dashboard
-					</Link>
-					<Link
-						to={ROUTES.signIn}
-						className={cn(
-							buttonVariants({ variant: "ghost", size: "lg" }),
-							"h-11 rounded-full px-7 transition-transform active:scale-[0.97]",
-						)}
-					>
-						<LogIn className="size-4" aria-hidden />
-						Sign in
-					</Link>
+					<SignOutButton redirectUrl={ROUTES.signIn}>
+						<Button
+							type="button"
+							size="lg"
+							className="h-11 rounded-full px-7 transition-transform active:scale-[0.97]"
+						>
+							<LogOut className="size-4" aria-hidden />
+							Sign out
+						</Button>
+					</SignOutButton>
 					<Button
 						type="button"
 						variant="outline"
 						size="lg"
-						className="h-11 rounded-full px-7 transition-transform active:scale-[0.97]"
+						className={cn(
+							"h-11 rounded-full px-7 transition-transform active:scale-[0.97]",
+						)}
 						onClick={() => window.history.back()}
 					>
 						Go back

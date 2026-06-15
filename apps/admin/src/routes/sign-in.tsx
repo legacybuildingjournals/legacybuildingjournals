@@ -1,10 +1,11 @@
 import { useAuth } from "@clerk/react";
 import { PageLoader } from "@legacy-building/ui/components/page-loader";
-import { useCurrentUser } from "@legacy-building/ui/hooks/use-current-user";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { ShieldCheck } from "lucide-react";
 
+import { AdminForbidden } from "@/components/admin-forbidden";
 import { AdminSignInForm } from "@/components/auth/sign-in-form";
+import { useAdminAccess } from "@/hooks/use-admin-access";
 import { adminPageClass } from "@/lib/admin-theme";
 import { ADMIN_APP_BRAND } from "@/lib/nav";
 import { ROUTES } from "@/lib/routes";
@@ -15,10 +16,18 @@ export const Route = createFileRoute("/sign-in")({
 
 function SignInPage() {
 	const { isLoaded } = useAuth();
-	const { isSignedIn, isLoading } = useCurrentUser();
+	const { isSignedIn, isLoading, isAdmin } = useAdminAccess();
 
-	if (!isLoading && isSignedIn) {
+	if (isLoading) {
+		return <PageLoader message="Checking session…" />;
+	}
+
+	if (isSignedIn && isAdmin) {
 		return <Navigate to={ROUTES.dashboard} replace />;
+	}
+
+	if (isSignedIn && !isAdmin) {
+		return <AdminForbidden />;
 	}
 
 	return (
