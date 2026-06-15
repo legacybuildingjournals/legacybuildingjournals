@@ -47,12 +47,14 @@ export function AccountEmailSection({
 		api.user.actions.assertEmailAvailableForChange,
 	);
 	const syncCustomerEmail = useAction(api.stripe.actions.syncCustomerEmail);
-	const createEmailAddress = useReverification((email: string) =>
-		user!.createEmailAddress({ email }),
-	);
-	const updatePrimaryEmail = useReverification((emailAddressId: string) =>
-		user!.update({ primaryEmailAddressId: emailAddressId }),
-	);
+	const createEmailAddress = useReverification((email: string) => {
+		if (!user) throw new Error("User is not available.");
+		return user.createEmailAddress({ email });
+	});
+	const updatePrimaryEmail = useReverification((emailAddressId: string) => {
+		if (!user) throw new Error("User is not available.");
+		return user.update({ primaryEmailAddressId: emailAddressId });
+	});
 
 	const [editing, setEditing] = useState(false);
 	const [phase, setPhase] = useState<"form" | "verify">("form");

@@ -66,8 +66,6 @@ export function useNativeSubscription() {
 		provider = subscription.provider ?? "stripe";
 	}
 
-	const isActive = plan !== "free";
-
 	// For IAP subscriptions, cancellation/renewal info comes from RevenueCat.
 	// For Stripe, it comes from the Convex subscription doc.
 	const cancelAtPeriodEnd = isPro

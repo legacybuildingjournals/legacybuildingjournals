@@ -20,7 +20,6 @@ import {
 	ViewInvoicesModal,
 } from "@/components/billing/ViewInvoicesModal";
 import {
-	BILLING_MANAGE_BG,
 	BILLING_PLAN_ACTION_COPY,
 	MANAGE_PLAN_FEATURES,
 } from "@/lib/billing/billingContent";
@@ -442,7 +441,7 @@ export function BillingActivePage({ showWelcome }: BillingActivePageProps) {
 									billingCardPaddingClass,
 								)}
 							>
-								<div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+								<div className="mb-4 flex items-center justify-between gap-3">
 									<h3 className="font-semibold text-foreground text-lg">
 										Payment Methods
 									</h3>
@@ -450,14 +449,14 @@ export function BillingActivePage({ showWelcome }: BillingActivePageProps) {
 										type="button"
 										onClick={() => void openPortal()}
 										disabled={portalPending}
-										className={billingTextLinkClass}
+										className={cn(billingTextLinkClass, "shrink-0")}
 									>
 										Add Method
 									</button>
 								</div>
 								{paymentMethod ? (
-									<div className="flex flex-col gap-3 rounded-xl border border-border bg-muted px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-										<div>
+									<div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted px-4 py-3">
+										<div className="min-w-0">
 											<p className="font-medium text-foreground text-sm">
 												{formatCardBrand(paymentMethod.brand)} ••••{" "}
 												{paymentMethod.last4}
@@ -471,7 +470,7 @@ export function BillingActivePage({ showWelcome }: BillingActivePageProps) {
 											type="button"
 											onClick={() => void openPortal()}
 											disabled={portalPending}
-											className={billingTextLinkClass}
+											className={cn(billingTextLinkClass, "shrink-0")}
 										>
 											Edit
 										</button>

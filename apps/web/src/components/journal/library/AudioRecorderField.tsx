@@ -9,10 +9,10 @@ const VISUALIZER_BAR_IDS = Array.from(
 );
 
 function formatDurationSeconds(totalSeconds: number): string {
-	const seconds = Math.max(0, totalSeconds);
+	const seconds = Math.max(0, Math.floor(totalSeconds));
+	if (!Number.isFinite(seconds)) return "0:00";
 	const mins = Math.floor(seconds / 60);
 	const secs = seconds % 60;
-	if (mins === 0) return String(secs);
 	return `${mins}:${String(secs).padStart(2, "0")}`;
 }
 
@@ -20,6 +20,10 @@ type AudioRecorderFieldProps = {
 	accentColor: string;
 	value: File | null;
 	onChange: (file: File | null) => void;
+	/** Saved recording URL when editing an entry that already has audio. */
+	existingAudioUrl?: string | null;
+	/** Called when the user removes the saved recording so they can record again. */
+	onExistingAudioClear?: () => void;
 	invalid?: boolean;
 };
 
@@ -28,6 +32,8 @@ export function AudioRecorderField({
 	accentColor,
 	value,
 	onChange,
+	existingAudioUrl,
+	onExistingAudioClear,
 	invalid,
 }: AudioRecorderFieldProps) {
 	const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -39,18 +45,23 @@ export function AudioRecorderField({
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const shouldSaveOnStopRef = useRef(true);
 	const previewAudioRef = useRef<HTMLAudioElement | null>(null);
-	const previewUrlRef = useRef<string | null>(null);
+	const previewObjectUrlRef = useRef<string | null>(null);
 
 	const [sessionActive, setSessionActive] = useState(false);
 	const [paused, setPaused] = useState(false);
 	const [previewPlaying, setPreviewPlaying] = useState(false);
+	const [previewSrc, setPreviewSrc] = useState<string | null>(null);
+	const [previewDuration, setPreviewDuration] = useState(0);
+	const [previewCurrentTime, setPreviewCurrentTime] = useState(0);
 	const [duration, setDuration] = useState(0);
 	const [bars, setBars] = useState<number[]>(() =>
 		Array.from({ length: 40 }, () => 6),
 	);
 
 	const isRecording = sessionActive && !paused;
-	const hasCompletedRecording = value !== null && !sessionActive;
+	const hasExistingAudio = Boolean(existingAudioUrl) && value === null;
+	const hasCompletedRecording =
+		(value !== null || hasExistingAudio) && !sessionActive;
 
 	const stopVisualizer = useCallback(() => {
 		if (rafRef.current !== null) {
@@ -73,6 +84,13 @@ export function AudioRecorderField({
 	const stopPreview = useCallback(() => {
 		previewAudioRef.current?.pause();
 		setPreviewPlaying(false);
+	}, []);
+
+	const revokePreviewObjectUrl = useCallback(() => {
+		if (previewObjectUrlRef.current) {
+			URL.revokeObjectURL(previewObjectUrlRef.current);
+			previewObjectUrlRef.current = null;
+		}
 	}, []);
 
 	const resetSession = useCallback(() => {
@@ -194,35 +212,27 @@ export function AudioRecorderField({
 			setDuration(0);
 			return;
 		}
-		onChange(null);
-		setDuration(0);
+		if (value) {
+			onChange(null);
+			setDuration(0);
+			return;
+		}
+		if (existingAudioUrl) {
+			onExistingAudioClear?.();
+			setDuration(0);
+		}
 	};
 
 	const togglePreview = () => {
-		if (!value) return;
+		const audio = previewAudioRef.current;
+		if (!audio || !previewSrc) return;
 		if (previewPlaying) {
-			stopPreview();
+			audio.pause();
 			return;
 		}
-
-		if (previewUrlRef.current) {
-			URL.revokeObjectURL(previewUrlRef.current);
-			previewUrlRef.current = null;
-		}
-		previewAudioRef.current?.pause();
-		previewAudioRef.current = null;
-
-		const url = URL.createObjectURL(value);
-		previewUrlRef.current = url;
-		const audio = new Audio(url);
-		previewAudioRef.current = audio;
-		audio.onended = () => setPreviewPlaying(false);
-		void audio
-			.play()
-			.then(() => setPreviewPlaying(true))
-			.catch(() => {
-				setPreviewPlaying(false);
-			});
+		void audio.play().catch(() => {
+			setPreviewPlaying(false);
+		});
 	};
 
 	const handleMainButton = () => {
@@ -238,7 +248,7 @@ export function AudioRecorderField({
 			resumeRecording();
 			return;
 		}
-		if (!sessionActive && !value) {
+		if (!sessionActive && !value && !existingAudioUrl) {
 			void startRecording();
 		}
 	};
@@ -251,46 +261,112 @@ export function AudioRecorderField({
 		return () => clearInterval(interval);
 	}, [isRecording]);
 
+	// Resolve a local blob URL for saved or newly recorded audio so duration + playback work.
 	useEffect(() => {
-		if (!value || sessionActive) return;
-		const url = URL.createObjectURL(value);
-		const audio = new Audio(url);
-		const onLoaded = () => {
-			if (Number.isFinite(audio.duration)) {
-				setDuration(Math.max(1, Math.round(audio.duration)));
+		let cancelled = false;
+
+		const applyPreviewSrc = (nextSrc: string | null) => {
+			if (!cancelled) {
+				setPreviewSrc(nextSrc);
+				setPreviewCurrentTime(0);
+				setPreviewDuration(0);
+				setPreviewPlaying(false);
 			}
-			URL.revokeObjectURL(url);
 		};
-		audio.addEventListener("loadedmetadata", onLoaded);
-		audio.load();
+
+		stopPreview();
+		revokePreviewObjectUrl();
+
+		if (value) {
+			const url = URL.createObjectURL(value);
+			previewObjectUrlRef.current = url;
+			applyPreviewSrc(url);
+			return () => {
+				cancelled = true;
+				revokePreviewObjectUrl();
+				applyPreviewSrc(null);
+			};
+		}
+
+		if (!existingAudioUrl) {
+			applyPreviewSrc(null);
+			return () => {
+				cancelled = true;
+			};
+		}
+
+		applyPreviewSrc(existingAudioUrl);
+
+		void fetch(existingAudioUrl)
+			.then((res) => {
+				if (!res.ok) throw new Error("fetch failed");
+				return res.blob();
+			})
+			.then((blob) => {
+				if (cancelled) return;
+				revokePreviewObjectUrl();
+				const url = URL.createObjectURL(blob);
+				previewObjectUrlRef.current = url;
+				applyPreviewSrc(url);
+			})
+			.catch(() => {
+				// Keep direct URL fallback for playback.
+			});
+
 		return () => {
-			audio.removeEventListener("loadedmetadata", onLoaded);
-			URL.revokeObjectURL(url);
+			cancelled = true;
+			revokePreviewObjectUrl();
+			applyPreviewSrc(null);
 		};
-	}, [value, sessionActive]);
+	}, [value, existingAudioUrl, revokePreviewObjectUrl, stopPreview]);
 
 	useEffect(() => {
-		stopPreview();
-		if (previewUrlRef.current) {
-			URL.revokeObjectURL(previewUrlRef.current);
-			previewUrlRef.current = null;
-		}
-		previewAudioRef.current = null;
-	}, [value, stopPreview]);
+		const audio = previewAudioRef.current;
+		if (!audio || !previewSrc) return;
+
+		const onPlay = () => setPreviewPlaying(true);
+		const onPause = () => setPreviewPlaying(false);
+		const onEnded = () => {
+			setPreviewPlaying(false);
+			setPreviewCurrentTime(0);
+		};
+		const onTimeUpdate = () => setPreviewCurrentTime(audio.currentTime);
+		const syncDuration = () => {
+			if (Number.isFinite(audio.duration) && audio.duration > 0) {
+				setPreviewDuration(audio.duration);
+			}
+		};
+
+		audio.addEventListener("play", onPlay);
+		audio.addEventListener("pause", onPause);
+		audio.addEventListener("ended", onEnded);
+		audio.addEventListener("timeupdate", onTimeUpdate);
+		audio.addEventListener("loadedmetadata", syncDuration);
+		audio.addEventListener("durationchange", syncDuration);
+
+		syncDuration();
+
+		return () => {
+			audio.removeEventListener("play", onPlay);
+			audio.removeEventListener("pause", onPause);
+			audio.removeEventListener("ended", onEnded);
+			audio.removeEventListener("timeupdate", onTimeUpdate);
+			audio.removeEventListener("loadedmetadata", syncDuration);
+			audio.removeEventListener("durationchange", syncDuration);
+		};
+	}, [previewSrc]);
 
 	useEffect(() => {
 		return () => {
 			stopPreview();
-			if (previewUrlRef.current) {
-				URL.revokeObjectURL(previewUrlRef.current);
-			}
+			revokePreviewObjectUrl();
 			if (mediaRecorderRef.current?.state === "recording") {
 				shouldSaveOnStopRef.current = false;
 				mediaRecorderRef.current.stop();
 			}
 			stopStream();
 		};
-	}, [stopPreview, stopStream]);
+	}, [stopPreview, stopStream, revokePreviewObjectUrl]);
 
 	const mainButtonLabel = (() => {
 		if (hasCompletedRecording) {
@@ -302,14 +378,38 @@ export function AudioRecorderField({
 	})();
 
 	const showMainAsActive = isRecording || (sessionActive && paused);
-	const displaySeconds = formatDurationSeconds(
-		sessionActive || value
-			? Math.max(duration, sessionActive && !value ? 0 : 1)
-			: 0,
-	);
+	const completedDuration = previewDuration > 0 ? previewDuration : 0;
+	const displaySeconds = (() => {
+		if (sessionActive) {
+			return formatDurationSeconds(duration);
+		}
+		if (hasCompletedRecording) {
+			if (previewPlaying || previewCurrentTime > 0) {
+				return `${formatDurationSeconds(previewCurrentTime)} / ${formatDurationSeconds(completedDuration)}`;
+			}
+			return formatDurationSeconds(completedDuration);
+		}
+		return formatDurationSeconds(0);
+	})();
+	const playbackProgress =
+		hasCompletedRecording && completedDuration > 0
+			? previewCurrentTime / completedDuration
+			: 0;
 
 	return (
 		<div className="flex w-full flex-row flex-wrap items-center gap-3">
+			{previewSrc ? (
+				<audio
+					key={previewSrc}
+					ref={previewAudioRef}
+					src={previewSrc}
+					preload="metadata"
+					className="hidden"
+				>
+					<track kind="captions" />
+				</audio>
+			) : null}
+
 			<button
 				type="button"
 				onClick={handleMainButton}
@@ -348,13 +448,24 @@ export function AudioRecorderField({
 					aria-hidden
 				/>
 				<div className="absolute inset-0 flex items-end justify-around px-2 pb-1.5">
-					{VISUALIZER_BAR_IDS.map((barId, i) => (
-						<div
-							key={barId}
-							className="w-[5px] rounded-sm bg-[#c7c7c7]"
-							style={{ height: bars[i] ?? 6 }}
-						/>
-					))}
+					{VISUALIZER_BAR_IDS.map((barId, i) => {
+						const barProgress = (i + 1) / VISUALIZER_BAR_IDS.length;
+						const played =
+							hasCompletedRecording && barProgress <= playbackProgress;
+						return (
+							<div
+								key={barId}
+								className="w-[5px] rounded-sm transition-colors duration-150"
+								style={{
+									height: bars[i] ?? 6,
+									backgroundColor: played
+										? accentColor || brand.alert
+										: "#c7c7c7",
+									opacity: played && previewPlaying ? 1 : played ? 0.85 : 0.55,
+								}}
+							/>
+						);
+					})}
 				</div>
 			</div>
 

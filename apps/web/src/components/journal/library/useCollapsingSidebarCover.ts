@@ -23,11 +23,13 @@ export function useCollapsingSidebarCover(
 		setCoverHeight(collapsingCoverHeight(el.scrollTop));
 	}, [scrollRef]);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: reset when sidebar content identity changes
 	useEffect(() => {
 		setCoverHeight(SIDEBAR_COVER_EXPANDED_PX);
 		scrollRef.current?.scrollTo({ top: 0 });
 	}, [resetKey, scrollRef]);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: rebind scroll listener when sidebar content identity changes
 	useEffect(() => {
 		const el = scrollRef.current;
 		if (!el) return;

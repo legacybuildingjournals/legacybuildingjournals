@@ -306,6 +306,7 @@ export function CheckoutPaymentForm({ amountLabel }: CheckoutPaymentFormProps) {
 							wallets: {
 								applePay: "never",
 								googlePay: "never",
+								link: "never",
 							},
 							fields: {
 								billingDetails: {

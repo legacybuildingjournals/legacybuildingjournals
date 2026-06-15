@@ -1,5 +1,3 @@
-import { cn } from "@legacy-building/ui/lib/utils";
-
 /** Shared outer padding for billing management pages (active, compare, checkout). */
 export const billingPageShellClass =
 	"mt-20 flex flex-1 flex-col px-3 py-6 sm:px-4 sm:py-8 md:px-10 md:py-10";
