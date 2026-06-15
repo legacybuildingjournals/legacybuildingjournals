@@ -74,6 +74,25 @@ export const fieldEntryLogClass = bubbleTextareaClass;
 /** Uploaded / preview images scale to fit inside their container without cropping. */
 export const uploadedImageFitClass = "max-h-full max-w-full object-contain";
 
+/** Bubble PictureInput tile (265×200px). */
+export const bubblePictureInputClass =
+	"relative h-[200px] w-[265px] max-w-full self-start overflow-hidden rounded-[12px] border bg-white";
+
+/** Bubble journal cover PictureInput tile (150×150px square). */
+export const journalCoverPictureInputClass =
+	"relative size-[150px] max-w-full self-start overflow-hidden rounded-[12px] border bg-white";
+
+/** Invisible file input overlaying a Bubble PictureInput container. */
+export const bubbleFileInputOverlayClass =
+	"absolute top-0 left-0 z-[15] h-full w-full cursor-pointer opacity-0 text-[0px]";
+
+/** Sidebar sticky cover: fill the frame edge-to-edge without letterboxing. */
+export const sidebarCoverImageClass = "size-full object-cover";
+
+/** Sidebar sticky cover frame (no padding). */
+export const sidebarCoverFrameClass =
+	"relative sticky top-0 z-[2] w-full shrink-0 overflow-hidden bg-white";
+
 /** Centered frame for journal entry and cover images. */
 export const journalImageFrameClass =
 	"flex items-center justify-center overflow-hidden";

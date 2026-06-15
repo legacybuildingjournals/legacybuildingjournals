@@ -12,7 +12,7 @@ import { DateField } from "@/components/journal/library/DateField";
 import {
 	fieldInputClass,
 	fieldLabelClass,
-	uploadedImageFitClass,
+	sidebarCoverImageClass,
 } from "@/components/journal/library/libraryFormStyles";
 import { SidebarEditActions } from "@/components/journal/library/SidebarEditActions";
 import { Button } from "@/components/journal/ui/button";
@@ -158,7 +158,7 @@ export function EditJournalSidebarForm({
 					type="button"
 					onClick={() => fileRef.current?.click()}
 					className={cn(
-						"relative flex min-h-[140px] w-full cursor-pointer items-center justify-center overflow-hidden bg-white",
+						"relative flex min-h-[140px] w-full cursor-pointer overflow-hidden bg-white",
 						showErrors && imageInvalid
 							? "ring-2 ring-[#b0200c] ring-inset"
 							: "",
@@ -168,7 +168,7 @@ export function EditJournalSidebarForm({
 						<img
 							src={coverPreview}
 							alt="Cover preview"
-							className={cn(uploadedImageFitClass, "max-h-[140px]")}
+							className={sidebarCoverImageClass}
 						/>
 					) : null}
 					<span

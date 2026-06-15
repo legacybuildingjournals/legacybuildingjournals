@@ -4,12 +4,15 @@ import { Button } from "@/components/journal/ui/button";
 import { Input } from "@/components/journal/ui/input";
 import { MyStoryDocument } from "@/components/my-story-pdf/MyStoryDocument";
 import type { MyStoryEntry } from "@/components/my-story-pdf/types";
+import { getImageDimensionsFromDataUrl } from "@/lib/journal/getImageDimensions";
 
 const emptyEntry = (): MyStoryEntry => ({
 	heading: "",
 	date: "",
 	body: "",
 	imageBase64: "",
+	imageWidth: undefined,
+	imageHeight: undefined,
 });
 
 function entryListKey(entry: MyStoryEntry) {
@@ -46,14 +49,25 @@ export function MyStoryPdfApp() {
 		(event: React.ChangeEvent<HTMLInputElement>) => {
 			const file = event.target.files?.[0];
 			if (!file) {
-				setCurrentEntry((prev) => ({ ...prev, imageBase64: "" }));
+				setCurrentEntry((prev) => ({
+					...prev,
+					imageBase64: "",
+					imageWidth: undefined,
+					imageHeight: undefined,
+				}));
 				return;
 			}
 			const reader = new FileReader();
-			reader.onload = () => {
+			reader.onload = async () => {
+				const dataUrl = typeof reader.result === "string" ? reader.result : "";
+				const dimensions = dataUrl
+					? await getImageDimensionsFromDataUrl(dataUrl)
+					: null;
 				setCurrentEntry((prev) => ({
 					...prev,
-					imageBase64: typeof reader.result === "string" ? reader.result : "",
+					imageBase64: dataUrl,
+					imageWidth: dimensions?.width,
+					imageHeight: dimensions?.height,
 				}));
 			};
 			reader.readAsDataURL(file);
@@ -72,6 +86,8 @@ export function MyStoryPdfApp() {
 				date: currentEntry.date.trim(),
 				body: currentEntry.body.trim(),
 				imageBase64: currentEntry.imageBase64 || undefined,
+				imageWidth: currentEntry.imageWidth,
+				imageHeight: currentEntry.imageHeight,
 			},
 		]);
 		setCurrentEntry(emptyEntry());

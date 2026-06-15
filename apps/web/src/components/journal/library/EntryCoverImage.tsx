@@ -41,13 +41,7 @@ export function EntryCoverImage({
 
 	if (!src || loadError) {
 		return (
-			<div
-				className={cn(
-					"min-h-[120px] w-full max-w-[280px] bg-[#f2f2f2]",
-					className,
-				)}
-				aria-hidden
-			/>
+			<div className={cn("size-full bg-[#f2f2f2]", className)} aria-hidden />
 		);
 	}
 

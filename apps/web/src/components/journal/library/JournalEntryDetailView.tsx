@@ -9,7 +9,10 @@ import { DeleteEntryDialog } from "@/components/journal/library/DeleteEntryDialo
 import { EditJournalEntrySidebarForm } from "@/components/journal/library/EditJournalEntrySidebarForm";
 import { EntryAudioPlayer } from "@/components/journal/library/EntryAudioPlayer";
 import { EntryCoverImage } from "@/components/journal/library/EntryCoverImage";
-import { uploadedImageFitClass } from "@/components/journal/library/libraryFormStyles";
+import {
+	sidebarCoverFrameClass,
+	sidebarCoverImageClass,
+} from "@/components/journal/library/libraryFormStyles";
 import { useCollapsingSidebarCover } from "@/components/journal/library/useCollapsingSidebarCover";
 import { Button } from "@/components/journal/ui/button";
 import { formatDate } from "@/lib/journal/formatDate";
@@ -143,13 +146,13 @@ export function JournalEntryDetailView({
 					style={{ backgroundColor: brand.libraryMint }}
 				>
 					<div
-						className="relative sticky top-0 z-[2] flex w-full shrink-0 items-center justify-center overflow-hidden bg-white p-3"
+						className={sidebarCoverFrameClass}
 						style={{ height: coverHeight }}
 					>
 						<EntryCoverImage
 							imageId={enriched.imageId}
 							imageUrl={enriched.imageUrl}
-							className={cn(uploadedImageFitClass, "max-h-full max-w-full")}
+							className={sidebarCoverImageClass}
 						/>
 						<SidebarIconButton
 							ariaLabel="Back to entries"

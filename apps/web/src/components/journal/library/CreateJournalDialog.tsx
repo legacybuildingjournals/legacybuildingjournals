@@ -2,11 +2,11 @@ import { api } from "@legacy-building/backend/convex/_generated/api";
 import { brand } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
 import { useMutation } from "convex/react";
-import { Camera, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { DateField } from "@/components/journal/library/DateField";
+import { JournalCoverImageUpload } from "@/components/journal/library/JournalCoverImageUpload";
 import { JournalTypePicker } from "@/components/journal/library/JournalTypePicker";
-import { uploadedImageFitClass } from "@/components/journal/library/libraryFormStyles";
 import { Button } from "@/components/journal/ui/button";
 import { Dialog, DialogTitle } from "@/components/journal/ui/dialog";
 import { DialogContentWithOverlay } from "@/components/journal/ui/dialog-content-with-overlay";
@@ -253,47 +253,14 @@ export function CreateJournalDialog({
 						/>
 					</div>
 
-					<div className="flex w-full flex-col gap-1">
+					<div className="flex flex-col items-start gap-1 self-start">
 						<span className={fieldLabelClass}>Upload image</span>
-						<div className="relative w-full">
-							<button
-								type="button"
-								onClick={() => fileRef.current?.click()}
-								className={cn(
-									"relative flex w-full cursor-pointer items-center justify-center",
-									"overflow-hidden rounded-xl border bg-white",
-									"h-[150px]",
-									imageShowError ? "border-[#b0200c]" : "border-[#c7c7c7]",
-								)}
-								aria-invalid={imageShowError}
-							>
-								{coverPreview ? (
-									<img
-										src={coverPreview}
-										alt="Cover preview"
-										className={cn(uploadedImageFitClass, "max-h-[150px]")}
-									/>
-								) : null}
-							</button>
-							<button
-								type="button"
-								onClick={() => fileRef.current?.click()}
-								className="pointer-events-none absolute top-1/2 left-1/2 flex size-[30px] -translate-x-1/2 -translate-y-1/2 items-center justify-center"
-								style={{ color: brand.primary }}
-								tabIndex={-1}
-								aria-hidden
-							>
-								<Camera className="size-5" strokeWidth={2} />
-							</button>
-							<input
-								ref={fileRef}
-								type="file"
-								accept="image/*"
-								className="sr-only"
-								onChange={handleCoverChange}
-								aria-label="Upload cover image"
-							/>
-						</div>
+						<JournalCoverImageUpload
+							imagePreview={coverPreview}
+							invalid={imageShowError}
+							onFileChange={handleCoverChange}
+							inputRef={fileRef}
+						/>
 					</div>
 
 					{showErrors && !isValid ? (

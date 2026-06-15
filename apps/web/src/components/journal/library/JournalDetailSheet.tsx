@@ -2,7 +2,7 @@ import { api } from "@legacy-building/backend/convex/_generated/api";
 import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
 import { brand } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
-import { useAction, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { Pencil, Share, Trash2, X } from "lucide-react";
 import {
 	type ReactNode,
@@ -20,6 +20,10 @@ import { JournalEntryDetailView } from "@/components/journal/library/JournalEntr
 import { JournalEntryRow } from "@/components/journal/library/JournalEntryRow";
 import { JournalExportFooter } from "@/components/journal/library/JournalExportFooter";
 import { JournalSidebarWaitOverlay } from "@/components/journal/library/JournalSidebarWaitOverlay";
+import {
+	sidebarCoverFrameClass,
+	sidebarCoverImageClass,
+} from "@/components/journal/library/libraryFormStyles";
 import { useCollapsingSidebarCover } from "@/components/journal/library/useCollapsingSidebarCover";
 import { Button } from "@/components/journal/ui/button";
 import { Checkbox } from "@/components/journal/ui/checkbox";
@@ -27,7 +31,10 @@ import {
 	MIN_BOOK_ORDER_ENTRIES,
 	minimumBookOrderMessage,
 } from "@/lib/journal/bookOrder";
-import { exportJournalEntriesToPdf } from "@/lib/journal/exportJournalPdf";
+import {
+	buildJournalPdfBlob,
+	exportJournalEntriesToPdf,
+} from "@/lib/journal/exportJournalPdf";
 import { formatDate } from "@/lib/journal/formatDate";
 import type { EnrichedJournalEntry } from "@/lib/journal/journalEntryTypes";
 import {
@@ -35,6 +42,7 @@ import {
 	toastMutationError,
 	toastMutationSuccess,
 } from "@/lib/journal/toast";
+import { uploadToStorage } from "@/lib/journal/uploadToStorage";
 
 type JournalDetailSheetProps = {
 	journalId: Id<"journals"> | null;
@@ -90,6 +98,9 @@ export function JournalDetailSheet({
 	const [exportError, setExportError] = useState<string | null>(null);
 	const createBookOrderCheckout = useAction(
 		api.journal.actions.createBookOrderCheckout,
+	);
+	const generateUploadUrl = useMutation(
+		api.journal.mutations.generateUploadUrl,
 	);
 	const [mounted, setMounted] = useState(false);
 
@@ -265,10 +276,27 @@ export function JournalDetailSheet({
 		}
 		checkoutWindow.opener = null;
 		try {
+			const pdfBlob = await buildJournalPdfBlob({
+				journal: {
+					title: journal.title,
+					dateMs: journal.dateMs,
+					type: journal.type,
+					dedication: journal.dedication,
+					coverImageUrl: journal.coverImageUrl,
+				},
+				includeJournal: allExportableSelected,
+				entries: selectedEntries,
+			});
+			const pdfStorageId = await uploadToStorage(
+				pdfBlob,
+				() => generateUploadUrl(),
+				"application/pdf",
+			);
 			const { checkoutUrl } = await createBookOrderCheckout({
 				journalId,
 				entryIds: selectedEntries.map((entry) => entry._id),
 				includeJournal: allExportableSelected,
+				pdfStorageId,
 			});
 			checkoutWindow.location.replace(checkoutUrl);
 			setOrdering(false);
@@ -287,6 +315,7 @@ export function JournalDetailSheet({
 		selectedEntryIds,
 		allExportableSelected,
 		createBookOrderCheckout,
+		generateUploadUrl,
 	]);
 
 	useEffect(() => {
@@ -371,20 +400,18 @@ export function JournalDetailSheet({
 											className="library-modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
 										>
 											<div
-												className="relative sticky top-0 z-[2] flex w-full shrink-0 items-center justify-center overflow-hidden bg-white p-3"
+												className={sidebarCoverFrameClass}
 												style={{ height: coverHeight }}
 											>
-												<div className="relative flex size-full items-center justify-center">
-													{isLoading ? (
-														<div className="size-full animate-pulse bg-[#f2f2f2]" />
-													) : loadedJournal ? (
-														<JournalCoverImage
-															coverImageId={loadedJournal.coverImageId}
-															coverImageUrl={loadedJournal.coverImageUrl}
-															className="max-h-full max-w-full"
-														/>
-													) : null}
-												</div>
+												{isLoading ? (
+													<div className="size-full animate-pulse bg-[#f2f2f2]" />
+												) : loadedJournal ? (
+													<JournalCoverImage
+														coverImageId={loadedJournal.coverImageId}
+														coverImageUrl={loadedJournal.coverImageUrl}
+														className={sidebarCoverImageClass}
+													/>
+												) : null}
 												<SidebarIconButton
 													ariaLabel="Close journal"
 													onClick={handleClose}
