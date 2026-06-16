@@ -84,23 +84,31 @@ export function WelcomePage({
 						</div>
 					</div>
 
-					{videoCompleted ? (
-						<Button
-							type="button"
-							onClick={onHomepage}
-							disabled={loading}
-							className={cn(
-								"min-h-11 min-w-[200px] rounded-full px-20 font-bold text-sm leading-none shadow-[2px_2px_4px_0px_rgb(170,170,170)]",
-								"fade-in animate-in duration-300 hover:opacity-95 disabled:opacity-70",
-							)}
-							style={{
-								backgroundColor: brand.white,
-								color: brand.primary,
-							}}
-						>
-							{loading ? "Loading…" : "Homepage"}
-						</Button>
-					) : null}
+					<Button
+						type="button"
+						onClick={onHomepage}
+						disabled={!videoCompleted || loading}
+						className={cn(
+							"min-h-11 min-w-[200px] rounded-full px-20 font-bold text-sm leading-none shadow-[2px_2px_4px_0px_rgb(170,170,170)]",
+							videoCompleted
+								? "fade-in animate-in duration-300 hover:opacity-95 disabled:opacity-70"
+								: "cursor-not-allowed bg-[#9ca3af] text-white opacity-100 hover:opacity-100",
+						)}
+						style={
+							videoCompleted
+								? {
+										backgroundColor: brand.white,
+										color: brand.primary,
+									}
+								: undefined
+						}
+					>
+						{loading
+							? "Loading…"
+							: videoCompleted
+								? "Homepage"
+								: "Watch video to continue"}
+					</Button>
 				</div>
 			</div>
 		</main>

@@ -45,7 +45,7 @@ function RootComponent() {
 		<>
 			<HeadContent />
 			<ThemeProvider
-				defaultTheme="system"
+				defaultTheme="light"
 				forcedTheme={isAuthRoute ? "light" : undefined}
 				storageKey="admin-ui-theme"
 			>
