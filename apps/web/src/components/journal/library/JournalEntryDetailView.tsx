@@ -4,11 +4,16 @@ import { brand } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
 import { useQuery } from "convex/react";
 import { ChevronLeft, Pencil, Trash2 } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { DeleteEntryDialog } from "@/components/journal/library/DeleteEntryDialog";
 import { EditJournalEntrySidebarForm } from "@/components/journal/library/EditJournalEntrySidebarForm";
 import { EntryAudioPlayer } from "@/components/journal/library/EntryAudioPlayer";
 import { EntryCoverImage } from "@/components/journal/library/EntryCoverImage";
+import {
+	sidebarCoverFrameClass,
+	sidebarCoverImageClass,
+} from "@/components/journal/library/libraryFormStyles";
+import { useCollapsingSidebarCover } from "@/components/journal/library/useCollapsingSidebarCover";
 import { Button } from "@/components/journal/ui/button";
 import { formatDate } from "@/lib/journal/formatDate";
 import {
@@ -57,6 +62,8 @@ export function JournalEntryDetailView({
 }: JournalEntryDetailViewProps) {
 	const [deleteOpen, setDeleteOpen] = useState(false);
 	const [editing, setEditing] = useState(false);
+	const scrollRef = useRef<HTMLDivElement>(null);
+	const coverHeight = useCollapsingSidebarCover(scrollRef, entryId);
 
 	const entry = useQuery(api.journal.entries.queries.getById, { id: entryId });
 
@@ -133,95 +140,101 @@ export function JournalEntryDetailView({
 				className="flex min-h-0 flex-1 flex-col overflow-hidden"
 				style={{ backgroundColor: brand.libraryMint }}
 			>
-				<div className="relative min-h-[200px] shrink-0 bg-white">
-					<EntryCoverImage
-						imageId={enriched.imageId}
-						imageUrl={enriched.imageUrl}
-						className="absolute inset-0 size-full object-contain p-3"
-					/>
-					<SidebarIconButton
-						ariaLabel="Back to entries"
-						onClick={onBack}
-						className="absolute top-2.5 left-2.5"
-					>
-						<ChevronLeft
-							className="size-5"
-							style={{ color: accent }}
-							strokeWidth={2}
-						/>
-					</SidebarIconButton>
-				</div>
-
 				<div
-					className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain p-5"
+					ref={scrollRef}
+					className="library-modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
 					style={{ backgroundColor: brand.libraryMint }}
 				>
-					<div className="flex items-start justify-between gap-2">
-						<h3 className="min-w-0 flex-1 font-semibold text-[#1a1a1a] text-base leading-[1.4]">
-							{enriched.title}
-						</h3>
-						<div className="flex shrink-0">
-							<SidebarIconButton
-								ariaLabel="Edit entry"
-								onClick={() => setEditing(true)}
-								className="bg-transparent"
-							>
-								<Pencil
-									className="size-5"
-									style={{ color: accent }}
-									strokeWidth={2}
-								/>
-							</SidebarIconButton>
-							<SidebarIconButton
-								ariaLabel="Delete entry"
-								onClick={() => setDeleteOpen(true)}
-								className="bg-transparent"
-							>
-								<Trash2
-									className="size-5"
-									style={{ color: brand.destructive }}
-									strokeWidth={2}
-								/>
-							</SidebarIconButton>
-						</div>
+					<div
+						className={sidebarCoverFrameClass}
+						style={{ height: coverHeight }}
+					>
+						<EntryCoverImage
+							imageId={enriched.imageId}
+							imageUrl={enriched.imageUrl}
+							className={sidebarCoverImageClass}
+						/>
+						<SidebarIconButton
+							ariaLabel="Back to entries"
+							onClick={onBack}
+							className="absolute top-2.5 left-2.5 bg-white"
+						>
+							<ChevronLeft
+								className="size-5"
+								style={{ color: accent }}
+								strokeWidth={2}
+							/>
+						</SidebarIconButton>
 					</div>
 
-					<p
-						className="font-normal text-sm leading-none"
-						style={{ color: brand.sidebarDateMuted }}
-					>
-						{formatDate(enriched.dateMs)}
-					</p>
+					<div className="flex flex-col gap-2 p-5">
+						<div className="flex items-start justify-between gap-2">
+							<h3 className="min-w-0 flex-1 font-semibold text-[#1a1a1a] text-base leading-[1.4]">
+								{enriched.title}
+							</h3>
+							<div className="flex shrink-0">
+								<SidebarIconButton
+									ariaLabel="Edit entry"
+									onClick={() => setEditing(true)}
+									className="bg-transparent"
+								>
+									<Pencil
+										className="size-5"
+										style={{ color: accent }}
+										strokeWidth={2}
+									/>
+								</SidebarIconButton>
+								<SidebarIconButton
+									ariaLabel="Delete entry"
+									onClick={() => setDeleteOpen(true)}
+									className="bg-transparent"
+								>
+									<Trash2
+										className="size-5"
+										style={{ color: brand.destructive }}
+										strokeWidth={2}
+									/>
+								</SidebarIconButton>
+							</div>
+						</div>
 
-					{isRecording && enriched.audioUrl ? (
-						<EntryAudioPlayer
-							src={enriched.audioUrl}
-							accentColor={accent}
-							className="py-1"
-						/>
-					) : null}
+						<p
+							className="font-normal text-sm leading-none"
+							style={{ color: brand.sidebarDateMuted }}
+						>
+							{formatDate(enriched.dateMs)}
+						</p>
 
-					<div className="min-h-[200px] flex-1 overflow-y-auto pt-2">
-						{enriched.mode === "writing" && enriched.body ? (
-							<p className="whitespace-pre-wrap font-normal text-[#1a1a1a] text-sm leading-[1.4]">
-								{enriched.body}
-							</p>
-						) : enriched.mode === "writing" ? (
-							<p className="text-[#8a8a8a] text-sm">No entry text</p>
+						{isRecording && enriched.audioUrl ? (
+							<EntryAudioPlayer
+								src={enriched.audioUrl}
+								accentColor={accent}
+								className="py-1"
+							/>
+						) : null}
+
+						<div className="pt-2">
+							{enriched.mode === "writing" && enriched.body ? (
+								<p className="whitespace-pre-wrap font-normal text-[#1a1a1a] text-sm leading-[1.4]">
+									{enriched.body}
+								</p>
+							) : enriched.mode === "writing" ? (
+								<p className="text-[#8a8a8a] text-sm">No entry text</p>
+							) : null}
+						</div>
+
+						{isRecording && enriched.audioUrl ? (
+							<Button
+								type="button"
+								variant="link"
+								onClick={() => void handleDownloadAudio()}
+								className="h-auto self-start p-0 font-medium text-sm underline-offset-2"
+								style={{ color: accent }}
+							>
+								Download audio
+							</Button>
 						) : null}
 					</div>
-
-					{isRecording && enriched.audioUrl ? (
-						<Button
-							type="button"
-							variant="link"
-							onClick={() => void handleDownloadAudio()}
-							className="h-auto self-start p-0 font-medium text-sm underline-offset-2"
-							style={{ color: accent }}
-						>
-							Download audio
-						</Button>
-					) : null}
 				</div>
 			</div>
 

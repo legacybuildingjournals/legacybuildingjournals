@@ -40,6 +40,7 @@ import type * as stripe_products_mutations from "../stripe/products/mutations.js
 import type * as stripe_products_queries from "../stripe/products/queries.js";
 import type * as stripe_queries from "../stripe/queries.js";
 import type * as subscriptions_helpers from "../subscriptions/helpers.js";
+import type * as subscriptions_mutations from "../subscriptions/mutations.js";
 import type * as subscriptions_queries from "../subscriptions/queries.js";
 import type * as user_actionHelpers from "../user/actionHelpers.js";
 import type * as user_actions from "../user/actions.js";
@@ -86,6 +87,7 @@ declare const fullApi: ApiFromModules<{
   "stripe/products/queries": typeof stripe_products_queries;
   "stripe/queries": typeof stripe_queries;
   "subscriptions/helpers": typeof subscriptions_helpers;
+  "subscriptions/mutations": typeof subscriptions_mutations;
   "subscriptions/queries": typeof subscriptions_queries;
   "user/actionHelpers": typeof user_actionHelpers;
   "user/actions": typeof user_actions;

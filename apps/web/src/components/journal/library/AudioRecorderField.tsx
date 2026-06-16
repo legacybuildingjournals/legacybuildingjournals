@@ -1,6 +1,6 @@
 import { brand } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
-import { Pause, Play } from "lucide-react";
+import { Pause, Play, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const VISUALIZER_BAR_IDS = Array.from(
@@ -8,10 +8,22 @@ const VISUALIZER_BAR_IDS = Array.from(
 	(_, n) => `recorder-bar-${n}`,
 );
 
+function formatDurationSeconds(totalSeconds: number): string {
+	const seconds = Math.max(0, Math.floor(totalSeconds));
+	if (!Number.isFinite(seconds)) return "0:00";
+	const mins = Math.floor(seconds / 60);
+	const secs = seconds % 60;
+	return `${mins}:${String(secs).padStart(2, "0")}`;
+}
+
 type AudioRecorderFieldProps = {
 	accentColor: string;
 	value: File | null;
 	onChange: (file: File | null) => void;
+	/** Saved recording URL when editing an entry that already has audio. */
+	existingAudioUrl?: string | null;
+	/** Called when the user removes the saved recording so they can record again. */
+	onExistingAudioClear?: () => void;
 	invalid?: boolean;
 };
 
@@ -20,6 +32,8 @@ export function AudioRecorderField({
 	accentColor,
 	value,
 	onChange,
+	existingAudioUrl,
+	onExistingAudioClear,
 	invalid,
 }: AudioRecorderFieldProps) {
 	const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -29,12 +43,25 @@ export function AudioRecorderField({
 	const analyserRef = useRef<AnalyserNode | null>(null);
 	const rafRef = useRef<number | null>(null);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const shouldSaveOnStopRef = useRef(true);
+	const previewAudioRef = useRef<HTMLAudioElement | null>(null);
+	const previewObjectUrlRef = useRef<string | null>(null);
 
-	const [recording, setRecording] = useState(false);
+	const [sessionActive, setSessionActive] = useState(false);
+	const [paused, setPaused] = useState(false);
+	const [previewPlaying, setPreviewPlaying] = useState(false);
+	const [previewSrc, setPreviewSrc] = useState<string | null>(null);
+	const [previewDuration, setPreviewDuration] = useState(0);
+	const [previewCurrentTime, setPreviewCurrentTime] = useState(0);
 	const [duration, setDuration] = useState(0);
 	const [bars, setBars] = useState<number[]>(() =>
 		Array.from({ length: 40 }, () => 6),
 	);
+
+	const isRecording = sessionActive && !paused;
+	const hasExistingAudio = Boolean(existingAudioUrl) && value === null;
+	const hasCompletedRecording =
+		(value !== null || hasExistingAudio) && !sessionActive;
 
 	const stopVisualizer = useCallback(() => {
 		if (rafRef.current !== null) {
@@ -53,6 +80,26 @@ export function AudioRecorderField({
 		audioContextRef.current = null;
 		analyserRef.current = null;
 	}, [stopVisualizer]);
+
+	const stopPreview = useCallback(() => {
+		previewAudioRef.current?.pause();
+		setPreviewPlaying(false);
+	}, []);
+
+	const revokePreviewObjectUrl = useCallback(() => {
+		if (previewObjectUrlRef.current) {
+			URL.revokeObjectURL(previewObjectUrlRef.current);
+			previewObjectUrlRef.current = null;
+		}
+	}, []);
+
+	const resetSession = useCallback(() => {
+		stopStream();
+		chunksRef.current = [];
+		mediaRecorderRef.current = null;
+		setSessionActive(false);
+		setPaused(false);
+	}, [stopStream]);
 
 	const drawVisualizer = useCallback(() => {
 		const analyser = analyserRef.current;
@@ -101,93 +148,286 @@ export function AudioRecorderField({
 
 			const recorder = new MediaRecorder(stream);
 			chunksRef.current = [];
+			shouldSaveOnStopRef.current = true;
 			recorder.ondataavailable = (e) => {
 				if (e.data.size > 0) chunksRef.current.push(e.data);
 			};
 			recorder.onstop = () => {
-				const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-				const file = new File([blob], `recording-${Date.now()}.webm`, {
-					type: blob.type || "audio/webm",
-				});
-				onChange(file);
-				stopStream();
-				setRecording(false);
+				if (shouldSaveOnStopRef.current && chunksRef.current.length > 0) {
+					const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+					const file = new File([blob], `recording-${Date.now()}.webm`, {
+						type: blob.type || "audio/webm",
+					});
+					onChange(file);
+				}
+				resetSession();
 			};
 			mediaRecorderRef.current = recorder;
 			recorder.start();
-			setRecording(true);
+			setSessionActive(true);
+			setPaused(false);
 			setDuration(0);
 			drawVisualizer();
 		} catch {
-			stopStream();
-			setRecording(false);
+			resetSession();
 		}
 	};
 
-	const stopRecording = () => {
-		mediaRecorderRef.current?.stop();
-		mediaRecorderRef.current = null;
+	const pauseRecording = () => {
+		const recorder = mediaRecorderRef.current;
+		if (recorder?.state === "recording") {
+			recorder.pause();
+			setPaused(true);
+			stopVisualizer();
+		}
 	};
 
-	const toggleRecording = () => {
-		if (recording) {
-			stopRecording();
-		} else {
+	const resumeRecording = () => {
+		const recorder = mediaRecorderRef.current;
+		if (recorder?.state === "paused") {
+			recorder.resume();
+			setPaused(false);
+			drawVisualizer();
+		}
+	};
+
+	const finalizeRecording = () => {
+		shouldSaveOnStopRef.current = true;
+		const recorder = mediaRecorderRef.current;
+		if (recorder && recorder.state !== "inactive") {
+			recorder.stop();
+		}
+	};
+
+	const deleteRecording = () => {
+		stopPreview();
+		if (sessionActive) {
+			shouldSaveOnStopRef.current = false;
+			const recorder = mediaRecorderRef.current;
+			if (recorder && recorder.state !== "inactive") {
+				recorder.stop();
+			} else {
+				resetSession();
+			}
+			setDuration(0);
+			return;
+		}
+		if (value) {
 			onChange(null);
+			setDuration(0);
+			return;
+		}
+		if (existingAudioUrl) {
+			onExistingAudioClear?.();
+			setDuration(0);
+		}
+	};
+
+	const togglePreview = () => {
+		const audio = previewAudioRef.current;
+		if (!audio || !previewSrc) return;
+		if (previewPlaying) {
+			audio.pause();
+			return;
+		}
+		void audio.play().catch(() => {
+			setPreviewPlaying(false);
+		});
+	};
+
+	const handleMainButton = () => {
+		if (hasCompletedRecording) {
+			togglePreview();
+			return;
+		}
+		if (isRecording) {
+			pauseRecording();
+			return;
+		}
+		if (sessionActive && paused) {
+			resumeRecording();
+			return;
+		}
+		if (!sessionActive && !value && !existingAudioUrl) {
 			void startRecording();
 		}
 	};
 
 	useEffect(() => {
-		if (!recording) return;
+		if (!isRecording) return;
 		const interval = window.setInterval(() => {
 			setDuration((d) => d + 1);
 		}, 1000);
 		return () => clearInterval(interval);
-	}, [recording]);
+	}, [isRecording]);
 
+	// Resolve a local blob URL for saved or newly recorded audio so duration + playback work.
 	useEffect(() => {
-		if (!value || recording) return;
-		const url = URL.createObjectURL(value);
-		const audio = new Audio(url);
-		const onLoaded = () => {
-			if (Number.isFinite(audio.duration)) {
-				setDuration(Math.max(1, Math.round(audio.duration)));
+		let cancelled = false;
+
+		const applyPreviewSrc = (nextSrc: string | null) => {
+			if (!cancelled) {
+				setPreviewSrc(nextSrc);
+				setPreviewCurrentTime(0);
+				setPreviewDuration(0);
+				setPreviewPlaying(false);
 			}
-			URL.revokeObjectURL(url);
 		};
-		audio.addEventListener("loadedmetadata", onLoaded);
-		audio.load();
+
+		stopPreview();
+		revokePreviewObjectUrl();
+
+		if (value) {
+			const url = URL.createObjectURL(value);
+			previewObjectUrlRef.current = url;
+			applyPreviewSrc(url);
+			return () => {
+				cancelled = true;
+				revokePreviewObjectUrl();
+				applyPreviewSrc(null);
+			};
+		}
+
+		if (!existingAudioUrl) {
+			applyPreviewSrc(null);
+			return () => {
+				cancelled = true;
+			};
+		}
+
+		applyPreviewSrc(existingAudioUrl);
+
+		void fetch(existingAudioUrl)
+			.then((res) => {
+				if (!res.ok) throw new Error("fetch failed");
+				return res.blob();
+			})
+			.then((blob) => {
+				if (cancelled) return;
+				revokePreviewObjectUrl();
+				const url = URL.createObjectURL(blob);
+				previewObjectUrlRef.current = url;
+				applyPreviewSrc(url);
+			})
+			.catch(() => {
+				// Keep direct URL fallback for playback.
+			});
+
 		return () => {
-			audio.removeEventListener("loadedmetadata", onLoaded);
-			URL.revokeObjectURL(url);
+			cancelled = true;
+			revokePreviewObjectUrl();
+			applyPreviewSrc(null);
 		};
-	}, [value, recording]);
+	}, [value, existingAudioUrl, revokePreviewObjectUrl, stopPreview]);
+
+	useEffect(() => {
+		const audio = previewAudioRef.current;
+		if (!audio || !previewSrc) return;
+
+		const onPlay = () => setPreviewPlaying(true);
+		const onPause = () => setPreviewPlaying(false);
+		const onEnded = () => {
+			setPreviewPlaying(false);
+			setPreviewCurrentTime(0);
+		};
+		const onTimeUpdate = () => setPreviewCurrentTime(audio.currentTime);
+		const syncDuration = () => {
+			if (Number.isFinite(audio.duration) && audio.duration > 0) {
+				setPreviewDuration(audio.duration);
+			}
+		};
+
+		audio.addEventListener("play", onPlay);
+		audio.addEventListener("pause", onPause);
+		audio.addEventListener("ended", onEnded);
+		audio.addEventListener("timeupdate", onTimeUpdate);
+		audio.addEventListener("loadedmetadata", syncDuration);
+		audio.addEventListener("durationchange", syncDuration);
+
+		syncDuration();
+
+		return () => {
+			audio.removeEventListener("play", onPlay);
+			audio.removeEventListener("pause", onPause);
+			audio.removeEventListener("ended", onEnded);
+			audio.removeEventListener("timeupdate", onTimeUpdate);
+			audio.removeEventListener("loadedmetadata", syncDuration);
+			audio.removeEventListener("durationchange", syncDuration);
+		};
+	}, [previewSrc]);
 
 	useEffect(() => {
 		return () => {
+			stopPreview();
+			revokePreviewObjectUrl();
 			if (mediaRecorderRef.current?.state === "recording") {
+				shouldSaveOnStopRef.current = false;
 				mediaRecorderRef.current.stop();
 			}
 			stopStream();
 		};
-	}, [stopStream]);
+	}, [stopPreview, stopStream, revokePreviewObjectUrl]);
 
-	const displaySeconds =
-		recording || value ? String(Math.max(duration, recording ? 0 : 1)) : "0";
+	const mainButtonLabel = (() => {
+		if (hasCompletedRecording) {
+			return previewPlaying ? "Pause playback" : "Play recording";
+		}
+		if (isRecording) return "Pause recording";
+		if (sessionActive && paused) return "Resume recording";
+		return "Start recording";
+	})();
+
+	const showMainAsActive = isRecording || (sessionActive && paused);
+	const completedDuration = previewDuration > 0 ? previewDuration : 0;
+	const displaySeconds = (() => {
+		if (sessionActive) {
+			return formatDurationSeconds(duration);
+		}
+		if (hasCompletedRecording) {
+			if (previewPlaying || previewCurrentTime > 0) {
+				return `${formatDurationSeconds(previewCurrentTime)} / ${formatDurationSeconds(completedDuration)}`;
+			}
+			return formatDurationSeconds(completedDuration);
+		}
+		return formatDurationSeconds(0);
+	})();
+	const playbackProgress =
+		hasCompletedRecording && completedDuration > 0
+			? previewCurrentTime / completedDuration
+			: 0;
 
 	return (
 		<div className="flex w-full flex-row flex-wrap items-center gap-3">
+			{previewSrc ? (
+				<audio
+					key={previewSrc}
+					ref={previewAudioRef}
+					src={previewSrc}
+					preload="metadata"
+					className="hidden"
+				>
+					<track kind="captions" />
+				</audio>
+			) : null}
+
 			<button
 				type="button"
-				onClick={toggleRecording}
+				onClick={handleMainButton}
 				className="flex size-10 shrink-0 items-center justify-center rounded p-1 hover:opacity-80"
 				style={{
-					color: recording ? brand.destructive : accentColor || brand.alert,
+					color: showMainAsActive
+						? brand.destructive
+						: accentColor || brand.alert,
 				}}
-				aria-label={recording ? "Stop recording" : "Start recording"}
+				aria-label={mainButtonLabel}
 			>
-				{recording ? (
+				{hasCompletedRecording ? (
+					previewPlaying ? (
+						<Pause className="size-8 fill-current" aria-hidden />
+					) : (
+						<Play className="size-8 fill-current" aria-hidden />
+					)
+				) : isRecording ? (
 					<Pause className="size-8 fill-current" aria-hidden />
 				) : (
 					<Play className="size-8 fill-current" aria-hidden />
@@ -208,19 +448,60 @@ export function AudioRecorderField({
 					aria-hidden
 				/>
 				<div className="absolute inset-0 flex items-end justify-around px-2 pb-1.5">
-					{VISUALIZER_BAR_IDS.map((barId, i) => (
-						<div
-							key={barId}
-							className="w-[5px] rounded-sm bg-[#c7c7c7]"
-							style={{ height: bars[i] ?? 6 }}
-						/>
-					))}
+					{VISUALIZER_BAR_IDS.map((barId, i) => {
+						const barProgress = (i + 1) / VISUALIZER_BAR_IDS.length;
+						const played =
+							hasCompletedRecording && barProgress <= playbackProgress;
+						return (
+							<div
+								key={barId}
+								className="w-[5px] rounded-sm transition-colors duration-150"
+								style={{
+									height: bars[i] ?? 6,
+									backgroundColor: played
+										? accentColor || brand.alert
+										: "#c7c7c7",
+									opacity: played && previewPlaying ? 1 : played ? 0.85 : 0.55,
+								}}
+							/>
+						);
+					})}
 				</div>
 			</div>
 
 			<span className="shrink-0 font-normal text-[#1a1a1a] text-sm tabular-nums leading-[1.4]">
 				{displaySeconds}
 			</span>
+
+			{sessionActive ? (
+				<div className="flex shrink-0 items-center gap-1">
+					<button
+						type="button"
+						onClick={finalizeRecording}
+						className="rounded-lg px-3 py-1.5 font-semibold text-sm hover:opacity-80"
+						style={{ color: accentColor || brand.alert }}
+					>
+						Done
+					</button>
+					<button
+						type="button"
+						onClick={deleteRecording}
+						className="flex size-9 items-center justify-center rounded-lg text-[#525252] hover:bg-[#f5f5f5] hover:text-[#b0200c]"
+						aria-label="Delete recording"
+					>
+						<Trash2 className="size-4" aria-hidden />
+					</button>
+				</div>
+			) : hasCompletedRecording ? (
+				<button
+					type="button"
+					onClick={deleteRecording}
+					className="flex size-9 shrink-0 items-center justify-center rounded-lg text-[#525252] hover:bg-[#f5f5f5] hover:text-[#b0200c]"
+					aria-label="Delete recording"
+				>
+					<Trash2 className="size-4" aria-hidden />
+				</button>
+			) : null}
 		</div>
 	);
 }

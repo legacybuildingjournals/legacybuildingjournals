@@ -2,7 +2,10 @@ import { brand } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
 import { Camera } from "lucide-react";
 import { useRef } from "react";
-import { uploadedImageFitClass } from "@/components/journal/library/libraryFormStyles";
+import {
+	sidebarCoverImageClass,
+	uploadedImageFitClass,
+} from "@/components/journal/library/libraryFormStyles";
 
 type EntryImageUploadProps = {
 	accentColor: string;
@@ -36,8 +39,9 @@ export function EntryImageUpload({
 				type="button"
 				onClick={() => imageRef.current?.click()}
 				className={cn(
-					"relative flex h-[200px] max-w-full cursor-pointer items-center justify-center overflow-hidden rounded-[12px] border bg-white p-3",
+					"relative flex h-[200px] max-w-full cursor-pointer overflow-hidden rounded-[12px] border bg-white",
 					fullWidth ? "w-full" : "w-[265px]",
+					imagePreview && fullWidth ? "" : "items-center justify-center p-3",
 					invalid ? "border-[#b0200c]" : "border-[#c7c7c7]",
 				)}
 				aria-label="Upload image"
@@ -48,7 +52,9 @@ export function EntryImageUpload({
 						src={imagePreview}
 						alt="Entry preview"
 						decoding="async"
-						className={cn("absolute inset-0", uploadedImageFitClass)}
+						className={
+							fullWidth ? sidebarCoverImageClass : uploadedImageFitClass
+						}
 					/>
 				) : (
 					<Camera

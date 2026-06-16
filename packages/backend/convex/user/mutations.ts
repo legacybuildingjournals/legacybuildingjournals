@@ -342,6 +342,15 @@ async function deleteAllDataForClerkUser(
 		await ctx.db.delete(entry._id);
 	}
 
+	// Remove any synced native (Apple/Google) subscription records.
+	const subscriptions = await ctx.db
+		.query("subscriptions")
+		.withIndex("by_userId", (q) => q.eq("userId", clerkId))
+		.collect();
+	for (const subscription of subscriptions) {
+		await ctx.db.delete(subscription._id);
+	}
+
 	const user = await ctx.db
 		.query("users")
 		.withIndex("by_clerk_id", (q) => q.eq("clerkId", clerkId))

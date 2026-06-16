@@ -1,5 +1,4 @@
-import { assets } from "@legacy-building/ui/lib/brand-journal";
-import { Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 
 import type { JournalStoryType } from "@/lib/journal/journalTypes";
 
@@ -53,11 +52,6 @@ const styles = StyleSheet.create({
 		letterSpacing: 1,
 		marginBottom: 24,
 	},
-	coverLogo: {
-		width: 110,
-		height: 50,
-		objectFit: "contain",
-	},
 });
 
 type CoverPageProps = {
@@ -83,7 +77,6 @@ export function CoverPage({
 				{journalName.trim() ? (
 					<Text style={styles.journalName}>{journalName.trim()}</Text>
 				) : null}
-				<Image src={assets.digLogo} style={styles.coverLogo} />
 			</View>
 		</Page>
 	);

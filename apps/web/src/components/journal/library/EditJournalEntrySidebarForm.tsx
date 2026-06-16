@@ -94,6 +94,7 @@ export function EditJournalEntrySidebarForm({
 		entry.imageUrl ?? null,
 	);
 	const [audioFile, setAudioFile] = useState<File | null>(null);
+	const [existingAudioCleared, setExistingAudioCleared] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [showErrors, setShowErrors] = useState(false);
@@ -106,6 +107,7 @@ export function EditJournalEntrySidebarForm({
 		setImageFile(null);
 		setImagePreview(entry.imageUrl ?? null);
 		setAudioFile(null);
+		setExistingAudioCleared(false);
 		setError(null);
 		setShowErrors(false);
 	}, [entry.title, entry.dateMs, entry.body, entry.journalId, entry.imageUrl]);
@@ -113,7 +115,8 @@ export function EditJournalEntrySidebarForm({
 	const titleInvalid = !title.trim();
 	const dateInvalid = Number.isNaN(date.getTime());
 	const bodyInvalid = !isRecording && !body.trim();
-	const audioInvalid = isRecording && audioFile === null && !entry.audioUrl;
+	const hasExistingAudio = Boolean(entry.audioUrl) && !existingAudioCleared;
+	const audioInvalid = isRecording && audioFile === null && !hasExistingAudio;
 	const imageInvalid = imageFile === null && !imagePreview;
 	const journalInvalid = selectedJournalId === null;
 
@@ -170,7 +173,7 @@ export function EditJournalEntrySidebarForm({
 			URL.revokeObjectURL(url);
 			return;
 		}
-		if (isRecording && entry.audioUrl) {
+		if (isRecording && hasExistingAudio && entry.audioUrl) {
 			void fetch(entry.audioUrl)
 				.then((res) => res.blob())
 				.then((blob) => {
@@ -306,6 +309,8 @@ export function EditJournalEntrySidebarForm({
 							accentColor={accent}
 							value={audioFile}
 							onChange={setAudioFile}
+							existingAudioUrl={hasExistingAudio ? entry.audioUrl : null}
+							onExistingAudioClear={() => setExistingAudioCleared(true)}
 							invalid={showErrors && audioInvalid}
 						/>
 					</div>

@@ -2,6 +2,7 @@ import { api } from "@legacy-building/backend/convex/_generated/api";
 import { Button } from "@legacy-building/ui/components/button";
 import { PageLoader } from "@legacy-building/ui/components/page-loader";
 import { brand } from "@legacy-building/ui/lib/brand-journal";
+import { cn } from "@legacy-building/ui/lib/utils";
 import { CheckoutElementsProvider } from "@stripe/react-stripe-js/checkout";
 import { loadStripe } from "@stripe/stripe-js";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -9,10 +10,15 @@ import { useAction, useConvex, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-
+import {
+	billingPageShellClass,
+	billingPageSubtitleClass,
+	billingPageTitleClass,
+} from "@/components/billing/billingLayoutStyles";
 import { CheckoutOrderSummary } from "@/components/billing/CheckoutOrderSummary";
 import { CheckoutPaymentForm } from "@/components/billing/CheckoutPaymentForm";
 import type { BillingPlanChoice } from "@/lib/billing/billingContent";
+import { BILLING_SUBSCRIBE_COPY } from "@/lib/billing/billingContent";
 import type { CheckoutFlow } from "@/lib/billing/checkoutSearch";
 import { formatAmount } from "@/lib/billing/plans";
 import { ROUTES } from "@/lib/routes";
@@ -195,7 +201,7 @@ export function CheckoutPage({ plan: initialPlan, flow }: CheckoutPageProps) {
 			if (!activeProduct) return "Complete payment";
 			return `Pay ${formatAmount(activeProduct.amountCents, activeProduct.currency)}`;
 		}
-		if (plan === "trial") return "Start my free 7-day trial";
+		if (plan === "trial") return BILLING_SUBSCRIBE_COPY.startTrialCta;
 		if (!activeProduct) return "Complete payment";
 		return `Pay ${formatAmount(activeProduct.amountCents, activeProduct.currency)}`;
 	})();
@@ -237,8 +243,8 @@ export function CheckoutPage({ plan: initialPlan, flow }: CheckoutPageProps) {
 	if (!publishableKey) {
 		return (
 			<div className="relative flex min-h-svh w-full flex-col bg-secondary">
-				<div className="mt-20 flex flex-1 flex-col items-center justify-center px-4 py-16">
-					<div className="mx-auto flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+				<div className={billingPageShellClass}>
+					<div className="mx-auto flex w-full max-w-md flex-col items-center gap-4 rounded-2xl border border-border bg-card p-6 text-center shadow-sm sm:p-8">
 						<h1 className="font-semibold text-foreground text-xl">
 							Billing unavailable
 						</h1>
@@ -276,23 +282,23 @@ export function CheckoutPage({ plan: initialPlan, flow }: CheckoutPageProps) {
 
 	return (
 		<div className="relative flex min-h-svh w-full flex-col bg-secondary">
-			<div className="mt-20 flex flex-1 flex-col px-4 py-8 sm:px-6 md:px-10">
-				<div className="mx-auto flex w-full max-w-[1040px] flex-col gap-8">
-					<header className="flex flex-col gap-2">
+			<div className={billingPageShellClass}>
+				<div className="mx-auto flex w-full max-w-[1040px] flex-col gap-6 sm:gap-8">
+					<header className="flex min-w-0 flex-col gap-2">
 						<Link to={backHref} className={checkoutBackLinkClass}>
 							{backLabel}
 						</Link>
-						<h1 className="font-semibold text-3xl text-foreground">
+						<h1 className={cn(billingPageTitleClass, "text-foreground")}>
 							{isUpgrade ? "Upgrade checkout" : "Checkout"}
 						</h1>
-						<p className="text-muted-foreground text-sm">
+						<p className={billingPageSubtitleClass}>
 							{isUpgrade
 								? "Confirm your new plan and complete payment."
 								: "Securely complete your subscription to Legacy Building."}
 						</p>
 					</header>
 
-					<div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+					<div className="grid gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
 						<CheckoutOrderSummary
 							plan={plan}
 							onPlanChange={handlePlanChange}
@@ -302,7 +308,7 @@ export function CheckoutPage({ plan: initialPlan, flow }: CheckoutPageProps) {
 						/>
 
 						{!checkoutReady ? (
-							<div className="flex min-h-[360px] flex-col justify-center gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+							<div className="flex min-h-[280px] flex-col justify-center gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm sm:min-h-[360px] sm:p-6 md:p-8">
 								<h2 className="font-semibold text-foreground text-xl">
 									Ready to continue?
 								</h2>
@@ -320,11 +326,11 @@ export function CheckoutPage({ plan: initialPlan, flow }: CheckoutPageProps) {
 								</Button>
 							</div>
 						) : initializing || !clientSecret || !stripePromise ? (
-							<div className="flex min-h-[360px] items-center justify-center rounded-2xl border border-border bg-card">
+							<div className="flex min-h-[280px] items-center justify-center rounded-2xl border border-border bg-card sm:min-h-[360px]">
 								<PageLoader overlay={false} />
 							</div>
 						) : (
-							<div className="rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+							<div className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6 md:p-8">
 								<CheckoutElementsProvider
 									key={clientSecret}
 									stripe={stripePromise}

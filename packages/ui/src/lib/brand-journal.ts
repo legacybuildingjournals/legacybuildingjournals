@@ -26,6 +26,7 @@ export const brand = {
 
 export const dashboardLayout = {
 	headerMinHeight: 80,
+	bottomNavHeight: 64,
 	contentMarginTop: 80,
 	contentPaddingX: 40,
 	contentPaddingY: 20,

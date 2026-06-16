@@ -1,4 +1,5 @@
 import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
 import { useCallback, useEffect, useState } from "react";
 import type { PurchasesPackage } from "react-native-purchases";
 
@@ -92,7 +93,6 @@ export function useBilling() {
 		const WEB_APP_ORIGIN =
 			process.env.EXPO_PUBLIC_WEB_APP_URL?.replace(/\/$/, "") ??
 			"http://localhost:3001";
-		const { default: WebBrowser } = await import("expo-web-browser");
 		await WebBrowser.openBrowserAsync(`${WEB_APP_ORIGIN}/dashboard/billing`);
 	}, []);
 

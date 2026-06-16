@@ -28,7 +28,7 @@ export const BILLING_FEATURES: {
 	{
 		icon: Mic,
 		title: "Voice recording",
-		description: "Capture moments in your own words",
+		description: "Capture moments in your own voice",
 	},
 	{
 		icon: Camera,
@@ -43,7 +43,7 @@ export const BILLING_FEATURES: {
 	{
 		icon: BookOpen,
 		title: "Turn entries into a printed book",
-		description: "Order a physical or hardcover journal",
+		description: "Order a physical softcover or hardcover journal",
 	},
 	{
 		icon: Cloud,
@@ -72,3 +72,25 @@ export function buildTrialSteps(monthlyPriceLabel: string) {
 		},
 	] as const;
 }
+
+/** User-facing plan change actions (Billing & Plans, Compare Plans). */
+export const BILLING_PLAN_ACTION_COPY = {
+	changePlan: "Change plan",
+	comparePlansTitle: "Change plan",
+	comparePlansSubtitle:
+		"Choose the plan that works best for you, then confirm your update.",
+	switchToAnnual: "Switch to annual",
+	switchToMonthly: "Switch to monthly",
+	scheduleSwitchToMonthly: "Schedule switch to monthly",
+	currentPlan: "Current plan",
+	continueToCheckout: "Continue to checkout",
+} as const;
+
+/** Subscribe / paywall marketing copy. */
+export const BILLING_SUBSCRIBE_COPY = {
+	/** Keeps the full trial phrase on one line in CTAs (use with whitespace-nowrap). */
+	startTrialCta: "Start my 7-day free trial",
+	trialStateLabel: "7-day free trial",
+	printedBooksNote:
+		"Printed books are ordered separately. Your subscription unlocks the feature to create and order them.",
+} as const;

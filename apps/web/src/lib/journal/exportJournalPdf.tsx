@@ -3,6 +3,7 @@ import { pdf } from "@react-pdf/renderer";
 import { MyStoryDocument } from "@/components/my-story-pdf/MyStoryDocument";
 import type { MyStoryEntry } from "@/components/my-story-pdf/types";
 import { formatPdfLongDate } from "@/lib/journal/formatDate";
+import { getImageDimensionsFromDataUrl } from "@/lib/journal/getImageDimensions";
 import type { EnrichedJournalEntry } from "@/lib/journal/journalEntryTypes";
 import type { JournalStoryType } from "@/lib/journal/journalTypes";
 
@@ -47,15 +48,55 @@ async function mapEntriesToMyStory(
 ): Promise<MyStoryEntry[]> {
 	const writingEntries = entries.filter((entry) => entry.mode === "writing");
 	return Promise.all(
-		writingEntries.map(async (entry) => ({
-			heading: entry.title?.trim() || "Untitled entry",
-			date: formatPdfLongDate(entry.dateMs),
-			body: entry.body?.trim() ?? "",
-			imageBase64: entry.imageUrl
-				? ((await fetchImageDataUrl(entry.imageUrl)) ?? undefined)
-				: undefined,
-		})),
+		writingEntries.map(async (entry) => {
+			let imageBase64: string | undefined;
+			let imageWidth: number | undefined;
+			let imageHeight: number | undefined;
+
+			if (entry.imageUrl) {
+				const dataUrl = await fetchImageDataUrl(entry.imageUrl);
+				if (dataUrl) {
+					imageBase64 = dataUrl;
+					const dimensions = await getImageDimensionsFromDataUrl(dataUrl);
+					imageWidth = dimensions?.width;
+					imageHeight = dimensions?.height;
+				}
+			}
+
+			return {
+				heading: entry.title?.trim() || "Untitled entry",
+				date: formatPdfLongDate(entry.dateMs),
+				body: entry.body?.trim() ?? "",
+				imageBase64,
+				imageWidth,
+				imageHeight,
+			};
+		}),
 	);
+}
+
+export async function buildJournalPdfBlob({
+	journal,
+	includeJournal,
+	entries,
+}: {
+	journal: JournalForPdfExport;
+	includeJournal: boolean;
+	entries: EnrichedJournalEntry[];
+}): Promise<Blob> {
+	const myStoryEntries = await mapEntriesToMyStory(entries);
+	const journalName = journal.title?.trim() || "Journal";
+
+	return pdf(
+		<MyStoryDocument
+			title="Story"
+			journalName={journalName}
+			dedication={journal.dedication}
+			entries={myStoryEntries}
+			includeCover={includeJournal}
+			storyType={journal.type}
+		/>,
+	).toBlob();
 }
 
 export async function exportJournalEntriesToPdf({
@@ -67,19 +108,8 @@ export async function exportJournalEntriesToPdf({
 	includeJournal: boolean;
 	entries: EnrichedJournalEntry[];
 }): Promise<void> {
-	const myStoryEntries = await mapEntriesToMyStory(entries);
+	const blob = await buildJournalPdfBlob({ journal, includeJournal, entries });
 	const journalName = journal.title?.trim() || "Journal";
-
-	const blob = await pdf(
-		<MyStoryDocument
-			title="Story"
-			journalName={journalName}
-			entries={myStoryEntries}
-			includeCover={includeJournal}
-			storyType={journal.type}
-		/>,
-	).toBlob();
-
 	const safeName = journalName.replace(/[^\w\s-]/g, "").trim() || "journal";
 	downloadPdfBlob(blob, `${safeName}_entries.pdf`);
 }

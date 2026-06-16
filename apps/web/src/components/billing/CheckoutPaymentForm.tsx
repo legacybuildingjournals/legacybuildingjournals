@@ -302,9 +302,11 @@ export function CheckoutPaymentForm({ amountLabel }: CheckoutPaymentFormProps) {
 					<PaymentElement
 						options={{
 							layout: "tabs",
+							paymentMethodOrder: ["card", "us_bank_account"],
 							wallets: {
 								applePay: "never",
 								googlePay: "never",
+								link: "never",
 							},
 							fields: {
 								billingDetails: {
@@ -324,8 +326,8 @@ export function CheckoutPaymentForm({ amountLabel }: CheckoutPaymentFormProps) {
 				type="submit"
 				disabled={paymentDisabled || !email.trim()}
 				className={cn(
-					"flex h-12 w-full items-center justify-center gap-2 rounded-xl font-semibold text-sm text-white",
-					"transition-colors hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60",
+					"flex h-12 w-full items-center justify-center gap-2 rounded-xl px-4 font-semibold text-sm text-white",
+					"whitespace-nowrap transition-colors hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60",
 				)}
 				style={{ backgroundColor: brand.primary }}
 			>

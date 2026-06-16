@@ -6,6 +6,7 @@ import { Check, Loader2 } from "lucide-react";
 import { useBillingCheckout } from "@/hooks/useBillingCheckout";
 import {
 	BILLING_FEATURES,
+	BILLING_SUBSCRIBE_COPY,
 	buildTrialSteps,
 } from "@/lib/billing/billingContent";
 import { formatAmount } from "@/lib/billing/plans";
@@ -60,7 +61,7 @@ function PlanCard({
 					{badge}
 				</span>
 			) : null}
-			<div className="flex items-start gap-3 pr-20">
+			<div className="flex items-start gap-3 pr-14 sm:pr-20">
 				<PlanRadio selected={selected} />
 				<div className="flex min-w-0 flex-1 flex-col gap-0.5">{children}</div>
 			</div>
@@ -106,31 +107,32 @@ export function BillingSubscribePanel() {
 
 	const ctaButtonClass = cn(
 		"flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-white font-semibold text-base text-gray-900",
+		"whitespace-nowrap px-4",
 		"transition-colors hover:bg-white/90",
 		"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50",
 	);
 
 	return (
-		<div className="flex w-full flex-col items-center gap-8">
-			<div className="flex flex-col items-center gap-6">
+		<div className="flex w-full min-w-0 flex-col items-center gap-6 sm:gap-8">
+			<div className="flex w-full min-w-0 flex-col items-center gap-4 sm:gap-6">
 				<img
 					src={assets.whiteLogo}
 					alt="Legacy Building"
 					width={256}
 					height={59}
-					className="h-10 w-auto object-contain sm:h-12"
+					className="h-9 w-auto max-w-[min(100%,200px)] object-contain sm:h-12"
 				/>
-				<div className="flex flex-col gap-2 text-center">
-					<h1 className="font-semibold text-[28px] text-white leading-tight tracking-tight sm:text-[34px]">
+				<div className="flex w-full min-w-0 flex-col gap-2 px-1 text-center">
+					<h1 className="font-semibold text-[clamp(1.375rem,5vw,2.125rem)] text-white leading-tight tracking-tight">
 						Unlock your full legacy experience
 					</h1>
-					<p className="text-[15px] text-white/85 sm:text-base">
+					<p className="text-[clamp(0.875rem,3.5vw,1rem)] text-white/85 leading-relaxed">
 						Start free today — write, record, and preserve your story
 					</p>
 				</div>
 			</div>
 
-			<div className="grid w-full gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10">
+			<div className="grid w-full min-w-0 gap-6 sm:gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-10">
 				<div className="flex flex-col gap-2.5">
 					{isLoading ? (
 						<>
@@ -150,7 +152,7 @@ export function BillingSubscribePanel() {
 									{trialDays} days free
 								</p>
 								<p className="text-white/70 text-xs leading-relaxed">
-									Then {monthlyPrice}/mo — cancel anytime before day {trialDays}
+									Then {monthlyPrice}/mo, cancel anytime before day {trialDays}
 								</p>
 							</PlanCard>
 
@@ -220,23 +222,23 @@ export function BillingSubscribePanel() {
 				</div>
 			</div>
 
-			<div className="w-full rounded-2xl bg-white/10 px-5 py-6 sm:px-8 sm:py-8">
-				<p className="mb-6 text-center font-medium text-[11px] text-white/70 uppercase tracking-[0.14em]">
+			<div className="w-full min-w-0 rounded-2xl bg-white/10 px-3 py-5 sm:px-5 sm:py-6 md:px-8 md:py-8">
+				<p className="mb-5 text-center font-medium text-[11px] text-white/70 uppercase tracking-[0.14em] sm:mb-6">
 					How your trial works
 				</p>
-				<div className="relative flex items-start justify-between gap-2">
+				<div className="relative flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
 					<div
-						className="absolute top-[11px] right-[10%] left-[10%] h-px bg-white/30"
+						className="absolute top-[11px] right-[10%] left-[10%] hidden h-px bg-white/30 sm:block"
 						aria-hidden
 					/>
 					{trialSteps.map((step) => (
 						<div
 							key={step.label}
-							className="relative z-10 flex flex-1 flex-col items-center gap-1.5 text-center"
+							className="relative z-10 flex flex-1 gap-3 sm:flex-col sm:items-center sm:gap-1.5 sm:text-center"
 						>
 							<span
 								className={cn(
-									"flex size-6 items-center justify-center rounded-full border-2",
+									"flex size-6 shrink-0 items-center justify-center rounded-full border-2",
 									step.done
 										? "border-white bg-white text-[#008080]"
 										: "border-white/50 bg-transparent",
@@ -246,32 +248,31 @@ export function BillingSubscribePanel() {
 									<Check className="size-3.5" strokeWidth={3} aria-hidden />
 								) : null}
 							</span>
-							<span className="font-semibold text-white text-xs">
-								{step.label}
-							</span>
-							<span className="max-w-[130px] text-[11px] text-white/70 leading-snug sm:text-xs">
-								{step.description}
-								{"subdescription" in step && step.subdescription ? (
-									<>
-										<br />
-										{step.subdescription}
-									</>
-								) : null}
-							</span>
+							<div className="flex min-w-0 flex-col gap-0.5 pt-0.5 sm:items-center">
+								<span className="font-semibold text-white text-xs">
+									{step.label}
+								</span>
+								<span className="text-[11px] text-white/70 leading-snug sm:max-w-[130px] sm:text-xs">
+									{step.description}
+									{"subdescription" in step && step.subdescription ? (
+										<>
+											<br />
+											{step.subdescription}
+										</>
+									) : null}
+								</span>
+							</div>
 						</div>
 					))}
 				</div>
-				<div className="mt-6 flex flex-col gap-3 text-center text-[11px] text-white/70 leading-relaxed sm:text-xs">
+				<div className="mt-5 flex flex-col gap-3 text-center text-[11px] text-white/70 leading-relaxed sm:mt-6 sm:text-xs">
 					<p>
 						Free for {trialDays} days, then {monthlyPrice}/month. Payment will
 						be charged to your account at the end of the free trial. Your
 						subscription automatically renews unless cancelled at least 24 hours
 						before the end of the trial or current period.
 					</p>
-					<p>
-						Printed books are ordered separately, starting from $10. Your
-						subscription unlocks the feature to create and order them.
-					</p>
+					<p>{BILLING_SUBSCRIBE_COPY.printedBooksNote}</p>
 				</div>
 			</div>
 

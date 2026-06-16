@@ -7,6 +7,7 @@ import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 import { SuspendedGuard } from "@/components/account/SuspendedGuard";
 import { JournalPaywallProvider } from "@/components/billing/JournalPaywallProvider";
 import { DashboardUserGate } from "@/components/dashboard/DashboardUserGate";
+import { DashboardBottomNav } from "@/components/journal/dashboard/DashboardBottomNav";
 import { DashboardHeader } from "@/components/journal/dashboard/DashboardHeader";
 import { WelcomeGuard } from "@/components/welcome/WelcomeGuard";
 import { ROUTES } from "@/lib/routes";
@@ -23,9 +24,10 @@ function DashboardLayout() {
 					<SuspendedGuard>
 						<WelcomeGuard>
 							<JournalPaywallProvider>
-								<div className="relative flex min-h-svh w-full flex-col bg-white">
+								<div className="relative flex min-h-svh w-full flex-col bg-white pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
 									<DashboardHeader />
 									<Outlet />
+									<DashboardBottomNav />
 								</div>
 							</JournalPaywallProvider>
 						</WelcomeGuard>

@@ -1,12 +1,16 @@
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
+import { cn } from "@legacy-building/ui/lib/utils";
 import { useQuery } from "convex/react";
 import { useState } from "react";
+
+import { uploadedImageFitClass } from "@/components/journal/library/libraryFormStyles";
 
 type JournalCoverImageProps = {
 	coverImageId?: Id<"_storage">;
 	/** Resolved http(s) URL from list query or persisted at create time */
 	coverImageUrl?: string;
+	className?: string;
 };
 
 function isHttpUrl(url: string | undefined): url is string {
@@ -16,6 +20,7 @@ function isHttpUrl(url: string | undefined): url is string {
 export function JournalCoverImage({
 	coverImageId,
 	coverImageUrl,
+	className,
 }: JournalCoverImageProps) {
 	const [failedSrc, setFailedSrc] = useState<string | null>(null);
 	const [refreshFromStorage, setRefreshFromStorage] = useState(false);
@@ -49,7 +54,7 @@ export function JournalCoverImage({
 			alt=""
 			loading="lazy"
 			decoding="async"
-			className="absolute inset-0 size-full object-contain p-3"
+			className={cn(uploadedImageFitClass, className)}
 			onError={() => {
 				if (!refreshFromStorage && coverImageId && hasCachedUrl) {
 					setRefreshFromStorage(true);

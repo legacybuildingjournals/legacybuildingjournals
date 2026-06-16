@@ -55,6 +55,38 @@ export const isAdminByEmail = query({
 	},
 });
 
+/** Authenticated admin check: Clerk id first, then JWT email fallback. */
+export const isCurrentUserAdmin = query({
+	args: {},
+	handler: async (ctx) => {
+		const identity = await ctx.auth.getUserIdentity();
+		if (!identity) {
+			return false;
+		}
+
+		const user = await ctx.db
+			.query("users")
+			.withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+			.unique();
+
+		if (user) {
+			return user.role === "admin";
+		}
+
+		const email = identity.email?.trim().toLowerCase();
+		if (!email) {
+			return false;
+		}
+
+		const byEmail = await ctx.db
+			.query("users")
+			.withIndex("by_email", (q) => q.eq("email", email))
+			.unique();
+
+		return byEmail?.role === "admin";
+	},
+});
+
 export const me = query({
 	args: {},
 	handler: async (ctx) => {

@@ -12,13 +12,6 @@ import { CreditCard, LogOut } from "lucide-react";
 
 import { ROUTES } from "@/lib/routes";
 
-const mobileNavLinks = [
-	{ id: "desk", label: "Desk", to: ROUTES.dashboardDesk },
-	{ id: "library", label: "Library", to: ROUTES.dashboardLibrary },
-	{ id: "account", label: "Account", to: ROUTES.dashboardAccount },
-	{ id: "billing", label: "Billing", to: ROUTES.dashboardBilling },
-] as const;
-
 type DashboardHeaderProfileMenuProps = {
 	avatarUrl: string;
 	mode: "mobile" | "desktop";
@@ -47,12 +40,10 @@ export function DashboardHeaderProfileMenu({
 	const mobileItemClass = cn(
 		"flex min-h-11 w-full min-w-[140px] cursor-pointer items-center px-4",
 		"font-medium text-[#1a1a1a] text-sm leading-[1.4] outline-none",
-		"border-[#c7c7c7] border-b bg-white",
+		"rounded-xl bg-white",
 		"hover:bg-[#f5f5f5] data-[highlighted]:bg-[#f5f5f5] data-[highlighted]:text-[#1a1a1a]",
 		"focus-visible:bg-[#f5f5f5] focus-visible:text-[#1a1a1a]",
 	);
-
-	const mobileLogoutClass = cn(mobileItemClass, "rounded-b-xl border-b-0");
 
 	return (
 		<DropdownMenu>
@@ -79,17 +70,8 @@ export function DashboardHeaderProfileMenu({
 					sideOffset={8}
 					className="z-[1605] min-w-[140px] overflow-hidden rounded-xl border border-[#c7c7c7] bg-white p-0 shadow-md ring-0"
 				>
-					{mobileNavLinks.map((item) => (
-						<MenuPrimitive.Item
-							key={item.id}
-							className={mobileItemClass}
-							onClick={() => void navigate({ to: item.to })}
-						>
-							{item.label}
-						</MenuPrimitive.Item>
-					))}
 					<MenuPrimitive.Item
-						className={mobileLogoutClass}
+						className={mobileItemClass}
 						onClick={handleSignOut}
 					>
 						Logout

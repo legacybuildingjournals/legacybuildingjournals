@@ -1,7 +1,7 @@
-import { useCurrentUser } from "@legacy-building/ui/hooks/use-current-user";
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 
 import Loader from "@/components/loader";
+import { useAdminAccess } from "@/hooks/use-admin-access";
 import { ROUTES } from "@/lib/routes";
 
 export const Route = createFileRoute("/")({
@@ -9,13 +9,13 @@ export const Route = createFileRoute("/")({
 });
 
 function IndexRedirect() {
-	const { isSignedIn, isLoading, role } = useCurrentUser();
+	const { isSignedIn, isLoading, isAdmin } = useAdminAccess();
 
 	if (isLoading) {
 		return <Loader />;
 	}
 
-	if (isSignedIn && role === "admin") {
+	if (isSignedIn && isAdmin) {
 		return <Navigate to={ROUTES.dashboard} replace />;
 	}
 

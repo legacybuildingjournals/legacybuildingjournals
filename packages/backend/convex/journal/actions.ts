@@ -22,6 +22,7 @@ export const createBookOrderCheckout = action({
 		journalId: v.id("journals"),
 		entryIds: v.array(v.id("journalEntries")),
 		includeJournal: v.boolean(),
+		pdfStorageId: v.optional(v.id("_storage")),
 	},
 	returns: v.object({ checkoutUrl: v.string() }),
 	handler: async (ctx, args): Promise<{ checkoutUrl: string }> => {
@@ -56,12 +57,20 @@ export const createBookOrderCheckout = action({
 
 		let pdfUrl: string;
 		try {
-			pdfUrl = await generateBookPdf({
-				templateId,
-				bookName,
-				dedicationLine,
-				journalEntries,
-			});
+			if (args.pdfStorageId) {
+				const uploadedPdfUrl = await ctx.storage.getUrl(args.pdfStorageId);
+				if (!uploadedPdfUrl) {
+					throw new Error("Uploaded book PDF is no longer available.");
+				}
+				pdfUrl = uploadedPdfUrl;
+			} else {
+				pdfUrl = await generateBookPdf({
+					templateId,
+					bookName,
+					dedicationLine,
+					journalEntries,
+				});
+			}
 		} catch (error) {
 			throw new ConvexError({
 				code: "PDF_GENERATION_FAILED",

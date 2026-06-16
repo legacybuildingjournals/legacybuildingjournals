@@ -221,12 +221,6 @@ export function UserDetailDialog({
 										</dd>
 									</div>
 									<div className="flex items-center justify-between gap-4">
-										<dt className="text-muted-foreground">Terms agreed</dt>
-										<dd className="font-medium text-popover-foreground">
-											{formatOnboardingDate(user.agreedToTermsAt)}
-										</dd>
-									</div>
-									<div className="flex items-center justify-between gap-4">
 										<dt className="text-muted-foreground">Journals</dt>
 										<dd className="font-medium text-popover-foreground">
 											{user.journalCount}

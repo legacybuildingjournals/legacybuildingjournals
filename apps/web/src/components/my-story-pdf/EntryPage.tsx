@@ -1,6 +1,7 @@
 import { Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 
 import type { MyStoryEntry } from "@/components/my-story-pdf/types";
+import { fitPdfImageSize } from "@/lib/journal/fitPdfImageSize";
 
 const TEAL = "#007A7A";
 
@@ -11,30 +12,14 @@ const styles = StyleSheet.create({
 		paddingBottom: 40,
 	},
 	headerBar: {
-		flexDirection: "row",
-		alignItems: "center",
 		backgroundColor: TEAL,
 		height: 32,
-		paddingHorizontal: 20,
 		marginHorizontal: -40,
 		marginTop: 0,
 		marginBottom: 24,
 	},
-	headerSpacer: {
-		flex: 1,
-	},
-	headerJournalName: {
-		color: "#ffffff",
-		fontSize: 11,
-		fontFamily: "Helvetica",
-	},
 	photoWrap: {
 		alignItems: "center",
-	},
-	photo: {
-		width: 260,
-		height: 200,
-		objectFit: "cover",
 	},
 	photoPlaceholder: {
 		width: 260,
@@ -65,26 +50,40 @@ const styles = StyleSheet.create({
 	},
 });
 
-type EntryPageProps = MyStoryEntry & {
-	journalName: string;
-};
+type EntryPageProps = MyStoryEntry;
 
 export function EntryPage({
 	heading,
 	date,
 	body,
 	imageBase64,
-	journalName,
+	imageWidth,
+	imageHeight,
 }: EntryPageProps) {
+	const photoSize =
+		imageWidth && imageHeight ? fitPdfImageSize(imageWidth, imageHeight) : null;
+
 	return (
 		<Page size="A4" style={styles.page}>
-			<View style={styles.headerBar}>
-				<View style={styles.headerSpacer} />
-				<Text style={styles.headerJournalName}>{journalName}</Text>
-			</View>
+			<View style={styles.headerBar} />
 			<View style={styles.photoWrap}>
 				{imageBase64 ? (
-					<Image src={imageBase64} style={styles.photo} />
+					<Image
+						src={imageBase64}
+						style={
+							photoSize
+								? {
+										width: photoSize.width,
+										height: photoSize.height,
+										objectFit: "contain",
+									}
+								: {
+										maxWidth: 515,
+										maxHeight: 360,
+										objectFit: "contain",
+									}
+						}
+					/>
 				) : (
 					<View style={styles.photoPlaceholder} />
 				)}

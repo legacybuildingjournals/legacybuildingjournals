@@ -4,7 +4,7 @@ import { createClerkClient } from "@clerk/backend";
 import { ConvexError, v } from "convex/values";
 import Stripe from "stripe";
 
-import { components, internal } from "../_generated/api";
+import { api, components, internal } from "../_generated/api";
 import type { ActionCtx } from "../_generated/server";
 import { action, internalAction } from "../_generated/server";
 import { tombstoneStripeComponentCustomer } from "../stripe/customerHelpers";
@@ -94,6 +94,25 @@ export const deleteMyAccount = action({
 		}
 
 		const clerkId = identity.subject;
+
+		// Block deletion while an Apple/Google subscription is active — those can
+		// ONLY be canceled in their store (Apple has no cancel API at all). If we
+		// deleted the account, the store would keep charging the user. Require them
+		// to cancel in the store first; once canceled, the RevenueCat webhook clears
+		// the row and deletion is allowed.
+		const entitlement = await ctx.runQuery(
+			api.subscriptions.queries.getEntitlement,
+			{},
+		);
+		if (entitlement.provider === "apple" || entitlement.provider === "google") {
+			const store =
+				entitlement.provider === "apple" ? "the App Store" : "Google Play";
+			throw new ConvexError({
+				code: "STORE_SUBSCRIPTION_ACTIVE",
+				provider: entitlement.provider,
+				message: `You have an active subscription through ${store}. Please cancel it in ${store} before deleting your account — we can't cancel store subscriptions for you.`,
+			});
+		}
 
 		// Cancel billing first while the user row still exists for lookups.
 		await cancelStripeBillingForClerkUser(ctx, clerkId);

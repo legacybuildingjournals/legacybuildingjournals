@@ -12,6 +12,7 @@ import {
 	isStripeResourceMissing,
 } from "./customerHelpers";
 import {
+	CHECKOUT_PAYMENT_METHOD_TYPES,
 	createProrationPaymentCheckoutSession,
 	createSubscriptionEmbeddedCheckoutSession,
 	subscriptionLatestInvoiceId,
@@ -58,6 +59,7 @@ async function createSubscriptionCheckoutUrl(
 		success_url: args.successUrl,
 		cancel_url: args.cancelUrl,
 		allow_promotion_codes: true,
+		payment_method_types: [...CHECKOUT_PAYMENT_METHOD_TYPES],
 		metadata: { userId: args.userId },
 		subscription_data: {
 			metadata: { userId: args.userId },

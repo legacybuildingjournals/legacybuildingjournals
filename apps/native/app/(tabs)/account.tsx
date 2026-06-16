@@ -88,6 +88,21 @@ export default function AccountScreen() {
 	const confirmDeleteAccount = () => {
 		if (busy) return;
 
+		// Apple/Google subscriptions can only be canceled in their store — block
+		// deletion until they do (the server enforces this too).
+		if (hasPaidAccess && (provider === "apple" || provider === "google")) {
+			const store = provider === "apple" ? "the App Store" : "Google Play";
+			Alert.alert(
+				"Cancel your subscription first",
+				`You have an active subscription through ${store}. To delete your account, cancel your subscription in ${store} first, then come back and try again.`,
+				[
+					{ text: "Not now", style: "cancel" },
+					{ text: `Open ${store}`, onPress: () => void manage(provider) },
+				],
+			);
+			return;
+		}
+
 		Alert.alert(
 			"Delete account?",
 			"Are you sure you want to permanently delete your account? All journals, entries, and uploaded media will be removed. This cannot be undone.",

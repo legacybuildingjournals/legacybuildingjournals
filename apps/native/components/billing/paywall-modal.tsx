@@ -39,6 +39,31 @@ function providerStoreLabel(provider: BillingProvider): string {
 	return "Stripe";
 }
 
+/**
+ * Convert a RevenueCat intro-offer period to a number of days. A "1 week" trial
+ * comes back as periodNumberOfUnits=1 + periodUnit="WEEK" — using the raw number
+ * would wrongly show "1 day".
+ */
+function introPeriodToDays(
+	intro:
+		| { periodUnit?: string | null; periodNumberOfUnits?: number | null }
+		| null
+		| undefined,
+): number | null {
+	const n = intro?.periodNumberOfUnits;
+	if (!n) return null;
+	switch (intro?.periodUnit) {
+		case "WEEK":
+			return n * 7;
+		case "MONTH":
+			return n * 30;
+		case "YEAR":
+			return n * 365;
+		default:
+			return n; // DAY (or unknown)
+	}
+}
+
 type PaywallModalProps = {
 	visible: boolean;
 	onClose: () => void;
@@ -110,7 +135,7 @@ export function PaywallModal({
 			: "$2.51";
 
 	const trialDays =
-		billing.monthlyPkg?.product.introPrice?.periodNumberOfUnits ??
+		introPeriodToDays(billing.monthlyPkg?.product.introPrice) ??
 		convexMonthly?.trialDays ??
 		7;
 

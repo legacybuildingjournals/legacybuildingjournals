@@ -1,6 +1,7 @@
 import { useUser } from "@clerk/react";
 import { Loader2 } from "lucide-react";
 
+import { AccountEmailSection } from "@/components/account/account-email-section";
 import { AccountPasswordSection } from "@/components/account/account-password-section";
 import {
 	accountInputClass,
@@ -64,20 +65,7 @@ export function PersonalInfoCard({
 
 			<hr className={`${accountPersonalInfoDividerClass} my-5`} />
 
-			<div className="flex flex-col gap-1.5">
-				<label htmlFor="account-email" className={accountLabelClass}>
-					Email
-				</label>
-				<Input
-					id="account-email"
-					type="email"
-					value={email}
-					readOnly
-					disabled
-					className={accountInputClass}
-					aria-label="Email address (cannot be changed)"
-				/>
-			</div>
+			<AccountEmailSection currentEmail={email} />
 
 			{showPasswordSection ? (
 				<>

@@ -50,7 +50,7 @@ export function ImageCarousel({
 		return (
 			<div
 				className={cn(
-					"flex h-[200px] w-full items-center justify-center bg-white",
+					"flex h-full min-h-[150px] w-full items-center justify-center bg-transparent",
 					className,
 				)}
 			>
@@ -69,7 +69,7 @@ export function ImageCarousel({
 				return (
 					<div
 						key={url}
-						className="flex h-[200px] w-full shrink-0 items-center justify-center"
+						className="flex h-full w-full shrink-0 items-center justify-center"
 					>
 						{shouldLoad ? (
 							<img
@@ -90,7 +90,7 @@ export function ImageCarousel({
 	return (
 		<div
 			className={cn(
-				"relative h-[200px] w-full overflow-hidden bg-white",
+				"relative h-[200px] w-full overflow-hidden bg-transparent",
 				className,
 			)}
 		>

@@ -1,12 +1,16 @@
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import { PageLoader } from "@legacy-building/ui/components/page-loader";
 import { brand } from "@legacy-building/ui/lib/brand-journal";
+import { cn } from "@legacy-building/ui/lib/utils";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAction } from "convex/react";
 import { Check } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-
+import {
+	billingPageTitleClass,
+	billingSubscribeShellClass,
+} from "@/components/billing/billingLayoutStyles";
 import { PaymentMethodDisplay } from "@/components/billing/PaymentMethodDisplay";
 import { ROUTES } from "@/lib/routes";
 
@@ -119,8 +123,13 @@ export function PaymentSuccessPage() {
 
 	return (
 		<div className="relative flex min-h-svh w-full flex-col bg-[#f5f5f5]">
-			<div className="mx-auto mt-20 flex w-full max-w-[640px] flex-1 flex-col items-center justify-center px-4 py-10 sm:px-6">
-				<div className="flex w-full flex-col items-center gap-6">
+			<div
+				className={cn(
+					billingSubscribeShellClass,
+					"max-w-[640px] items-start justify-start sm:items-center sm:justify-center",
+				)}
+			>
+				<div className="flex w-full min-w-0 flex-col items-center gap-5 sm:gap-6">
 					<div
 						className="flex size-16 shrink-0 items-center justify-center rounded-full border-2"
 						style={{ borderColor: brand.primary, color: brand.primary }}
@@ -128,8 +137,13 @@ export function PaymentSuccessPage() {
 						<Check className="size-8 stroke-[2.5]" aria-hidden />
 					</div>
 
-					<div className="flex w-full flex-col items-center gap-2 text-center">
-						<h1 className="font-semibold text-3xl text-[#1a1a1a] sm:text-4xl">
+					<div className="flex w-full min-w-0 flex-col items-center gap-2 px-1 text-center">
+						<h1
+							className={cn(
+								billingPageTitleClass,
+								"text-[#1a1a1a] sm:text-4xl",
+							)}
+						>
 							Payment Successful
 						</h1>
 						<p className="max-w-md text-[#525252] text-sm sm:text-base">
@@ -172,7 +186,7 @@ export function PaymentSuccessPage() {
 								</p>
 							</div>
 
-							<div className="grid gap-6 px-5 py-6 text-left sm:grid-cols-2 sm:px-6 sm:py-8">
+							<div className="grid gap-5 px-4 py-5 text-left sm:grid-cols-2 sm:gap-6 sm:px-6 sm:py-8">
 								<SummaryField label="Plan Name">
 									<span className="font-semibold text-[#1a1a1a]">
 										{summary?.planName ?? "—"}
