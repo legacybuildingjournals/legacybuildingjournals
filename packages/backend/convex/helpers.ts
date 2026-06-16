@@ -31,26 +31,9 @@ function clerkFullName(clerkUser: ClerkUser): string {
 		.trim();
 }
 
-export function isGoogleClerkUser(clerkUser: ClerkUser): boolean {
-	return (
-		clerkUser.external_accounts?.some((account) => {
-			const provider = account.provider.toLowerCase();
-			return (
-				provider === "google" ||
-				provider === "oauth_google" ||
-				provider.includes("google")
-			);
-		}) ?? false
-	);
-}
-
-/** Hyphenated display name for Google OAuth sign-ups. */
+/** Trim and normalize spacing; does not insert hyphens. */
 export function formatNameAsUsername(fullName: string): string {
-	return fullName
-		.trim()
-		.replace(/\s+/g, "-")
-		.replace(/-+/g, "-")
-		.replace(/^-|-$/g, "");
+	return fullName.trim().replace(/\s+/g, " ");
 }
 
 export function roleFromClerkMetadata(clerkUser: ClerkUser): "admin" | "user" {
@@ -75,7 +58,7 @@ export function getEmailAndName(clerkUser: ClerkUser): {
 	return { email, name };
 }
 
-/** Initial Convex `name` on first Clerk sync (Clerk username → legacy metadata → Google). */
+/** Initial Convex `name` on first Clerk sync (Clerk username → legacy metadata → display name). */
 export function getInitialNameFromClerk(clerkUser: ClerkUser): string {
 	const clerkUsername = (clerkUser.username ?? "").trim();
 	if (clerkUsername.length >= 2) return clerkUsername;
@@ -85,10 +68,7 @@ export function getInitialNameFromClerk(clerkUser: ClerkUser): string {
 
 	const { name } = getEmailAndName(clerkUser);
 	if (name === "Unknown") return name;
-	if (isGoogleClerkUser(clerkUser)) {
-		return formatNameAsUsername(name) || name;
-	}
-	return name;
+	return formatNameAsUsername(name) || name;
 }
 
 export async function storeClerkProfilePicture(

@@ -99,8 +99,11 @@ export function buildUserListPredicate(args: {
 				if (user.betaAccess !== true) return false;
 			} else {
 				const sub = user.subscriptionStatus;
-				if (args.subscriptionStatus === "unset") {
-					if (sub !== undefined) return false;
+				if (
+					args.subscriptionStatus === "none" ||
+					args.subscriptionStatus === "unset"
+				) {
+					if (sub !== "none" && sub !== undefined) return false;
 				} else if (sub !== args.subscriptionStatus) {
 					return false;
 				}

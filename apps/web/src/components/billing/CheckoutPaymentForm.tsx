@@ -14,7 +14,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import { defaultUsername, isGoogleOAuthProvider } from "@/lib/account/username";
+import { defaultUsername } from "@/lib/account/username";
 import { ROUTES } from "@/lib/routes";
 
 const checkoutPaymentFormSchema = z.object({
@@ -43,14 +43,9 @@ export function CheckoutPaymentForm({ amountLabel }: CheckoutPaymentFormProps) {
 	const { convexUser, isLoading: userLoading } = useCurrentUser();
 	const email = user?.primaryEmailAddress?.emailAddress ?? "";
 
-	const isGoogle = Boolean(
-		user?.externalAccounts?.some((account) =>
-			isGoogleOAuthProvider(account.provider),
-		),
-	);
 	const defaultFullName = useMemo(
-		() => defaultUsername(convexUser?.name, user?.fullName ?? null, isGoogle),
-		[convexUser?.name, user?.fullName, isGoogle],
+		() => defaultUsername(convexUser?.name, user?.fullName ?? null),
+		[convexUser?.name, user?.fullName],
 	);
 
 	const [promotionCode, setPromotionCode] = useState("");

@@ -21,7 +21,7 @@ export function DeskRecentJournal({
 	if (recent === undefined) {
 		return (
 			<div className={cn("w-full max-w-[min(340px,100%)]", className)}>
-				<h2 className="mb-2 text-center font-bold text-[#1a1a1a] text-[clamp(2.125rem,5.5vw,2.375rem)] leading-[1.4]">
+				<h2 className="mb-2 text-center font-bold text-[#1a1a1a] text-[clamp(1.875rem,5vw,2.125rem)] leading-[1.4]">
 					Recent Journal
 				</h2>
 				<div className="h-[268px] animate-pulse rounded-xl bg-white/60 shadow-sm" />

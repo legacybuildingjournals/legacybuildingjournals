@@ -5,6 +5,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { usePaginatedQuery } from "convex/react";
 import { useState } from "react";
 
+import { AdminFilterSelect } from "@/components/admin-filter-select";
+
 import { AdminTablePagination } from "@/components/admin-table-pagination";
 import { PaginatedTableFrame } from "@/components/paginated-table-frame";
 import { UserDetailDialog } from "@/components/user-detail-dialog";
@@ -13,6 +15,34 @@ import { UsersTable } from "@/components/users-table";
 import { usePaginatedPage } from "@/hooks/use-paginated-page";
 import { adminContainerClass } from "@/lib/admin-theme";
 import { ADMIN_PAGE_SIZE } from "@/lib/pagination";
+
+const ROLE_FILTER_ITEMS = [
+	{ label: "All roles", value: "all" },
+	{ label: "Admin", value: "admin" },
+	{ label: "User", value: "user" },
+] as const;
+
+const ACCOUNT_STATUS_FILTER_ITEMS = [
+	{ label: "All statuses", value: "all" },
+	{ label: "Active", value: "active" },
+	{ label: "Suspended", value: "suspended" },
+] as const;
+
+const SUBSCRIPTION_FILTER_ITEMS = [
+	{ label: "All subscriptions", value: "all" },
+	{ label: "Active (paid)", value: "active" },
+	{ label: "Trialing", value: "trialing" },
+	{ label: "Grace period", value: "grace_period" },
+	{ label: "Canceled", value: "canceled" },
+	{ label: "Beta", value: "beta" },
+	{ label: "None", value: "none" },
+] as const;
+
+type RoleFilterValue = (typeof ROLE_FILTER_ITEMS)[number]["value"];
+type AccountStatusFilterValue =
+	(typeof ACCOUNT_STATUS_FILTER_ITEMS)[number]["value"];
+type SubscriptionFilterValue =
+	(typeof SUBSCRIPTION_FILTER_ITEMS)[number]["value"];
 
 export const Route = createFileRoute("/_admin/users")({
 	component: UsersPage,
@@ -26,14 +56,7 @@ function UsersPage() {
 		"",
 	);
 	const [subscriptionFilter, setSubscriptionFilter] = useState<
-		| ""
-		| "active"
-		| "trialing"
-		| "grace_period"
-		| "canceled"
-		| "none"
-		| "unset"
-		| "beta"
+		"" | "active" | "trialing" | "grace_period" | "canceled" | "none" | "beta"
 	>("");
 	const [selectedUserId, setSelectedUserId] = useState<Id<"users"> | null>(
 		null,
@@ -93,60 +116,44 @@ function UsersPage() {
 				>
 					Search
 				</Button>
-				<select
-					value={roleFilter}
-					onChange={(e) => {
-						setRoleFilter(e.target.value as "" | "admin" | "user");
-						resetPage();
-					}}
-					className="h-11 rounded-xl border border-border bg-card px-3 text-sm"
-					aria-label="Filter by role"
-				>
-					<option value="">All roles</option>
-					<option value="admin">Admin</option>
-					<option value="user">User</option>
-				</select>
-				<select
-					value={statusFilter}
-					onChange={(e) => {
-						setStatusFilter(e.target.value as "" | "active" | "suspended");
-						resetPage();
-					}}
-					className="h-11 rounded-xl border border-border bg-card px-3 text-sm"
-					aria-label="Filter by account status"
-				>
-					<option value="">All statuses</option>
-					<option value="active">Active</option>
-					<option value="suspended">Suspended</option>
-				</select>
-				<select
-					value={subscriptionFilter}
-					onChange={(e) => {
-						setSubscriptionFilter(
-							e.target.value as
-								| ""
-								| "active"
-								| "trialing"
-								| "grace_period"
-								| "canceled"
-								| "none"
-								| "unset"
-								| "beta",
+				<AdminFilterSelect
+					items={ROLE_FILTER_ITEMS}
+					value={roleFilter || "all"}
+					onValueChange={(value) => {
+						setRoleFilter(
+							value === "all" ? "" : (value as Exclude<RoleFilterValue, "all">),
 						);
 						resetPage();
 					}}
-					className="h-11 rounded-xl border border-border bg-card px-3 text-sm"
-					aria-label="Filter by subscription status"
-				>
-					<option value="">All subscriptions</option>
-					<option value="active">Active (paid)</option>
-					<option value="trialing">Trialing</option>
-					<option value="grace_period">Grace period</option>
-					<option value="canceled">Canceled</option>
-					<option value="beta">Beta</option>
-					<option value="none">None</option>
-					<option value="unset">Not set</option>
-				</select>
+					ariaLabel="Filter by role"
+				/>
+				<AdminFilterSelect
+					items={ACCOUNT_STATUS_FILTER_ITEMS}
+					value={statusFilter || "all"}
+					onValueChange={(value) => {
+						setStatusFilter(
+							value === "all"
+								? ""
+								: (value as Exclude<AccountStatusFilterValue, "all">),
+						);
+						resetPage();
+					}}
+					ariaLabel="Filter by account status"
+				/>
+				<AdminFilterSelect
+					items={SUBSCRIPTION_FILTER_ITEMS}
+					value={subscriptionFilter || "all"}
+					onValueChange={(value) => {
+						setSubscriptionFilter(
+							value === "all"
+								? ""
+								: (value as Exclude<SubscriptionFilterValue, "all">),
+						);
+						resetPage();
+					}}
+					ariaLabel="Filter by subscription status"
+					className="min-w-[220px]"
+				/>
 			</div>
 
 			<PaginatedTableFrame

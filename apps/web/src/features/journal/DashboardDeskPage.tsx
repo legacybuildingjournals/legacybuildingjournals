@@ -74,7 +74,7 @@ export function DashboardDeskPage() {
 								src={avatarUrl}
 								hasCustomPhoto={hasCustomPhoto}
 							/>
-							<h1 className="text-center font-bold text-[clamp(2rem,5vw,2.25rem)] text-foreground leading-[1.4]">
+							<h1 className="text-center font-bold text-[clamp(1.75rem,4.5vw,2rem)] text-foreground leading-[1.4]">
 								Hi, {userName}
 							</h1>
 						</div>

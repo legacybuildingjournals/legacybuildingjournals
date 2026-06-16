@@ -25,7 +25,7 @@ import {
 import { DeleteAccountDialog } from "@/components/account/delete-account-dialog";
 import { PersonalInfoCard } from "@/components/account/personal-info-card";
 import { Button } from "@/components/journal/ui/button";
-import { defaultUsername, isGoogleOAuthProvider } from "@/lib/account/username";
+import { defaultUsername } from "@/lib/account/username";
 import {
 	messageFromUnknownError,
 	toastMutationError,
@@ -67,20 +67,13 @@ export function DashboardAccountPage() {
 	const [deleteOpen, setDeleteOpen] = useState(false);
 	const [bannerDismissed, setBannerDismissed] = useState(false);
 
-	const isGoogle = Boolean(
-		user?.externalAccounts?.some((account) =>
-			isGoogleOAuthProvider(account.provider),
-		),
-	);
 	const email =
 		user?.primaryEmailAddress?.emailAddress ?? convexUser?.email ?? "";
 
 	useEffect(() => {
 		if (!clerkLoaded || isLoading) return;
-		setUsername(
-			defaultUsername(convexUser?.name, user?.fullName ?? null, isGoogle),
-		);
-	}, [clerkLoaded, isLoading, convexUser?.name, user?.fullName, isGoogle]);
+		setUsername(defaultUsername(convexUser?.name, user?.fullName ?? null));
+	}, [clerkLoaded, isLoading, convexUser?.name, user?.fullName]);
 
 	const handleUsernameUpdate = async () => {
 		const trimmed = username.trim();

@@ -8,6 +8,8 @@ import { usePaginatedQuery } from "convex/react";
 import { Search } from "lucide-react";
 import { useState } from "react";
 
+import { AdminFilterSelect } from "@/components/admin-filter-select";
+
 import { AdminTablePagination } from "@/components/admin-table-pagination";
 import { PaginatedTableFrame } from "@/components/paginated-table-frame";
 import {
@@ -26,6 +28,16 @@ import {
 	adminTableRowClass,
 } from "@/lib/admin-theme";
 import { ADMIN_PAGE_SIZE } from "@/lib/pagination";
+
+const STATUS_FILTER_ITEMS = [
+	{ label: "All billing users", value: "all" },
+	{ label: "Active (paid)", value: "active" },
+	{ label: "Trialing", value: "trialing" },
+	{ label: "Grace period", value: "grace_period" },
+	{ label: "Canceled", value: "canceled" },
+] as const;
+
+type StatusFilterValue = (typeof STATUS_FILTER_ITEMS)[number]["value"];
 
 export const Route = createFileRoute("/_admin/subscriptions")({
 	component: SubscriptionsPage,
@@ -101,28 +113,20 @@ function SubscriptionsPage() {
 				>
 					Search
 				</Button>
-				<select
-					value={statusFilter}
-					onChange={(e) => {
+				<AdminFilterSelect
+					items={STATUS_FILTER_ITEMS}
+					value={statusFilter || "all"}
+					onValueChange={(value) => {
 						setStatusFilter(
-							e.target.value as
-								| ""
-								| "active"
-								| "trialing"
-								| "grace_period"
-								| "canceled",
+							value === "all"
+								? ""
+								: (value as Exclude<StatusFilterValue, "all">),
 						);
 						resetPage();
 					}}
-					className="h-11 rounded-xl border border-border bg-card px-3 text-sm"
-					aria-label="Filter by subscription status"
-				>
-					<option value="">All billing users</option>
-					<option value="active">Active (paid)</option>
-					<option value="trialing">Trialing</option>
-					<option value="grace_period">Grace period</option>
-					<option value="canceled">Canceled</option>
-				</select>
+					ariaLabel="Filter by subscription status"
+					className="min-w-[220px]"
+				/>
 			</div>
 
 			{isLoadingFirstPage ? (

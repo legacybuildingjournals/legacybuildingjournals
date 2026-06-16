@@ -1,23 +1,16 @@
-/** Prefer stored username; fall back to Clerk name (Google → hyphenated). */
+/** Prefer stored username; fall back to Clerk display name as entered. */
 export function defaultUsername(
 	convexName: string | undefined,
 	clerkFullName: string | null | undefined,
-	isGoogle: boolean,
 ): string {
 	if (convexName?.trim()) return convexName.trim();
-	if (isGoogle && clerkFullName?.trim()) {
-		return formatNameAsUsername(clerkFullName);
-	}
-	return clerkFullName?.trim() ?? "";
+	if (clerkFullName?.trim()) return formatNameAsUsername(clerkFullName);
+	return "";
 }
 
-/** "Jane Doe" → "Jane-Doe" for default Google usernames. */
+/** Trim and normalize spacing; does not insert hyphens. */
 export function formatNameAsUsername(fullName: string): string {
-	return fullName
-		.trim()
-		.replace(/\s+/g, "-")
-		.replace(/-+/g, "-")
-		.replace(/^-|-$/g, "");
+	return fullName.trim().replace(/\s+/g, " ");
 }
 
 export function isGoogleOAuthProvider(provider: string | undefined): boolean {
