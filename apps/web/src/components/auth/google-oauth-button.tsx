@@ -29,60 +29,38 @@ export function GoogleOAuthButton(
 
 		if (props.mode === "sign-in") {
 			const metadata = props.unsafeMetadata;
-			const hasMetadata =
-				metadata !== undefined &&
-				metadata !== null &&
-				Object.keys(metadata).length > 0;
 
-			const trySignUpThenSignIn = async () => {
-				if (!signUp) return;
-				setPending(true);
-				const { error } = await signUp.sso({
-					strategy: "oauth_google",
-					redirectCallbackUrl: ROUTES.ssoCallback,
-					redirectUrl: ROUTES.dashboard,
-					unsafeMetadata: metadata,
-				});
-				setPending(false);
-
-				if (error) {
-					const code =
-						"code" in error && typeof error.code === "string" ? error.code : "";
-					if (
-						code === "form_identifier_exists" ||
-						code === "identifier_already_signed_up"
-					) {
-						if (!signIn) return;
-						setPending(true);
-						const { error: signInErr } = await signIn.sso({
-							strategy: "oauth_google",
-							redirectCallbackUrl: ROUTES.ssoCallback,
-							redirectUrl: ROUTES.dashboard,
-						});
-						setPending(false);
-						if (signInErr) {
-							console.error(signInErr);
-						}
-						return;
-					}
-					console.error(error);
-				}
-			};
-
-			if (hasMetadata) {
-				await trySignUpThenSignIn();
-				return;
-			}
-
-			if (!signIn) return;
+			// Try sign-up first so new Google users get a signUp object (not signIn transfer).
+			if (!signUp) return;
 			setPending(true);
-			const { error } = await signIn.sso({
+			const { error } = await signUp.sso({
 				strategy: "oauth_google",
 				redirectCallbackUrl: ROUTES.ssoCallback,
 				redirectUrl: ROUTES.dashboard,
+				unsafeMetadata: metadata,
 			});
 			setPending(false);
+
 			if (error) {
+				const code =
+					"code" in error && typeof error.code === "string" ? error.code : "";
+				if (
+					code === "form_identifier_exists" ||
+					code === "identifier_already_signed_up"
+				) {
+					if (!signIn) return;
+					setPending(true);
+					const { error: signInErr } = await signIn.sso({
+						strategy: "oauth_google",
+						redirectCallbackUrl: ROUTES.ssoCallback,
+						redirectUrl: ROUTES.dashboard,
+					});
+					setPending(false);
+					if (signInErr) {
+						console.error(signInErr);
+					}
+					return;
+				}
 				console.error(error);
 			}
 			return;
@@ -102,19 +80,12 @@ export function GoogleOAuthButton(
 		}
 	};
 
-	const needsSignIn =
-		props.mode === "sign-in" &&
-		!(props.unsafeMetadata && Object.keys(props.unsafeMetadata).length > 0);
-	const needsSignUp =
-		props.mode === "sign-up" ||
-		(props.mode === "sign-in" &&
-			!!props.unsafeMetadata &&
-			Object.keys(props.unsafeMetadata).length > 0);
+	const needsSignUp = props.mode === "sign-up" || props.mode === "sign-in";
 	const disabled =
 		!clerk.loaded ||
 		pending ||
-		(needsSignIn && !signIn) ||
-		(needsSignUp && !signUp);
+		(needsSignUp && !signUp) ||
+		(!signIn && props.mode === "sign-in");
 
 	return (
 		<Button
