@@ -94,6 +94,93 @@ function describeSubscription(subscription: Subscription) {
 	};
 }
 
+function formatDateMs(ms: number) {
+	return new Date(ms).toLocaleDateString(undefined, {
+		year: "numeric",
+		month: "short",
+		day: "numeric",
+	});
+}
+
+const STORE_INFO = {
+	apple: {
+		name: "the App Store",
+		url: "https://apps.apple.com/account/subscriptions",
+	},
+	google: {
+		name: "Google Play",
+		url: "https://play.google.com/store/account/subscriptions",
+	},
+} as const;
+
+/**
+ * Apple/Google subscriptions can only be managed in their store — the web app
+ * is not allowed to cancel or change them. Show a read-only summary + a link.
+ */
+function StoreManagedSubscription({
+	provider,
+	isTrial,
+	currentPeriodEnd,
+	willRenew,
+}: {
+	provider: "apple" | "google";
+	isTrial: boolean;
+	currentPeriodEnd: number | null;
+	willRenew: boolean | null;
+}) {
+	const info = STORE_INFO[provider];
+	const stateLabel = isTrial
+		? "Free trial"
+		: willRenew === false
+			? "Canceling"
+			: "Active";
+	const periodEnd = currentPeriodEnd ? formatDateMs(currentPeriodEnd) : null;
+	const detail = periodEnd
+		? willRenew === false
+			? `Access ends ${periodEnd}`
+			: isTrial
+				? `Trial ends ${periodEnd}`
+				: `Renews ${periodEnd}`
+		: null;
+
+	return (
+		<div className="mx-auto flex w-full max-w-[960px] flex-col gap-6 border-white/10 border-t pt-10">
+			<div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-5 sm:px-6">
+				<p className="mb-3 font-medium text-white/55 text-xs uppercase tracking-[0.12em]">
+					Your subscription
+				</p>
+				<div className="flex flex-col gap-1">
+					<h2 className="font-semibold text-lg text-white">
+						Legacy Building Pro
+					</h2>
+					<div className="flex flex-wrap items-center gap-2 text-sm">
+						<span className="rounded-full bg-white/15 px-2.5 py-1 font-medium text-white text-xs">
+							{stateLabel}
+						</span>
+						{detail ? (
+							<span className="text-white/60 text-xs">{detail}</span>
+						) : null}
+					</div>
+				</div>
+				<p className="mt-4 text-sm text-white/60">
+					You subscribed through {info.name}, so your plan can only be changed
+					or canceled there. Open your {info.name} subscription settings to
+					manage it.
+				</p>
+				<a
+					href={info.url}
+					target="_blank"
+					rel="noopener noreferrer"
+					className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 px-4 font-medium text-sm text-white transition-colors hover:bg-white/15"
+				>
+					<ExternalLink className="size-3.5" aria-hidden />
+					Manage in {info.name}
+				</a>
+			</div>
+		</div>
+	);
+}
+
 function invoiceBadge(status: string) {
 	switch (status) {
 		case "paid":
@@ -106,6 +193,7 @@ function invoiceBadge(status: string) {
 }
 
 export function BillingManagementSection() {
+	const entitlement = useQuery(api.subscriptions.queries.getEntitlement);
 	const subscription = useQuery(api.stripe.queries.getMySubscription);
 	const invoices = useQuery(api.stripe.queries.listMyInvoices);
 	const createBillingPortalSession = useAction(
@@ -119,6 +207,18 @@ export function BillingManagementSection() {
 	const [portalPending, setPortalPending] = useState(false);
 	const [mutationPending, setMutationPending] = useState(false);
 	const [cancelModalOpen, setCancelModalOpen] = useState(false);
+
+	// Apple/Google subscribers manage their plan in the store, not here.
+	if (entitlement?.provider === "apple" || entitlement?.provider === "google") {
+		return (
+			<StoreManagedSubscription
+				provider={entitlement.provider}
+				isTrial={entitlement.isTrial}
+				currentPeriodEnd={entitlement.currentPeriodEnd}
+				willRenew={entitlement.willRenew}
+			/>
+		);
+	}
 
 	const hasActivePlan =
 		subscription !== null &&

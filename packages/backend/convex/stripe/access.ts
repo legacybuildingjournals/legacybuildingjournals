@@ -1,6 +1,7 @@
 import { ConvexError } from "convex/values";
 
 import type { MutationCtx, QueryCtx } from "../_generated/server";
+import { getActiveIapSubscription } from "../subscriptions/helpers";
 import {
 	FEATURE_ACCESS_STATUSES,
 	listSubscriptionsForClerkUser,
@@ -20,6 +21,12 @@ export async function userHasPaidFeatureAccess(
 	if (!user) return false;
 	if (user.role === "admin") return true;
 	if (user.betaAccess === true) return true;
+
+	// Native IAP (Apple/Google) subscribers — synced from RevenueCat. This makes
+	// access work cross-platform: someone who subscribed in the app still has
+	// access on the web, and vice versa.
+	const iap = await getActiveIapSubscription(ctx, clerkUserId);
+	if (iap) return true;
 
 	// Never trust the mirrored `users.subscriptionStatus` alone — it can lag after
 	// cancel/reset. Require a live Stripe subscription instead.

@@ -91,7 +91,12 @@ export function BillingActivePage({ showWelcome }: BillingActivePageProps) {
 	const [invoicesLoading, setInvoicesLoading] = useState(true);
 	const [invoicesModalOpen, setInvoicesModalOpen] = useState(false);
 
+	// Stripe APIs (payment methods, invoices) only apply to Stripe subscribers.
+	// Apple/Google subs have no Stripe customer — skip those calls entirely.
+	const subProvider = subscription?.provider ?? "stripe";
+
 	useEffect(() => {
+		if (subProvider !== "stripe") return;
 		if (showWelcome) {
 			toast.success("Your subscription is active!");
 			void getDefaultPaymentMethod({}).then(setPaymentMethod);
@@ -108,13 +113,18 @@ export function BillingActivePage({ showWelcome }: BillingActivePageProps) {
 				cancelled = true;
 			};
 		}
-	}, [showWelcome, getDefaultPaymentMethod, listInvoicesLive]);
+	}, [showWelcome, getDefaultPaymentMethod, listInvoicesLive, subProvider]);
 
 	useEffect(() => {
+		if (subProvider !== "stripe") return;
 		void getDefaultPaymentMethod({}).then(setPaymentMethod);
-	}, [getDefaultPaymentMethod]);
+	}, [getDefaultPaymentMethod, subProvider]);
 
 	useEffect(() => {
+		if (subProvider !== "stripe") {
+			setInvoicesLoading(false);
+			return;
+		}
 		let cancelled = false;
 		void listInvoicesLive({})
 			.then((rows) => {
@@ -126,7 +136,7 @@ export function BillingActivePage({ showWelcome }: BillingActivePageProps) {
 		return () => {
 			cancelled = true;
 		};
-	}, [listInvoicesLive]);
+	}, [listInvoicesLive, subProvider]);
 
 	if (!subscription) return null;
 
@@ -144,6 +154,10 @@ export function BillingActivePage({ showWelcome }: BillingActivePageProps) {
 			: provider === "google"
 				? "Google Play"
 				: "Stripe";
+	const storeUrl =
+		provider === "google"
+			? "https://play.google.com/store/account/subscriptions"
+			: "https://apps.apple.com/account/subscriptions";
 
 	const planName = subscription.plan?.name
 		? `${subscription.plan.name} Plan`
@@ -352,116 +366,140 @@ export function BillingActivePage({ showWelcome }: BillingActivePageProps) {
 							</div>
 						</div>
 
-						<div className="flex flex-col gap-6">
-							<div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
-								<h3 className="mb-4 font-semibold text-foreground text-lg">
-									Billing History
-								</h3>
-								{invoicesLoading ? (
-									<p className="mb-4 text-muted-foreground text-sm">
-										Loading invoices…
-									</p>
-								) : latestInvoice ? (
-									<div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-border bg-muted px-4 py-3">
-										<div className="min-w-0">
-											<p className="truncate font-medium text-foreground text-sm">
-												Invoice #{latestInvoice.stripeInvoiceId.slice(-7)}
-											</p>
-											<p className="text-muted-foreground text-xs">
-												{formatDate(latestInvoice.created)}
-											</p>
-										</div>
-										<div className="flex shrink-0 items-center gap-2">
-											<span className="font-semibold text-foreground text-sm">
-												{formatMoney(
-													latestInvoice.status === "paid"
-														? latestInvoice.amountPaid
-														: latestInvoice.amountDue,
-												)}
-											</span>
-											{latestInvoice.status === "paid" ? (
-												<span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-[10px] text-primary">
-													Paid
-												</span>
-											) : null}
-											<button
-												type="button"
-												onClick={() => openInvoice(latestInvoice)}
-												disabled={!latestInvoice.hostedInvoiceUrl}
-												className={cn(billingIconButtonClass, "size-8")}
-												aria-label="Download invoice"
-											>
-												<Download className="size-4" aria-hidden />
-											</button>
-										</div>
-									</div>
-								) : (
-									<p className="mb-4 text-muted-foreground text-sm">
-										No invoices yet — trial plans may not show a charge until
-										billing starts.
-									</p>
-								)}
-								<button
-									type="button"
-									onClick={() => setInvoicesModalOpen(true)}
-									className={billingTextLinkClass}
-								>
-									View Invoices
-								</button>
-							</div>
-
-							<div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
-								<div className="mb-4 flex items-center justify-between gap-3">
-									<h3 className="font-semibold text-foreground text-lg">
-										Payment Methods
+						{isStripe ? (
+							<div className="flex flex-col gap-6">
+								<div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+									<h3 className="mb-4 font-semibold text-foreground text-lg">
+										Billing History
 									</h3>
+									{invoicesLoading ? (
+										<p className="mb-4 text-muted-foreground text-sm">
+											Loading invoices…
+										</p>
+									) : latestInvoice ? (
+										<div className="mb-4 flex items-center justify-between gap-3 rounded-xl border border-border bg-muted px-4 py-3">
+											<div className="min-w-0">
+												<p className="truncate font-medium text-foreground text-sm">
+													Invoice #{latestInvoice.stripeInvoiceId.slice(-7)}
+												</p>
+												<p className="text-muted-foreground text-xs">
+													{formatDate(latestInvoice.created)}
+												</p>
+											</div>
+											<div className="flex shrink-0 items-center gap-2">
+												<span className="font-semibold text-foreground text-sm">
+													{formatMoney(
+														latestInvoice.status === "paid"
+															? latestInvoice.amountPaid
+															: latestInvoice.amountDue,
+													)}
+												</span>
+												{latestInvoice.status === "paid" ? (
+													<span className="rounded-full bg-primary/10 px-2 py-0.5 font-medium text-[10px] text-primary">
+														Paid
+													</span>
+												) : null}
+												<button
+													type="button"
+													onClick={() => openInvoice(latestInvoice)}
+													disabled={!latestInvoice.hostedInvoiceUrl}
+													className={cn(billingIconButtonClass, "size-8")}
+													aria-label="Download invoice"
+												>
+													<Download className="size-4" aria-hidden />
+												</button>
+											</div>
+										</div>
+									) : (
+										<p className="mb-4 text-muted-foreground text-sm">
+											No invoices yet — trial plans may not show a charge until
+											billing starts.
+										</p>
+									)}
 									<button
 										type="button"
-										onClick={() => void openPortal()}
-										disabled={portalPending}
+										onClick={() => setInvoicesModalOpen(true)}
 										className={billingTextLinkClass}
 									>
-										Add Method
+										View Invoices
 									</button>
 								</div>
-								{paymentMethod ? (
-									<div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted px-4 py-3">
-										<div>
-											<p className="font-medium text-foreground text-sm">
-												{formatCardBrand(paymentMethod.brand)} ••••{" "}
-												{paymentMethod.last4}
-											</p>
-											<p className="text-muted-foreground text-xs">
-												{String(paymentMethod.expMonth).padStart(2, "0")}/
-												{paymentMethod.expYear}
-											</p>
-										</div>
+
+								<div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+									<div className="mb-4 flex items-center justify-between gap-3">
+										<h3 className="font-semibold text-foreground text-lg">
+											Payment Methods
+										</h3>
 										<button
 											type="button"
 											onClick={() => void openPortal()}
 											disabled={portalPending}
 											className={billingTextLinkClass}
 										>
-											Edit
+											Add Method
 										</button>
 									</div>
-								) : (
-									<button
-										type="button"
-										onClick={() => void openPortal()}
-										disabled={portalPending}
-										className={cn(billingCardActionButtonClass, "px-4 py-6")}
-									>
-										{portalPending ? (
-											<Loader2 className="size-4 animate-spin" aria-hidden />
-										) : (
-											<ExternalLink className="size-4" aria-hidden />
-										)}
-										Manage payment methods in Stripe
-									</button>
-								)}
+									{paymentMethod ? (
+										<div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted px-4 py-3">
+											<div>
+												<p className="font-medium text-foreground text-sm">
+													{formatCardBrand(paymentMethod.brand)} ••••{" "}
+													{paymentMethod.last4}
+												</p>
+												<p className="text-muted-foreground text-xs">
+													{String(paymentMethod.expMonth).padStart(2, "0")}/
+													{paymentMethod.expYear}
+												</p>
+											</div>
+											<button
+												type="button"
+												onClick={() => void openPortal()}
+												disabled={portalPending}
+												className={billingTextLinkClass}
+											>
+												Edit
+											</button>
+										</div>
+									) : (
+										<button
+											type="button"
+											onClick={() => void openPortal()}
+											disabled={portalPending}
+											className={cn(billingCardActionButtonClass, "px-4 py-6")}
+										>
+											{portalPending ? (
+												<Loader2 className="size-4 animate-spin" aria-hidden />
+											) : (
+												<ExternalLink className="size-4" aria-hidden />
+											)}
+											Manage payment methods in Stripe
+										</button>
+									)}
+								</div>
 							</div>
-						</div>
+						) : (
+							<div className="flex flex-col gap-6">
+								<div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+									<h3 className="mb-2 font-semibold text-foreground text-lg">
+										Billing &amp; receipts
+									</h3>
+									<p className="mb-4 text-muted-foreground text-sm leading-relaxed">
+										Your payment method and billing history are handled by{" "}
+										{storeLabel}. View receipts or update payment in your{" "}
+										{storeLabel} subscription settings.
+									</p>
+									<a
+										href={storeUrl}
+										target="_blank"
+										rel="noopener noreferrer"
+										className={cn(billingCardActionButtonClass, "px-4 py-3")}
+									>
+										<ExternalLink className="size-4" aria-hidden />
+										Open {storeLabel}
+									</a>
+								</div>
+							</div>
+						)}
 					</div>
 				</div>
 			</div>

@@ -5,95 +5,78 @@ import { useRevenueCat } from "@/contexts/revenuecat-context";
 import type { BillingProvider, PlanStatus } from "@/lib/billing/plans";
 import { ENTITLEMENT_ID } from "@/lib/billing/revenuecat";
 
-type SubscriptionDoc = {
-	provider: BillingProvider;
-	status: string;
-	interval: "monthly" | "annual" | null;
-	currentPeriodEnd: number;
-	cancelAtPeriodEnd: boolean;
-};
-
 /**
- * Resolves the user's subscription status from two sources:
+ * Resolves the user's subscription from two sources, in order:
  *
- * 1. **Convex (Stripe)** — for users who subscribed via the web app.
- * 2. **RevenueCat** — for users who subscribed via native IAP (Apple/Google).
+ * 1. **RevenueCat on-device** — freshest for a purchase just made in the app
+ *    (Apple/Google). Reports the store, so we know the exact provider.
+ * 2. **Convex `getEntitlement`** — the server source of truth, which merges
+ *    webhook-synced IAP subscriptions (Apple/Google) with Stripe (web) and
+ *    admin/beta access. Covers cross-platform cases: a Stripe web subscriber
+ *    opening the app, or an IAP subscriber before the on-device cache warms up.
  *
- * RevenueCat takes precedence when active, since Apple/Google require their
- * billing system for mobile subscriptions.
+ * The `provider` it returns drives where the user manages/cancels their plan
+ * (App Store / Play Store / web).
  */
 export function useNativeSubscription() {
-	// Convex/Stripe source (existing web subscribers).
-	const subscription = useQuery(api.stripe.queries.getMySubscription) as
-		| SubscriptionDoc
-		| null
-		| undefined;
-	const hasPaidAccess = useQuery(api.stripe.queries.hasPaidFeatureAccess);
-
-	// RevenueCat source (native IAP subscribers).
+	const entitlement = useQuery(api.subscriptions.queries.getEntitlement);
 	const { isPro, isReady: rcReady, customerInfo } = useRevenueCat();
 
-	const isLoading =
-		subscription === undefined || hasPaidAccess === undefined || !rcReady;
+	const isLoading = entitlement === undefined || !rcReady;
 
-	// Determine provider and plan from the active source.
-	// RevenueCat pro access takes precedence over Stripe.
-	let plan: PlanStatus = "free";
-	let provider: BillingProvider = "stripe";
-
+	// 1. RevenueCat on-device — authoritative for a fresh native purchase.
 	if (isPro && customerInfo) {
-		// User has an active IAP subscription through RevenueCat.
-		const entitlement = customerInfo.entitlements.active[ENTITLEMENT_ID];
-		const store = entitlement?.store;
-
-		provider =
+		const entry = customerInfo.entitlements.active[ENTITLEMENT_ID];
+		const store = entry?.store;
+		const provider: BillingProvider =
 			store === "APP_STORE" || store === "MAC_APP_STORE"
 				? "apple"
 				: store === "PLAY_STORE"
 					? "google"
 					: "stripe";
+		const productId = entry?.productIdentifier ?? "";
+		const plan: PlanStatus =
+			productId.includes("annual") || productId.includes("yearly")
+				? "annual"
+				: "monthly";
 
-		// Determine interval from the product identifier convention.
-		const productId = entitlement?.productIdentifier ?? "";
-		if (productId.includes("annual") || productId.includes("yearly")) {
-			plan = "annual";
-		} else {
-			plan = "monthly";
-		}
-	} else if (subscription?.interval) {
-		// Fall back to Stripe/Convex subscription.
-		plan = subscription.interval;
-		provider = subscription.provider ?? "stripe";
+		return {
+			plan,
+			hasPaidAccess: true,
+			isLoading,
+			provider,
+			isTrialing: entry?.periodType === "TRIAL",
+			cancelAtPeriodEnd: entry?.willRenew === false,
+			currentPeriodEnd: entry?.expirationDateMillis
+				? Math.floor(entry.expirationDateMillis / 1000)
+				: null,
+		};
 	}
 
-	const isActive = plan !== "free";
+	// 2. Server entitlement (webhook-synced IAP + Stripe + admin/beta).
+	if (entitlement?.hasAccess) {
+		return {
+			plan: (entitlement.interval ?? "monthly") as PlanStatus,
+			hasPaidAccess: true,
+			isLoading,
+			provider: (entitlement.provider ?? "stripe") as BillingProvider,
+			isTrialing: entitlement.isTrial,
+			cancelAtPeriodEnd: entitlement.willRenew === false,
+			// Normalize ms → seconds to match the on-device branch.
+			currentPeriodEnd: entitlement.currentPeriodEnd
+				? Math.floor(entitlement.currentPeriodEnd / 1000)
+				: null,
+		};
+	}
 
-	// For IAP subscriptions, cancellation/renewal info comes from RevenueCat.
-	// For Stripe, it comes from the Convex subscription doc.
-	const cancelAtPeriodEnd = isPro
-		? customerInfo?.entitlements.active[ENTITLEMENT_ID]?.willRenew === false
-		: (subscription?.cancelAtPeriodEnd ?? false);
-
-	const currentPeriodEnd = isPro
-		? customerInfo?.entitlements.active[ENTITLEMENT_ID]?.expirationDateMillis
-			? Math.floor(
-					(customerInfo.entitlements.active[ENTITLEMENT_ID]
-						?.expirationDateMillis ?? 0) / 1000,
-				)
-			: null
-		: (subscription?.currentPeriodEnd ?? null);
-
+	// 3. Free / no subscription.
 	return {
-		plan,
-		hasPaidAccess: isPro || (hasPaidAccess ?? false),
+		plan: "free" as PlanStatus,
+		hasPaidAccess: false,
 		isLoading,
-		subscription: subscription ?? null,
-		provider,
-		isTrialing: isPro
-			? customerInfo?.entitlements.active[ENTITLEMENT_ID]?.periodType ===
-				"TRIAL"
-			: subscription?.status === "trialing",
-		cancelAtPeriodEnd,
-		currentPeriodEnd,
+		provider: "stripe" as BillingProvider,
+		isTrialing: false,
+		cancelAtPeriodEnd: false,
+		currentPeriodEnd: null,
 	};
 }

@@ -2,6 +2,7 @@ import { v } from "convex/values";
 
 import { components } from "../_generated/api";
 import { query } from "../_generated/server";
+import { getActiveIapSubscription } from "../subscriptions/helpers";
 import { userHasPaidFeatureAccess } from "./access";
 import { listSubscriptionsForClerkUser } from "./helpers";
 
@@ -47,6 +48,38 @@ export const getMySubscription = query({
 	handler: async (ctx) => {
 		const identity = await ctx.auth.getUserIdentity();
 		if (!identity) return null;
+
+		// Native IAP (Apple/Google) takes precedence — synced from RevenueCat.
+		// Shape it like a Stripe subscription so all consumers (account Plan
+		// Status, billing page) work unchanged; `provider` drives the UI to show
+		// "manage in the store" and hide Stripe-only cancel/upgrade controls.
+		const iap = await getActiveIapSubscription(ctx, identity.subject);
+		if (iap) {
+			// IAP "canceled" still has access until period end → mirror Stripe's
+			// (status active + cancelAtPeriodEnd) so the UI reads it correctly.
+			const displayStatus =
+				iap.status === "trialing"
+					? "trialing"
+					: iap.status === "grace_period"
+						? "past_due"
+						: "active";
+			return {
+				stripeSubscriptionId: iap._id,
+				provider: iap.provider,
+				status: displayStatus,
+				interval: iap.interval ?? null,
+				priceId: "",
+				// Stripe consumers expect epoch seconds.
+				currentPeriodEnd: iap.currentPeriodEnd
+					? Math.floor(iap.currentPeriodEnd / 1000)
+					: 0,
+				cancelAtPeriodEnd: iap.willRenew === false,
+				cancelAt: null,
+				// No Stripe product for an IAP sub; UI falls back to the interval name.
+				plan: null,
+				pendingPlanChange: null,
+			};
+		}
 
 		const subscriptions: ComponentSubscription[] =
 			await listSubscriptionsForClerkUser(ctx, identity.subject);

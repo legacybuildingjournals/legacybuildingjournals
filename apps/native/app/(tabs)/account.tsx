@@ -9,11 +9,13 @@ import { useState } from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { useJournalPaywall } from "@/components/billing/journal-paywall-provider";
 import { DashboardScreenHeader } from "@/components/navigation/dashboard-screen-header";
+import { useBilling } from "@/hooks/use-billing";
 import { useNativeCurrentUser } from "@/hooks/use-native-current-user";
+import { useNativeSubscription } from "@/hooks/use-native-subscription";
 import { planStatusLabel } from "@/lib/billing/plans";
 import { messageFromError } from "@/lib/error-utils";
 import { nativeLegalRoutes } from "@/lib/legal-routes";
-import { nativeBillingUrl, nativeLegalUrl } from "@/lib/native-legal-url";
+import { nativeLegalUrl } from "@/lib/native-legal-url";
 
 type AccountRowProps = {
 	title: string;
@@ -54,6 +56,8 @@ export default function AccountScreen() {
 	const { signOut } = useClerk();
 	const { convexUser } = useNativeCurrentUser();
 	const { plan, isLoading: planLoading, openPaywall } = useJournalPaywall();
+	const { provider, hasPaidAccess } = useNativeSubscription();
+	const { manage } = useBilling();
 	const accent = useThemeColor("accent");
 	const deleteMyAccount = useAction(api.user.deleteAccount.deleteMyAccount);
 
@@ -105,9 +109,19 @@ export default function AccountScreen() {
 		void WebBrowser.openBrowserAsync(nativeLegalUrl(path));
 	};
 
+	// Route subscription management to the right place for the provider:
+	// Apple → App Store, Google → Play Store, Stripe (web-originated) → web billing.
 	const openBilling = () => {
-		void WebBrowser.openBrowserAsync(nativeBillingUrl());
+		void manage(provider);
 	};
+
+	const billingSubtitle = !hasPaidAccess
+		? "Manage subscription and payment"
+		: provider === "apple"
+			? "Managed in the App Store"
+			: provider === "google"
+				? "Managed in Google Play"
+				: "Managed on the web";
 
 	const confirmLogout = () => {
 		Alert.alert("Log out?", "You'll need to sign in again.", [
@@ -151,7 +165,7 @@ export default function AccountScreen() {
 				/>
 				<AccountRow
 					title="Billing"
-					subtitle="Manage subscription and payment"
+					subtitle={billingSubtitle}
 					onPress={openBilling}
 					chevronColor={accent}
 				/>
