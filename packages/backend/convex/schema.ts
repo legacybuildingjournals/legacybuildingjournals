@@ -154,6 +154,9 @@ export default defineSchema({
 		audioUrl: v.optional(v.string()),
 		imageId: v.optional(v.id("_storage")),
 		audioId: v.optional(v.id("_storage")),
+		/** Recorded clip length in ms, captured at record time so playback UIs can
+		 * show the duration without waiting on the player to load remote audio. */
+		audioDurationMs: v.optional(v.number()),
 	})
 		.index("by_journalId", ["journalId"])
 		.index("by_userId", ["userId"]),
