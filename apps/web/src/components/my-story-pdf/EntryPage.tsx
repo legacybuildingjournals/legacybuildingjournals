@@ -5,18 +5,22 @@ import { fitPdfImageSize } from "@/lib/journal/fitPdfImageSize";
 
 const TEAL = "#007A7A";
 
+const HEADER_HEIGHT = 32;
+const HEADER_GAP = 24;
+
 const styles = StyleSheet.create({
 	page: {
-		paddingTop: 0,
+		paddingTop: HEADER_HEIGHT + HEADER_GAP,
 		paddingHorizontal: 40,
 		paddingBottom: 40,
 	},
 	headerBar: {
+		position: "absolute",
+		top: 0,
+		left: -40,
+		right: -40,
 		backgroundColor: TEAL,
-		height: 32,
-		marginHorizontal: -40,
-		marginTop: 0,
-		marginBottom: 24,
+		height: HEADER_HEIGHT,
 	},
 	photoWrap: {
 		alignItems: "center",
@@ -65,7 +69,7 @@ export function EntryPage({
 
 	return (
 		<Page size="A4" style={styles.page}>
-			<View style={styles.headerBar} />
+			<View fixed style={styles.headerBar} />
 			<View style={styles.photoWrap}>
 				{imageBase64 ? (
 					<Image

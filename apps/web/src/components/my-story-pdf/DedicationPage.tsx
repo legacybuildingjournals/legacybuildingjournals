@@ -3,17 +3,21 @@ import { Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 
 const TEAL = "#007A7A";
 
+const HEADER_HEIGHT = 32;
+
 const styles = StyleSheet.create({
 	page: {
-		paddingTop: 0,
+		paddingTop: HEADER_HEIGHT,
 		paddingHorizontal: 40,
 		paddingBottom: 40,
 	},
 	headerBar: {
+		position: "absolute",
+		top: 0,
+		left: -40,
+		right: -40,
 		backgroundColor: TEAL,
-		height: 32,
-		marginHorizontal: -40,
-		marginBottom: 0,
+		height: HEADER_HEIGHT,
 	},
 	content: {
 		flex: 1,
@@ -46,7 +50,7 @@ type DedicationPageProps = {
 export function DedicationPage({ dedication }: DedicationPageProps) {
 	return (
 		<Page size="A4" style={styles.page}>
-			<View style={styles.headerBar} />
+			<View fixed style={styles.headerBar} />
 			<View style={styles.content}>
 				<Text style={styles.dedication}>{dedication.trim()}</Text>
 			</View>
