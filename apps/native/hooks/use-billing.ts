@@ -7,6 +7,7 @@ import type { BillingProvider, PlanInterval } from "@/lib/billing/plans";
 import {
 	getAnnualPackage,
 	getMonthlyPackage,
+	initRevenueCat,
 	type PurchaseResult,
 	purchasePackage,
 	restorePurchases,
@@ -33,38 +34,51 @@ export function useBilling() {
 	const [annualPkg, setAnnualPkg] = useState<PurchasesPackage | null>(null);
 	const [isLoadingPackages, setIsLoadingPackages] = useState(true);
 
+	/**
+	 * Fetch the latest offering packages from the store. Exposed so the paywall
+	 * can refresh when it opens — the initial mount fetch can race with the
+	 * RevenueCat SDK / Play BillingClient still connecting at app start, leaving
+	 * packages null until a later fetch succeeds.
+	 */
+	const refresh = useCallback(async () => {
+		try {
+			// Ensure the SDK is configured before fetching offerings (idempotent).
+			initRevenueCat();
+			const [monthly, annual] = await Promise.all([
+				getMonthlyPackage(),
+				getAnnualPackage(),
+			]);
+			setMonthlyPkg(monthly);
+			setAnnualPkg(annual);
+		} catch (e) {
+			// Offerings may not be available yet (agreements pending).
+			// The paywall will show fallback prices from Convex products.
+			console.error("[Billing] getOfferings failed:", e);
+		} finally {
+			setIsLoadingPackages(false);
+		}
+	}, []);
+
 	// Fetch available packages on mount.
 	useEffect(() => {
-		let cancelled = false;
-
-		async function load() {
-			try {
-				const [monthly, annual] = await Promise.all([
-					getMonthlyPackage(),
-					getAnnualPackage(),
-				]);
-				if (!cancelled) {
-					setMonthlyPkg(monthly);
-					setAnnualPkg(annual);
-				}
-			} catch {
-				// Offerings may not be available yet (agreements pending).
-				// The paywall will show fallback prices from Convex products.
-			} finally {
-				if (!cancelled) setIsLoadingPackages(false);
-			}
-		}
-
-		void load();
-		return () => {
-			cancelled = true;
-		};
-	}, []);
+		void refresh();
+	}, [refresh]);
 
 	/** Begin a new subscription for the chosen interval via native IAP. */
 	const purchase = useCallback(
 		async (interval: PlanInterval): Promise<PurchaseResult> => {
-			const pkg = interval === "annual" ? annualPkg : monthlyPkg;
+			// Prefer the package already loaded into state, but if it hasn't
+			// populated yet (the background load effect races with the tap, and a
+			// separate useBilling instance may hold the cached state), fetch it
+			// fresh on demand. initRevenueCat() is idempotent.
+			let pkg = interval === "annual" ? annualPkg : monthlyPkg;
+			if (!pkg) {
+				initRevenueCat();
+				pkg =
+					interval === "annual"
+						? await getAnnualPackage()
+						: await getMonthlyPackage();
+			}
 
 			if (!pkg) {
 				throw new Error(
@@ -100,6 +114,7 @@ export function useBilling() {
 		purchase,
 		restore,
 		manage,
+		refresh,
 		monthlyPkg,
 		annualPkg,
 		isLoadingPackages,

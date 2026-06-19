@@ -10,13 +10,9 @@ import { useMemo, useState } from "react";
 import {
 	ActivityIndicator,
 	Alert,
-	KeyboardAvoidingView,
-	Modal,
-	Platform,
 	Pressable,
 	ScrollView,
 	Text,
-	TextInput,
 	View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -34,13 +30,11 @@ export default function JournalDetailScreen() {
 	const params = useLocalSearchParams<{ journalId?: string }>();
 	const journalId = params.journalId as Id<"journals"> | undefined;
 
-	const [accent, accentForeground, fieldForeground, placeholderColor] =
-		useThemeColor([
-			"accent",
-			"accent-foreground",
-			"field-foreground",
-			"field-placeholder",
-		]);
+	const [accent, accentForeground, fieldForeground] = useThemeColor([
+		"accent",
+		"accent-foreground",
+		"field-foreground",
+	]);
 	const mutationToast = useMutationToast();
 	const { guardJournalAction } = useJournalPaywall();
 
@@ -53,12 +47,8 @@ export default function JournalDetailScreen() {
 		journalId ? { journalId } : "skip",
 	);
 	const removeJournal = useMutation(api.journal.mutations.remove);
-	const renameJournal = useMutation(api.journal.mutations.rename);
 	const exportJournal = useAction(api.journal.actions.exportJournal);
 	const orderBook = useAction(api.journal.actions.orderBook);
-	const [renameOpen, setRenameOpen] = useState(false);
-	const [renameValue, setRenameValue] = useState("");
-	const [renaming, setRenaming] = useState(false);
 	const [selectionMode, setSelectionMode] = useState(false);
 	const [selectedIds, setSelectedIds] = useState<Set<Id<"journalEntries">>>(
 		new Set(),
@@ -67,14 +57,20 @@ export default function JournalDetailScreen() {
 	const [ordering, setOrdering] = useState(false);
 
 	const isLoading = journal === undefined || entries === undefined;
-	const entryCount = entries?.length ?? 0;
+	// Only non-recording entries are exportable/printable — audio can't go into a
+	// PDF or printed book — so recording entries are hidden from the selection
+	// list entirely (matches web).
+	const exportableEntries = useMemo(
+		() => (entries ?? []).filter((e) => e.mode !== "recording"),
+		[entries],
+	);
+	const exportableCount = exportableEntries.length;
 	const resolvedSelectedIds = useMemo(() => {
-		if (!entries) return [] as Id<"journalEntries">[];
-		const valid = new Set(entries.map((e) => e._id));
+		const valid = new Set(exportableEntries.map((e) => e._id));
 		return Array.from(selectedIds).filter((id) => valid.has(id));
-	}, [entries, selectedIds]);
+	}, [exportableEntries, selectedIds]);
 	const selectedCount = resolvedSelectedIds.length;
-	const allSelected = entryCount > 0 && selectedCount === entryCount;
+	const allSelected = exportableCount > 0 && selectedCount === exportableCount;
 
 	const showMinimumOrderAlert = (count: number) => {
 		const remaining = MIN_ORDER_ENTRIES - count;
@@ -110,16 +106,19 @@ export default function JournalDetailScreen() {
 		}
 	};
 
-	const openRename = () => {
-		if (!journal) return;
-		setRenameValue(journal.title);
-		setRenameOpen(true);
+	const goToEditJournal = () => {
+		if (!journalId) return;
+		router.push({
+			pathname: "/journal/create",
+			params: { journalId },
+		});
 	};
 
 	const startExportSelection = () => {
 		if (!journal) return;
-		// Pre-select everything so "export all" is one tap; user can deselect.
-		setSelectedIds(new Set((entries ?? []).map((e) => e._id)));
+		// Pre-select all exportable (non-recording) entries so "export all" is one
+		// tap; user can deselect.
+		setSelectedIds(new Set(exportableEntries.map((e) => e._id)));
 		setSelectionMode(true);
 	};
 
@@ -149,25 +148,6 @@ export default function JournalDetailScreen() {
 		}
 	};
 
-	const handleRename = async () => {
-		if (!journalId || renaming) return;
-		const trimmed = renameValue.trim();
-		if (trimmed.length < 1) {
-			mutationToast.error(new Error("empty"), "Journal name can't be empty.");
-			return;
-		}
-		setRenaming(true);
-		try {
-			await renameJournal({ id: journalId, title: trimmed });
-			mutationToast.success("Journal renamed.");
-			setRenameOpen(false);
-		} catch (err) {
-			mutationToast.error(err, "Could not rename journal. Please try again.");
-		} finally {
-			setRenaming(false);
-		}
-	};
-
 	const toggleSelected = (id: Id<"journalEntries">) => {
 		setSelectedIds((prev) => {
 			const next = new Set(prev);
@@ -184,7 +164,7 @@ export default function JournalDetailScreen() {
 
 	const toggleSelectAll = () => {
 		setSelectedIds(
-			allSelected ? new Set() : new Set((entries ?? []).map((e) => e._id)),
+			allSelected ? new Set() : new Set(exportableEntries.map((e) => e._id)),
 		);
 	};
 
@@ -272,7 +252,7 @@ export default function JournalDetailScreen() {
 							</Text>
 							<Pressable
 								onPress={toggleSelectAll}
-								disabled={entryCount === 0}
+								disabled={exportableCount === 0}
 								accessibilityRole="button"
 								accessibilityLabel={allSelected ? "Deselect all" : "Select all"}
 								className="active:opacity-70 disabled:opacity-40"
@@ -332,9 +312,9 @@ export default function JournalDetailScreen() {
 								{!selectionMode ? (
 									<View className="flex-row items-center gap-2">
 										<Pressable
-											onPress={openRename}
+											onPress={goToEditJournal}
 											accessibilityRole="button"
-											accessibilityLabel="Edit journal name"
+											accessibilityLabel="Edit journal"
 											className="size-10 items-center justify-center rounded-full bg-primary/10 active:opacity-70"
 											hitSlop={6}
 										>
@@ -342,7 +322,7 @@ export default function JournalDetailScreen() {
 										</Pressable>
 										<Pressable
 											onPress={startExportSelection}
-											disabled={entryCount === 0}
+											disabled={exportableCount === 0}
 											accessibilityRole="button"
 											accessibilityLabel="Export journal"
 											className="size-10 items-center justify-center rounded-full bg-primary/10 active:opacity-70 disabled:opacity-40"
@@ -386,7 +366,7 @@ export default function JournalDetailScreen() {
 
 						{entries && entries.length > 0 ? (
 							<View className="gap-3">
-								{entries.map((entry) => (
+								{(selectionMode ? exportableEntries : entries).map((entry) => (
 									<JournalEntryRow
 										key={entry._id}
 										title={entry.title}
@@ -494,65 +474,6 @@ export default function JournalDetailScreen() {
 					</Pressable>
 				)}
 			</View>
-
-			{/* Rename modal */}
-			<Modal
-				visible={renameOpen}
-				transparent
-				animationType="fade"
-				statusBarTranslucent
-				onRequestClose={() => setRenameOpen(false)}
-			>
-				<KeyboardAvoidingView
-					behavior={Platform.OS === "ios" ? "padding" : undefined}
-					className="flex-1"
-				>
-					<Pressable
-						className="flex-1 items-center justify-center bg-overlay px-6"
-						onPress={() => !renaming && setRenameOpen(false)}
-					>
-						<Pressable
-							className="w-full max-w-[360px] gap-4 rounded-2xl bg-background p-5"
-							onPress={(e) => e.stopPropagation()}
-						>
-							<Text className="font-semibold text-foreground text-lg">
-								Rename journal
-							</Text>
-							<TextInput
-								value={renameValue}
-								onChangeText={setRenameValue}
-								placeholder="Journal name"
-								placeholderTextColor={placeholderColor}
-								autoFocus
-								className="h-12 rounded-xl border border-border bg-background px-3 text-base text-foreground"
-							/>
-							<View className="flex-row justify-end gap-2">
-								<Pressable
-									onPress={() => setRenameOpen(false)}
-									disabled={renaming}
-									className="rounded-full px-5 py-3 active:opacity-70"
-								>
-									<Text className="font-semibold text-base text-muted-foreground">
-										Cancel
-									</Text>
-								</Pressable>
-								<Pressable
-									onPress={() => void handleRename()}
-									disabled={renaming}
-									className="flex-row items-center gap-2 rounded-full bg-primary px-5 py-3 active:opacity-90 disabled:opacity-70"
-								>
-									{renaming ? (
-										<ActivityIndicator color={accentForeground} size="small" />
-									) : null}
-									<Text className="font-semibold text-base text-primary-foreground">
-										{renaming ? "Saving…" : "Save"}
-									</Text>
-								</Pressable>
-							</View>
-						</Pressable>
-					</Pressable>
-				</KeyboardAvoidingView>
-			</Modal>
 		</View>
 	);
 }

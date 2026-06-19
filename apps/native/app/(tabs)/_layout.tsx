@@ -1,11 +1,14 @@
 import { useAuth } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs, useRouter } from "expo-router";
+import { Redirect, Tabs, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native/hooks";
 import { useEffect, useMemo, useRef } from "react";
 
+import { useNativeCurrentUser } from "@/hooks/use-native-current-user";
+
 export default function TabLayout() {
 	const { isLoaded, isSignedIn } = useAuth();
+	const { convexUser, isLoading: userLoading } = useNativeCurrentUser();
 	const router = useRouter();
 	const didRedirect = useRef(false);
 	const [activeTint, inactiveTint, tabBackground, tabBorder] = useThemeColor([
@@ -44,6 +47,16 @@ export default function TabLayout() {
 
 	if (!isLoaded || !isSignedIn) {
 		return null;
+	}
+
+	// Wait for the Convex user before deciding, then send first-run users through
+	// onboarding (username + welcome video) until `welcomeCompletedAt` is set.
+	if (userLoading) {
+		return null;
+	}
+
+	if (!convexUser || !convexUser.welcomeCompletedAt) {
+		return <Redirect href="/welcome" />;
 	}
 
 	return (

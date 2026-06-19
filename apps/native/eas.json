@@ -7,7 +7,14 @@
 		"development": {
 			"developmentClient": true,
 			"distribution": "internal",
-			"prebuildCommand": "npx expo prebuild --no-install"
+			"prebuildCommand": "npx expo prebuild --no-install",
+			"env": {
+				"EXPO_PUBLIC_CONVEX_URL": "https://exuberant-lark-860.convex.cloud",
+				"EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bGlnaHQtdGV0cmEtNzIuY2xlcmsuYWNjb3VudHMuZGV2JA",
+				"EXPO_PUBLIC_REVENUECAT_APPLE_KEY": "appl_MsDyYwRWSrsTtjcnMfJoapQlbFV",
+				"EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY": "goog_primpwSXNjoFOaCXSIpJYgqKrJP",
+				"EXPO_PUBLIC_WEB_APP_URL": "https://app.legacybuildingjournals.com"
+			}
 		},
 		"development-simulator": {
 			"developmentClient": true,
@@ -15,18 +22,49 @@
 			"prebuildCommand": "npx expo prebuild --no-install",
 			"ios": {
 				"simulator": true
+			},
+			"env": {
+				"EXPO_PUBLIC_CONVEX_URL": "https://exuberant-lark-860.convex.cloud",
+				"EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bGlnaHQtdGV0cmEtNzIuY2xlcmsuYWNjb3VudHMuZGV2JA",
+				"EXPO_PUBLIC_REVENUECAT_APPLE_KEY": "appl_MsDyYwRWSrsTtjcnMfJoapQlbFV",
+				"EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY": "goog_primpwSXNjoFOaCXSIpJYgqKrJP",
+				"EXPO_PUBLIC_WEB_APP_URL": "https://app.legacybuildingjournals.com"
 			}
 		},
 		"preview": {
 			"distribution": "internal",
-			"prebuildCommand": "npx expo prebuild --no-install"
+			"prebuildCommand": "npx expo prebuild --no-install",
+			"android": {
+				"buildType": "app-bundle"
+			},
+			"env": {
+				"EXPO_PUBLIC_CONVEX_URL": "https://exuberant-lark-860.convex.cloud",
+				"EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bGlnaHQtdGV0cmEtNzIuY2xlcmsuYWNjb3VudHMuZGV2JA",
+				"EXPO_PUBLIC_REVENUECAT_APPLE_KEY": "appl_MsDyYwRWSrsTtjcnMfJoapQlbFV",
+				"EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY": "goog_primpwSXNjoFOaCXSIpJYgqKrJP",
+				"EXPO_PUBLIC_WEB_APP_URL": "https://app.legacybuildingjournals.com"
+			}
 		},
 		"production": {
 			"autoIncrement": true,
-			"prebuildCommand": "npx expo prebuild --no-install"
+			"prebuildCommand": "npx expo prebuild --no-install",
+			"env": {
+				"EXPO_PUBLIC_CONVEX_URL": "https://exuberant-lark-860.convex.cloud",
+				"EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bGlnaHQtdGV0cmEtNzIuY2xlcmsuYWNjb3VudHMuZGV2JA",
+				"EXPO_PUBLIC_REVENUECAT_APPLE_KEY": "appl_MsDyYwRWSrsTtjcnMfJoapQlbFV",
+				"EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY": "goog_primpwSXNjoFOaCXSIpJYgqKrJP",
+				"EXPO_PUBLIC_WEB_APP_URL": "https://app.legacybuildingjournals.com"
+			}
 		}
 	},
 	"submit": {
-		"production": {}
+		"production": {
+			"ios": {
+				"ascAppId": "6778774585",
+				"ascApiKeyPath": "/Users/umaraurangzeb/AuthKey_ASC.p8",
+				"ascApiKeyId": "5R3CNB7NNX",
+				"ascApiKeyIssuerId": "28319d2e-47e6-46a1-984b-dedc8ee47fec"
+			}
+		}
 	}
 }

@@ -13,6 +13,11 @@ declare module "@legacy-building/assets/images/*.png" {
 	export default src;
 }
 
+declare module "@legacy-building/assets/images/*.webp" {
+	const src: number;
+	export default src;
+}
+
 // Local app assets (imported via the "@/" alias).
 declare module "@/assets/images/*.jpeg" {
 	const src: number;
@@ -25,6 +30,11 @@ declare module "@/assets/images/*.jpg" {
 }
 
 declare module "@/assets/images/*.png" {
+	const src: number;
+	export default src;
+}
+
+declare module "@/assets/images/*.webp" {
 	const src: number;
 	export default src;
 }

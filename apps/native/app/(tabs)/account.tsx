@@ -130,6 +130,39 @@ export default function AccountScreen() {
 		void manage(provider);
 	};
 
+	// Tapping "Subscription":
+	// - Free users → open the in-app paywall to subscribe.
+	// - Paid on the web (Stripe) → in-app subscription management is CLOSED. We
+	//   never show the IAP paywall (no "switch to annual" via the store); instead
+	//   we point them to the web, where the plan must be changed/cancelled.
+	// - Paid via Apple/Google → the store paywall handles plan changes.
+	const handleSubscriptionPress = () => {
+		if (!hasPaidAccess) {
+			openPaywall();
+			return;
+		}
+		if (provider === "stripe") {
+			Alert.alert(
+				"Managed on the web",
+				"Your subscription was purchased on the web. To change or cancel your plan, manage it from the Legacy Building website on your browser.",
+				[
+					{ text: "Not now", style: "cancel" },
+					{ text: "Open website", onPress: () => void manage("stripe") },
+				],
+			);
+			return;
+		}
+		openPaywall();
+	};
+
+	const subscriptionSubtitle = planLoading
+		? "Loading…"
+		: plan === "free"
+			? "Free plan — tap to upgrade"
+			: provider === "stripe"
+				? `${planStatusLabel(plan)} plan — managed on the web`
+				: `${planStatusLabel(plan)} plan`;
+
 	const billingSubtitle = !hasPaidAccess
 		? "Manage subscription and payment"
 		: provider === "apple"
@@ -168,14 +201,8 @@ export default function AccountScreen() {
 				/>
 				<AccountRow
 					title="Subscription"
-					subtitle={
-						planLoading
-							? "Loading…"
-							: plan === "free"
-								? "Free plan — tap to upgrade"
-								: `${planStatusLabel(plan)} plan`
-					}
-					onPress={openPaywall}
+					subtitle={subscriptionSubtitle}
+					onPress={handleSubscriptionPress}
 					chevronColor={accent}
 				/>
 				<AccountRow

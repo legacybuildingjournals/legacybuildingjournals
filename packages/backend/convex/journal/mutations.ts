@@ -157,6 +157,10 @@ export const update = mutation({
 		type: v.optional(journalType),
 		dedication: v.optional(v.string()),
 		coverImageId: v.optional(v.id("_storage")),
+		// `number` sets the period end, `null` clears it. Omitted (undefined) keeps
+		// the existing value — so callers that don't manage the end date (web) are
+		// unaffected.
+		endDateMs: v.optional(v.union(v.number(), v.null())),
 	},
 	handler: async (ctx, args) => {
 		const userId = await requirePaidJournalAccess(ctx);
@@ -193,6 +197,9 @@ export const update = mutation({
 			dateMs: args.dateMs,
 			...(args.type !== undefined ? { type: args.type } : {}),
 			...(typeChanged ? { sortOrder } : {}),
+			...(args.endDateMs !== undefined
+				? { endDateMs: args.endDateMs ?? undefined }
+				: {}),
 			dedication: args.dedication,
 			coverImageId,
 			coverImageUrl,

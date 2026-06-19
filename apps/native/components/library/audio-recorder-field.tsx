@@ -9,7 +9,7 @@ import {
 	useAudioRecorderState,
 } from "expo-audio";
 import { useThemeColor } from "heroui-native/hooks";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Linking, Pressable, Text, View } from "react-native";
 
 function formatDuration(ms: number): string {
@@ -59,6 +59,10 @@ export function AudioRecorderField({
 	]);
 
 	const [preparing, setPreparing] = useState(false);
+	// Wall-clock start time of the active recording. expo-audio's recorder status
+	// reports `durationMillis: 0` once stopped, so we measure elapsed time
+	// ourselves as the source of truth.
+	const recordStartRef = useRef<number | null>(null);
 
 	// Default to a playback-friendly session so recorded audio plays out the
 	// main speaker. We only flip to record mode for the duration of recording.
@@ -101,6 +105,7 @@ export function AudioRecorderField({
 			});
 			await recorder.prepareToRecordAsync();
 			recorder.record();
+			recordStartRef.current = Date.now();
 			recordingStarted = true;
 		} catch (err) {
 			Alert.alert(
@@ -126,10 +131,18 @@ export function AudioRecorderField({
 				allowsRecording: false,
 				playsInSilentMode: true,
 			}).catch(() => {});
-			const durationMs =
-				recorder.getStatus().durationMillis ??
-				recorderState.durationMillis ??
-				0;
+			// `getStatus().durationMillis` is 0 after stop and `recorderState` may be
+			// stale, so take the largest of: measured elapsed time, the recorder
+			// status, and the last polled state value.
+			const elapsedMs = recordStartRef.current
+				? Date.now() - recordStartRef.current
+				: 0;
+			recordStartRef.current = null;
+			const durationMs = Math.max(
+				elapsedMs,
+				recorder.getStatus().durationMillis ?? 0,
+				recorderState.durationMillis ?? 0,
+			);
 
 			// `recorder.uri` points at the finalized recording. We hand it off as-is;
 			// the modern File API in `uploadBinaryToConvex` reads it natively at
@@ -143,7 +156,13 @@ export function AudioRecorderField({
 				return;
 			}
 
-			onChange({ uri, mimeType: "audio/m4a", durationMs });
+			// `audio/mp4` is the standard MIME for the AAC/.m4a clip expo-audio
+			// produces. Convex serves the uploaded file with this Content-Type, and
+			// because the storage URL has no file extension, iOS AVPlayer relies on
+			// it to recognise the format — the non-standard `audio/m4a` failed to
+			// load remotely (local previews worked because the file:// uri kept its
+			// .m4a extension).
+			onChange({ uri, mimeType: "audio/mp4", durationMs });
 		} catch (err) {
 			Alert.alert(
 				"Could not save recording",

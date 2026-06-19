@@ -1,7 +1,7 @@
 {
 	"expo": {
 		"scheme": "legacy-building",
-		"userInterfaceStyle": "automatic",
+		"userInterfaceStyle": "light",
 		"orientation": "default",
 		"web": {
 			"bundler": "metro"
