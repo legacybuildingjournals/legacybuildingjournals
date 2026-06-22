@@ -44,6 +44,9 @@
 		},
 		"android": {
 			"package": "com.legacybuildingjournals.app",
+			"blockedPermissions": [
+				"android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+			],
 			"adaptiveIcon": {
 				"foregroundImage": "./assets/images/android-icon-foreground.png",
 				"backgroundImage": "./assets/images/android-icon-background.png",
