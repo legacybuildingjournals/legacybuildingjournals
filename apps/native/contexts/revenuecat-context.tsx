@@ -10,7 +10,7 @@ import {
 import type { CustomerInfo } from "react-native-purchases";
 
 import {
-	checkProAccess,
+	getCustomerInfo,
 	hasPro,
 	identifyUser,
 	initRevenueCat,
@@ -54,10 +54,16 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
 		// 1. Configure the SDK (no-op if already configured).
 		initRevenueCat();
 
-		// 2. Fetch initial status.
-		checkProAccess()
-			.then((pro) => {
-				setIsPro(pro);
+		// 2. Fetch initial status. Capture the full CustomerInfo (not just a
+		//    boolean) so consumers that read `customerInfo` to derive plan/provider
+		//    have it on first paint. The update listener below only fires on
+		//    *changes*, so without this `customerInfo` stays null even when the
+		//    user is pro — which made gating fall through to the server entitlement
+		//    and show the paywall to paid/comped users.
+		getCustomerInfo()
+			.then((info) => {
+				setCustomerInfo(info);
+				setIsPro(hasPro(info));
 				setIsReady(true);
 			})
 			.catch(() => {

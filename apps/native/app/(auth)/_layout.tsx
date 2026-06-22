@@ -1,5 +1,6 @@
 import { useAuth } from "@clerk/expo";
 import { Redirect, Stack } from "expo-router";
+import { LoadingScreen } from "@/components/loading-screen";
 /** Auth screens: when signed in, go straight to the tabs. Redirecting to "/"
  * instead loops infinitely, because "/" also resolves to (auth)/index (route
  * group), which re-mounts this layout and redirects to "/" again. */
@@ -7,7 +8,7 @@ export default function AuthRoutesLayout() {
 	const { isLoaded, isSignedIn } = useAuth();
 
 	if (!isLoaded) {
-		return null;
+		return <LoadingScreen />;
 	}
 
 	if (isSignedIn) {
