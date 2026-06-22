@@ -49,8 +49,8 @@
 			"autoIncrement": true,
 			"prebuildCommand": "npx expo prebuild --no-install",
 			"env": {
-				"EXPO_PUBLIC_CONVEX_URL": "https://exuberant-lark-860.convex.cloud",
-				"EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_bGlnaHQtdGV0cmEtNzIuY2xlcmsuYWNjb3VudHMuZGV2JA",
+				"EXPO_PUBLIC_CONVEX_URL": "https://third-quail-997.convex.cloud",
+				"EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsubGVnYWN5YnVpbGRpbmdqb3VybmFscy5jb20k",
 				"EXPO_PUBLIC_REVENUECAT_APPLE_KEY": "appl_MsDyYwRWSrsTtjcnMfJoapQlbFV",
 				"EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY": "goog_primpwSXNjoFOaCXSIpJYgqKrJP",
 				"EXPO_PUBLIC_WEB_APP_URL": "https://app.legacybuildingjournals.com"

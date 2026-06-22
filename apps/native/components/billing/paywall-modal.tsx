@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import { useAction, useQuery } from "convex/react";
+import * as WebBrowser from "expo-web-browser";
 import { useThemeColor } from "heroui-native/hooks";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -22,7 +23,9 @@ import {
 	PAYWALL_FEATURES,
 	type PlanInterval,
 } from "@/lib/billing/plans";
+import { nativeLegalRoutes } from "@/lib/legal-routes";
 import { useMutationToast } from "@/lib/mutation-toast";
+import { nativeLegalUrl } from "@/lib/native-legal-url";
 
 function formatRenewDate(seconds: number): string {
 	return new Date(seconds * 1000).toLocaleDateString(undefined, {
@@ -484,6 +487,40 @@ export function PaywallModal({
 							</Text>
 						</Pressable>
 					) : null}
+
+					{/* Terms of Use + Privacy Policy — required by Apple (Guideline
+					    3.1.2) for auto-renewable subscription paywalls. */}
+					<View className="mt-2 flex-row items-center justify-center gap-1.5">
+						<Pressable
+							onPress={() =>
+								void WebBrowser.openBrowserAsync(
+									nativeLegalUrl(nativeLegalRoutes.terms),
+								)
+							}
+							accessibilityRole="link"
+							accessibilityLabel="Terms of Use"
+							className="active:opacity-70"
+						>
+							<Text className="text-primary-foreground/50 text-xs underline">
+								Terms of Use
+							</Text>
+						</Pressable>
+						<Text className="text-primary-foreground/40 text-xs">•</Text>
+						<Pressable
+							onPress={() =>
+								void WebBrowser.openBrowserAsync(
+									nativeLegalUrl(nativeLegalRoutes.privacy),
+								)
+							}
+							accessibilityRole="link"
+							accessibilityLabel="Privacy Policy"
+							className="active:opacity-70"
+						>
+							<Text className="text-primary-foreground/50 text-xs underline">
+								Privacy Policy
+							</Text>
+						</Pressable>
+					</View>
 				</View>
 			</View>
 		</Modal>

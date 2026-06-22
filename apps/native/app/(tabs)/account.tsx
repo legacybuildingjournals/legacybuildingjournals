@@ -205,12 +205,17 @@ export default function AccountScreen() {
 					onPress={handleSubscriptionPress}
 					chevronColor={accent}
 				/>
-				<AccountRow
-					title="Billing"
-					subtitle={billingSubtitle}
-					onPress={openBilling}
-					chevronColor={accent}
-				/>
+				{/* Billing only exists once there's a subscription to manage.
+				    Free users have nothing to bill, so the row is hidden until
+				    they subscribe (it reappears for any paid provider). */}
+				{hasPaidAccess ? (
+					<AccountRow
+						title="Billing"
+						subtitle={billingSubtitle}
+						onPress={openBilling}
+						chevronColor={accent}
+					/>
+				) : null}
 				<AccountRow
 					title="Change Email"
 					subtitle={email}
