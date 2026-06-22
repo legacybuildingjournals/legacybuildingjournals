@@ -13,6 +13,8 @@ import type * as admin_billing from "../admin/billing.js";
 import type * as admin_helpers from "../admin/helpers.js";
 import type * as admin_mutations from "../admin/mutations.js";
 import type * as admin_queries from "../admin/queries.js";
+import type * as email_actions from "../email/actions.js";
+import type * as email_mutations from "../email/mutations.js";
 import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
 import type * as journal_actions from "../journal/actions.js";
@@ -60,6 +62,8 @@ declare const fullApi: ApiFromModules<{
   "admin/helpers": typeof admin_helpers;
   "admin/mutations": typeof admin_mutations;
   "admin/queries": typeof admin_queries;
+  "email/actions": typeof email_actions;
+  "email/mutations": typeof email_mutations;
   helpers: typeof helpers;
   http: typeof http;
   "journal/actions": typeof journal_actions;

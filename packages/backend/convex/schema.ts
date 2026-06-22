@@ -94,6 +94,8 @@ export default defineSchema({
 		accountStatus: v.optional(accountStatusValidator),
 		/** Admin-granted free access; bypasses subscription paywall. */
 		betaAccess: v.optional(v.boolean()),
+		/** Convex scheduled-function id for the day-5 trial reminder email. Cleared on send or conversion. */
+		trialReminderJobId: v.optional(v.id("_scheduled_functions")),
 	})
 		.index("by_clerk_id", ["clerkId"])
 		.index("by_email", ["email"])

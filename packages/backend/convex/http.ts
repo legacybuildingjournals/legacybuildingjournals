@@ -173,6 +173,9 @@ http.route({
  * Mirror the authoritative subscription status (already synced into the Stripe
  * component's tables) onto our `users` table so the UI/access gates can read it
  * cheaply. Runs after the component's default sync.
+ *
+ * Also schedules the day-5 trial reminder email when a trialing subscription is
+ * created, and cancels it (via mirrorSubscriptionStatus) when the user converts.
  */
 async function mirrorSubscriptionEvent(
 	ctx: GenericActionCtx<GenericDataModel>,
@@ -200,6 +203,19 @@ async function mirrorSubscriptionEvent(
 		stripeCustomerId,
 		stripeStatus,
 	});
+
+	// Schedule the day-5 reminder when a trial starts
+	if (
+		event.type === "customer.subscription.created" &&
+		subscription.status === "trialing" &&
+		subscription.trial_end &&
+		userId
+	) {
+		await ctx.runMutation(internal.email.mutations.scheduleTrialReminder, {
+			clerkUserId: userId,
+			trialEndSeconds: subscription.trial_end,
+		});
+	}
 }
 
 // Stripe webhook handler at /stripe/webhook (signature verified by the component).
