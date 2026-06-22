@@ -96,6 +96,13 @@ export default defineSchema({
 		betaAccess: v.optional(v.boolean()),
 		/** Convex scheduled-function id for the day-5 trial reminder email. Cleared on send or conversion. */
 		trialReminderJobId: v.optional(v.id("_scheduled_functions")),
+		/**
+		 * Day-5 trial reminder email state. Optional so pre-existing users and
+		 * non-trial (e.g. annual) signups are untouched. Set to `false` when a
+		 * 7-day trial starts and the job is scheduled, flipped to `true` once the
+		 * email is actually sent.
+		 */
+		trialReminderEmailSent: v.optional(v.boolean()),
 	})
 		.index("by_clerk_id", ["clerkId"])
 		.index("by_email", ["email"])

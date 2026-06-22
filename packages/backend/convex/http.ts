@@ -213,7 +213,9 @@ async function mirrorSubscriptionEvent(
 	) {
 		await ctx.runMutation(internal.email.mutations.scheduleTrialReminder, {
 			clerkUserId: userId,
-			trialEndSeconds: subscription.trial_end,
+			// Stripe gives trial_end in seconds; the scheduler expects ms.
+			trialEndMs: subscription.trial_end * 1000,
+			source: "stripe",
 		});
 	}
 }

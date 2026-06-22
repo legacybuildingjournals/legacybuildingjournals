@@ -6,15 +6,27 @@ import { internal } from "../_generated/api";
 import { action, internalAction } from "../_generated/server";
 
 export const sendTrialDayFiveReminder = internalAction({
-	args: { clerkUserId: v.string() },
-	handler: async (ctx, { clerkUserId }) => {
-		const user = await ctx.runQuery(internal.user.queries.getTrialUserInfo, {
-			clerkId: clerkUserId,
-		});
-		if (!user) return;
+	args: {
+		clerkUserId: v.string(),
+		source: v.union(v.literal("stripe"), v.literal("revenuecat")),
+	},
+	handler: async (ctx, { clerkUserId, source }) => {
+		const context = await ctx.runQuery(
+			internal.email.queries.getTrialReminderContext,
+			{ clerkUserId, source },
+		);
+		if (!context) return;
 
-		// Guard: user may have converted before day 5
-		if (user.subscriptionStatus !== "trialing") {
+		// Safety net against duplicate sends.
+		if (context.alreadySent) {
+			await ctx.runMutation(internal.email.mutations.cancelTrialReminder, {
+				clerkUserId,
+			});
+			return;
+		}
+
+		// Guard: user may have converted or churned before day 5.
+		if (!context.isTrialing) {
 			await ctx.runMutation(internal.email.mutations.cancelTrialReminder, {
 				clerkUserId,
 			});
@@ -27,40 +39,78 @@ export const sendTrialDayFiveReminder = internalAction({
 			return;
 		}
 
-		const firstName = user.name.split(" ")[0] ?? user.name;
+		const firstName = context.name.split(" ")[0] ?? context.name;
 		const appUrl =
 			process.env.APP_URL ?? "https://app.legacybuildingjournals.com";
 		const journalUrl = appUrl + "/dashboard";
-		const billingUrl = appUrl + "/dashboard/billing";
+		const manage = resolveManageDestination(
+			context.provider,
+			appUrl + "/dashboard/billing",
+		);
 
 		const resend = new Resend(apiKey);
 		const { error } = await resend.emails.send({
 			from: "Legacy Building Journals <hello@legacybuildingjournals.com>",
-			to: [user.email],
+			to: [context.email],
 			subject: `${firstName}, your trial ends in 2 days`,
-			html: buildTrialReminderHtml({ firstName, journalUrl, billingUrl }),
+			html: buildTrialReminderHtml({
+				firstName,
+				journalUrl,
+				manageUrl: manage.url,
+				manageLabel: manage.label,
+			}),
 		});
 
 		if (error) {
+			// Leave the job record intact so it isn't marked as sent on failure.
 			console.error("Resend error sending trial reminder:", error);
 			return;
 		}
 
-		// Clear the stored job id — work is done
-		await ctx.runMutation(internal.email.mutations.cancelTrialReminder, {
+		// Mark as sent: clears the job id and flips trialReminderEmailSent.
+		await ctx.runMutation(internal.email.mutations.markTrialReminderSent, {
 			clerkUserId,
 		});
 	},
 });
 
+/** Apple/Google forbid managing IAP subscriptions outside their stores. */
+const STORE_SUBSCRIPTION_URLS = {
+	apple: "https://apps.apple.com/account/subscriptions",
+	google: "https://play.google.com/store/account/subscriptions",
+} as const;
+
+/** Pick the correct "manage subscription" link + label for the user's store. */
+function resolveManageDestination(
+	provider: "stripe" | "apple" | "google",
+	webBillingUrl: string,
+): { url: string; label: string } {
+	switch (provider) {
+		case "apple":
+			return {
+				url: STORE_SUBSCRIPTION_URLS.apple,
+				label: "Manage in App Store",
+			};
+		case "google":
+			return {
+				url: STORE_SUBSCRIPTION_URLS.google,
+				label: "Manage in Google Play",
+			};
+		default:
+			return { url: webBillingUrl, label: "Manage Subscription" };
+	}
+}
+
 function buildTrialReminderHtml({
 	firstName,
 	journalUrl,
-	billingUrl,
+	manageUrl,
+	manageLabel,
 }: {
 	firstName: string;
 	journalUrl: string;
-	billingUrl: string;
+	manageUrl: string;
+	manageLabel: string;
 }): string {
 	return `<!DOCTYPE html>
 <html lang="en">
@@ -106,9 +156,9 @@ function buildTrialReminderHtml({
                     </a>
                   </td>
                   <td>
-                    <a href="${billingUrl}"
+                    <a href="${manageUrl}"
                        style="display:inline-block;background:#ffffff;color:#008080;font-size:15px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;text-decoration:none;padding:12px 28px;border-radius:8px;font-weight:600;border:1.5px solid #008080;">
-                      Manage Subscription
+                      ${manageLabel}
                     </a>
                   </td>
                 </tr>
@@ -139,11 +189,16 @@ function buildTrialReminderHtml({
 /**
  * Dev-only: send the trial reminder email immediately to the signed-in user.
  * Requires ALLOW_BILLING_RESET=true in Convex env (same flag as billing reset).
+ * Pass `provider` to preview the store-specific "manage" button (defaults web).
  */
 export const sendTestTrialReminder = action({
-	args: {},
+	args: {
+		provider: v.optional(
+			v.union(v.literal("stripe"), v.literal("apple"), v.literal("google")),
+		),
+	},
 	returns: v.object({ sent: v.boolean(), to: v.string() }),
-	handler: async (ctx): Promise<{ sent: boolean; to: string }> => {
+	handler: async (ctx, args): Promise<{ sent: boolean; to: string }> => {
 		if (process.env.ALLOW_BILLING_RESET !== "true") {
 			throw new ConvexError({
 				code: "FORBIDDEN",
@@ -182,14 +237,22 @@ export const sendTestTrialReminder = action({
 		const appUrl =
 			process.env.APP_URL ?? "https://app.legacybuildingjournals.com";
 		const journalUrl = appUrl + "/dashboard";
-		const billingUrl = appUrl + "/dashboard/billing";
+		const manage = resolveManageDestination(
+			args.provider ?? "stripe",
+			appUrl + "/dashboard/billing",
+		);
 
 		const resend = new Resend(apiKey);
 		const { error } = await resend.emails.send({
 			from: "Legacy Building Journals <hello@legacybuildingjournals.com>",
 			to: [user.email],
 			subject: `${firstName}, your trial ends in 2 days`,
-			html: buildTrialReminderHtml({ firstName, journalUrl, billingUrl }),
+			html: buildTrialReminderHtml({
+				firstName,
+				journalUrl,
+				manageUrl: manage.url,
+				manageLabel: manage.label,
+			}),
 		});
 
 		if (error) {

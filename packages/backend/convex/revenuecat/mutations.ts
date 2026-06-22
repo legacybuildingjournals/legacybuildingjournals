@@ -2,6 +2,10 @@ import { v } from "convex/values";
 
 import { internalMutation } from "../_generated/server";
 import {
+	cancelTrialReminderForUser,
+	scheduleTrialReminderForUser,
+} from "../email/helpers";
+import {
 	iapSubscriptionStatusValidator,
 	planIntervalValidator,
 	subscriptionProviderValidator,
@@ -60,6 +64,23 @@ export const upsertFromWebhook = internalMutation({
 			await ctx.db.patch(existing._id, fields);
 		} else {
 			await ctx.db.insert("subscriptions", fields);
+		}
+
+		// `appUserId` is the Clerk id once the app called Purchases.logIn(clerkId),
+		// so it maps directly to a `users` row for the reminder helpers.
+		const clerkUserId = args.appUserId;
+
+		if (args.status === "trialing" && args.currentPeriodEnd) {
+			// Trial active → schedule the day-5 reminder (idempotent).
+			await scheduleTrialReminderForUser(ctx, {
+				clerkUserId,
+				// RevenueCat already gives expiration in milliseconds.
+				trialEndMs: args.currentPeriodEnd,
+				source: "revenuecat",
+			});
+		} else if (existing?.status === "trialing" && args.status !== "trialing") {
+			// Converted to paid (or churned) before day 5 → drop the pending email.
+			await cancelTrialReminderForUser(ctx, clerkUserId);
 		}
 	},
 });
