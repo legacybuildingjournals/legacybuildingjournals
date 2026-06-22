@@ -48,6 +48,9 @@
 		"production": {
 			"autoIncrement": true,
 			"prebuildCommand": "npx expo prebuild --no-install",
+			"android": {
+				"buildType": "app-bundle"
+			},
 			"env": {
 				"EXPO_PUBLIC_CONVEX_URL": "https://third-quail-997.convex.cloud",
 				"EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsubGVnYWN5YnVpbGRpbmdqb3VybmFscy5jb20k",
