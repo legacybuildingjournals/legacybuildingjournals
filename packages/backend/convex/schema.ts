@@ -94,6 +94,15 @@ export default defineSchema({
 		accountStatus: v.optional(accountStatusValidator),
 		/** Admin-granted free access; bypasses subscription paywall. */
 		betaAccess: v.optional(v.boolean()),
+		/** Convex scheduled-function id for the day-5 trial reminder email. Cleared on send or conversion. */
+		trialReminderJobId: v.optional(v.id("_scheduled_functions")),
+		/**
+		 * Day-5 trial reminder email state. Optional so pre-existing users and
+		 * non-trial (e.g. annual) signups are untouched. Set to `false` when a
+		 * 7-day trial starts and the job is scheduled, flipped to `true` once the
+		 * email is actually sent.
+		 */
+		trialReminderEmailSent: v.optional(v.boolean()),
 	})
 		.index("by_clerk_id", ["clerkId"])
 		.index("by_email", ["email"])
@@ -154,6 +163,9 @@ export default defineSchema({
 		audioUrl: v.optional(v.string()),
 		imageId: v.optional(v.id("_storage")),
 		audioId: v.optional(v.id("_storage")),
+		/** Recorded clip length in ms, captured at record time so playback UIs can
+		 * show the duration without waiting on the player to load remote audio. */
+		audioDurationMs: v.optional(v.number()),
 	})
 		.index("by_journalId", ["journalId"])
 		.index("by_userId", ["userId"]),

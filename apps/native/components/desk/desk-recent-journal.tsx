@@ -25,14 +25,37 @@ export function DeskRecentJournal() {
 
 	if (recent === null) {
 		return (
-			<View className="w-full max-w-sm gap-2">
-				<Text className="font-semibold text-base text-foreground">
-					Most Recent...
-				</Text>
-				<View className="rounded-xl bg-card/90 px-5 py-6">
-					<Text className="text-center text-muted-foreground text-sm">
-						You haven&apos;t created anything yet.
+			<View className="w-full max-w-sm px-3">
+				<View
+					className="items-center rounded-lg bg-background px-6 py-7"
+					style={{
+						shadowColor: "#000",
+						shadowOpacity: 0.12,
+						shadowRadius: 10,
+						shadowOffset: { width: 0, height: 3 },
+						elevation: 4,
+					}}
+				>
+					<Text className="mb-4 text-center font-semibold text-base text-foreground">
+						Create your first journal!
 					</Text>
+					<Pressable
+						onPress={() => router.push("/journal/create")}
+						accessibilityRole="button"
+						accessibilityLabel="Create your first journal"
+						className="h-12 w-full items-center justify-center rounded-full bg-primary active:opacity-90"
+						style={{
+							shadowColor: "#000",
+							shadowOpacity: 0.18,
+							shadowRadius: 6,
+							shadowOffset: { width: 0, height: 2 },
+							elevation: 3,
+						}}
+					>
+						<Text className="font-semibold text-base text-primary-foreground">
+							Let&apos;s go!
+						</Text>
+					</Pressable>
 				</View>
 			</View>
 		);

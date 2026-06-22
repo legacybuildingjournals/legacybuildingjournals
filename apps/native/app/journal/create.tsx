@@ -1,10 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@legacy-building/backend/convex/_generated/api";
-import { useMutation } from "convex/react";
+import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
+import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { router, useLocalSearchParams } from "expo-router";
+import { Spinner } from "heroui-native";
 import { useThemeColor } from "heroui-native/hooks";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	ActivityIndicator,
 	Alert,
@@ -47,30 +49,46 @@ function messageFromError(err: unknown, fallback: string): string {
 	return fallback;
 }
 
+/** Stored dates use UTC midnight; format with UTC parts for DateField input. */
+function dateMsToInput(ms: number): string {
+	const date = new Date(ms);
+	return `${date.getUTCMonth() + 1}/${String(date.getUTCDate()).padStart(2, "0")}/${date.getUTCFullYear()}`;
+}
+
 export default function CreateJournalScreen() {
 	const insets = useSafeAreaInsets();
-	const params = useLocalSearchParams<{ type?: string }>();
+	const params = useLocalSearchParams<{ type?: string; journalId?: string }>();
+	const editJournalId = params.journalId as Id<"journals"> | undefined;
+	const isEditing = Boolean(editJournalId);
 	const initialStoryType: StoryTab = isStoryTab(params.type)
 		? params.type
 		: DEFAULT_STORY_TAB;
 
+	const journalToEdit = useQuery(
+		api.journal.queries.getById,
+		editJournalId ? { id: editJournalId } : "skip",
+	);
 	const createJournal = useMutation(api.journal.mutations.create);
+	const updateJournal = useMutation(api.journal.mutations.update);
 	const generateUploadUrl = useMutation(
 		api.journal.mutations.generateUploadUrl,
 	);
-	const { hasPaidAccess, openPaywall } = useJournalPaywall();
+	const { guardJournalAction, hasPaidAccess, openPaywall } =
+		useJournalPaywall();
 
 	const [title, setTitle] = useState("");
 	const [dedication, setDedication] = useState("");
 	const [storyType, setStoryType] = useState<StoryTab>(initialStoryType);
 	const [startDate, setStartDate] = useState("");
 	const [endDate, setEndDate] = useState("");
-	const [entryLog, setEntryLog] = useState("");
 	const [coverUri, setCoverUri] = useState<string | null>(null);
 	const [coverMime, setCoverMime] = useState<string | null>(null);
 	const [coverSize, setCoverSize] = useState<number>(0);
 	const [showErrors, setShowErrors] = useState(false);
+	const [showStoryInfo, setShowStoryInfo] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
+	const [hydratedJournalId, setHydratedJournalId] =
+		useState<Id<"journals"> | null>(null);
 
 	const primary = useThemeColor("accent");
 	const placeholderColor = useThemeColor("field-placeholder");
@@ -82,9 +100,35 @@ export default function CreateJournalScreen() {
 	const startDateInvalid = startMs === null;
 	const endDateInvalid = endDate.length > 0 && endMs === null;
 	const endBeforeStart = startMs !== null && endMs !== null && endMs < startMs;
+	const coverInvalid = !coverUri;
 
 	const formInvalid =
-		titleInvalid || startDateInvalid || endDateInvalid || endBeforeStart;
+		titleInvalid ||
+		startDateInvalid ||
+		endDateInvalid ||
+		endBeforeStart ||
+		coverInvalid;
+
+	useEffect(() => {
+		if (
+			!editJournalId ||
+			!journalToEdit ||
+			hydratedJournalId === editJournalId
+		) {
+			return;
+		}
+		setTitle(journalToEdit.title);
+		setDedication(journalToEdit.dedication ?? "");
+		setStoryType(journalToEdit.type);
+		setStartDate(dateMsToInput(journalToEdit.dateMs));
+		setEndDate(
+			journalToEdit.endDateMs ? dateMsToInput(journalToEdit.endDateMs) : "",
+		);
+		setCoverUri(journalToEdit.coverImageUrl ?? null);
+		setCoverMime(null);
+		setCoverSize(0);
+		setHydratedJournalId(editJournalId);
+	}, [editJournalId, hydratedJournalId, journalToEdit]);
 
 	const handleCancel = useCallback(() => {
 		if (submitting) return;
@@ -118,17 +162,8 @@ export default function CreateJournalScreen() {
 		setCoverSize(picked.image.sizeBytes);
 	}, [submitting]);
 
-	const handleSubmit = useCallback(async () => {
-		setShowErrors(true);
-		if (formInvalid || startMs === null) return;
-
-		// Form is valid — gate here so free users fill out the journal first, then
-		// hit the paywall on "Create Journal".
-		if (!hasPaidAccess) {
-			openPaywall();
-			return;
-		}
-
+	const runSubmit = useCallback(async () => {
+		if (startMs === null) return;
 		setSubmitting(true);
 		try {
 			let coverImageId:
@@ -146,20 +181,31 @@ export default function CreateJournalScreen() {
 				);
 			}
 
-			await createJournal({
-				title: title.trim(),
-				dateMs: startMs,
-				type: storyType,
-				dedication: dedication.trim() ? dedication.trim() : undefined,
-				coverImageId,
-				endDateMs: endMs ?? undefined,
-				entryLog: entryLog.trim() ? entryLog.trim() : undefined,
-			});
+			if (editJournalId) {
+				await updateJournal({
+					id: editJournalId,
+					title: title.trim(),
+					dateMs: startMs,
+					type: storyType,
+					dedication: dedication.trim() ? dedication.trim() : undefined,
+					coverImageId,
+					endDateMs: endDate.trim() ? endMs : null,
+				});
+			} else {
+				await createJournal({
+					title: title.trim(),
+					dateMs: startMs,
+					type: storyType,
+					dedication: dedication.trim() ? dedication.trim() : undefined,
+					coverImageId,
+					endDateMs: endMs ?? undefined,
+				});
+			}
 
 			router.back();
 		} catch (err) {
 			Alert.alert(
-				"Could not create journal",
+				isEditing ? "Could not update journal" : "Could not create journal",
 				messageFromError(err, "Please try again."),
 			);
 		} finally {
@@ -171,16 +217,62 @@ export default function CreateJournalScreen() {
 		coverUri,
 		createJournal,
 		dedication,
+		editJournalId,
+		endDate,
 		endMs,
-		entryLog,
-		formInvalid,
 		generateUploadUrl,
-		hasPaidAccess,
-		openPaywall,
+		isEditing,
 		startMs,
 		storyType,
 		title,
+		updateJournal,
 	]);
+
+	const handleSubmit = useCallback(() => {
+		setShowErrors(true);
+		if (formInvalid || startMs === null) return;
+
+		// Form is valid — gate here so free users fill out the journal first, then
+		// hit the paywall on "Create/Save".
+		if (isEditing) {
+			guardJournalAction(() => void runSubmit());
+			return;
+		}
+		if (!hasPaidAccess) {
+			openPaywall();
+			return;
+		}
+		void runSubmit();
+	}, [
+		formInvalid,
+		guardJournalAction,
+		hasPaidAccess,
+		isEditing,
+		openPaywall,
+		runSubmit,
+		startMs,
+	]);
+
+	if (isEditing && journalToEdit === undefined) {
+		return (
+			<View className="flex-1 items-center justify-center bg-background">
+				<Spinner size="lg" />
+			</View>
+		);
+	}
+
+	if (isEditing && journalToEdit === null) {
+		return (
+			<View className="flex-1 items-center justify-center gap-2 bg-background px-6">
+				<Text className="font-semibold text-foreground text-lg">
+					Journal not found
+				</Text>
+				<Text className="text-center text-muted-foreground text-sm">
+					It may have been deleted.
+				</Text>
+			</View>
+		);
+	}
 
 	return (
 		<View className="flex-1 bg-background">
@@ -200,7 +292,7 @@ export default function CreateJournalScreen() {
 				</Pressable>
 
 				<Text className="font-semibold text-foreground text-lg">
-					Create Journal
+					{isEditing ? "Edit Journal" : "Create Journal"}
 				</Text>
 
 				<Pressable
@@ -260,14 +352,31 @@ export default function CreateJournalScreen() {
 							<Text className="font-semibold text-foreground text-sm">
 								Journal Type
 							</Text>
-							<Ionicons
-								name="information-circle-outline"
-								size={16}
-								color={primary}
-							/>
+							<Pressable
+								onPress={() => setShowStoryInfo((value) => !value)}
+								accessibilityRole="button"
+								accessibilityLabel={
+									showStoryInfo
+										? "Hide journal type information"
+										: "Show journal type information"
+								}
+								accessibilityState={{ expanded: showStoryInfo }}
+								className="size-5 items-center justify-center active:opacity-70"
+								hitSlop={8}
+							>
+								<Ionicons
+									name="information-circle-outline"
+									size={18}
+									color={primary}
+								/>
+							</Pressable>
 						</View>
 						{STORY_TABS.map((tab) => {
 							const selected = storyType === tab.id;
+							const description =
+								tab.id === "my_story"
+									? "Select this option to capture your own life and the Legacy you want to preserve."
+									: "Select this option to document someone else's life, like your child or loved one, so their journey can be remembered and celebrated.";
 							return (
 								<Pressable
 									key={tab.id}
@@ -275,11 +384,16 @@ export default function CreateJournalScreen() {
 									accessibilityRole="radio"
 									accessibilityState={{ selected }}
 									accessibilityLabel={tab.label}
-									className={`h-12 items-start justify-center rounded-2xl border px-4 active:opacity-90 ${
+									className={`items-start justify-center rounded-2xl border px-4 active:opacity-90 ${
 										selected
 											? "border-primary bg-primary/15"
 											: "border-border bg-background"
 									}`}
+									style={{
+										minHeight: 48,
+										paddingTop: showStoryInfo ? 12 : 0,
+										paddingBottom: showStoryInfo ? 12 : 0,
+									}}
 								>
 									<Text
 										className={`text-base ${
@@ -288,6 +402,11 @@ export default function CreateJournalScreen() {
 									>
 										{tab.label}
 									</Text>
+									{showStoryInfo ? (
+										<Text className="mt-1 text-muted-foreground text-sm leading-5">
+											{description}
+										</Text>
+									) : null}
 								</Pressable>
 							);
 						})}
@@ -329,33 +448,20 @@ export default function CreateJournalScreen() {
 						) : null}
 					</View>
 
-					{/* Entry Log */}
+					{/* Cover image (required) */}
 					<View className="gap-1.5">
 						<Text className="font-semibold text-foreground text-sm">
-							Entry Log
-						</Text>
-						<TextInput
-							value={entryLog}
-							onChangeText={setEntryLog}
-							placeholder="Write a quick first entry (optional)"
-							placeholderTextColor={placeholderColor}
-							multiline
-							numberOfLines={5}
-							className="min-h-32 rounded-2xl border border-border bg-background px-3 py-3 text-base text-foreground"
-							textAlignVertical="top"
-						/>
-					</View>
-
-					{/* Optional cover image */}
-					<View className="gap-1.5">
-						<Text className="font-semibold text-foreground text-sm">
-							Cover Image (Optional)
+							Cover Image
 						</Text>
 						<Pressable
 							onPress={() => void handlePickCover()}
 							accessibilityRole="button"
 							accessibilityLabel="Pick cover image"
-							className="h-36 items-center justify-center overflow-hidden rounded-2xl border border-border bg-background active:opacity-90"
+							className={`h-36 items-center justify-center overflow-hidden rounded-2xl border bg-background active:opacity-90 ${
+								showErrors && coverInvalid
+									? "border-destructive"
+									: "border-border"
+							}`}
 						>
 							{coverUri ? (
 								<Image
@@ -372,6 +478,11 @@ export default function CreateJournalScreen() {
 								</View>
 							)}
 						</Pressable>
+						{showErrors && coverInvalid ? (
+							<Text className="text-destructive text-xs">
+								A cover image is required.
+							</Text>
+						) : null}
 					</View>
 
 					{showErrors && formInvalid && !endBeforeStart ? (
@@ -390,14 +501,20 @@ export default function CreateJournalScreen() {
 						onPress={() => void handleSubmit()}
 						disabled={submitting}
 						accessibilityRole="button"
-						accessibilityLabel="Create journal"
+						accessibilityLabel={isEditing ? "Save journal" : "Create journal"}
 						className={`h-12 flex-row items-center justify-center gap-2 rounded-full bg-primary active:opacity-90 ${
 							submitting ? "opacity-70" : ""
 						}`}
 					>
 						{submitting ? <ActivityIndicator color="#ffffff" /> : null}
 						<Text className="font-semibold text-base text-primary-foreground">
-							{submitting ? "Creating…" : "Create Journal"}
+							{submitting
+								? isEditing
+									? "Saving…"
+									: "Creating…"
+								: isEditing
+									? "Save Changes"
+									: "Create Journal"}
 						</Text>
 					</Pressable>
 				</View>

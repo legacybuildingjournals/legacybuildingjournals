@@ -18,10 +18,14 @@ function formatClock(seconds: number): string {
 
 type EntryAudioPlayerProps = {
 	uri: string;
+	/** Duration captured at record time (ms); used until the player reports its
+	 * own, so the total time shows immediately and even if the player can't read
+	 * the remote file's metadata. */
+	durationMs?: number;
 };
 
 /** Playback row for a recording entry: play/pause, progress bar, timecodes. */
-export function EntryAudioPlayer({ uri }: EntryAudioPlayerProps) {
+export function EntryAudioPlayer({ uri, durationMs }: EntryAudioPlayerProps) {
 	const player = useAudioPlayer({ uri });
 	const status = useAudioPlayerStatus(player);
 	const warningForeground = useThemeColor("warning-foreground");
@@ -35,7 +39,11 @@ export function EntryAudioPlayer({ uri }: EntryAudioPlayerProps) {
 	}, []);
 
 	const isPlaying = status.playing;
-	const duration = status.duration ?? 0;
+	const fallbackDuration = durationMs && durationMs > 0 ? durationMs / 1000 : 0;
+	// Prefer the player's reported duration once it loads; otherwise fall back to
+	// the value persisted at record time.
+	const reportedDuration = status.duration ?? 0;
+	const duration = reportedDuration > 0 ? reportedDuration : fallbackDuration;
 	const current = Math.min(
 		status.currentTime ?? 0,
 		duration > 0 ? duration : Number.POSITIVE_INFINITY,

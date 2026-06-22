@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import { useAction, useQuery } from "convex/react";
+import * as WebBrowser from "expo-web-browser";
 import { useThemeColor } from "heroui-native/hooks";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
 	ActivityIndicator,
 	Alert,
@@ -22,7 +23,9 @@ import {
 	PAYWALL_FEATURES,
 	type PlanInterval,
 } from "@/lib/billing/plans";
+import { nativeLegalRoutes } from "@/lib/legal-routes";
 import { useMutationToast } from "@/lib/mutation-toast";
+import { nativeLegalUrl } from "@/lib/native-legal-url";
 
 function formatRenewDate(seconds: number): string {
 	return new Date(seconds * 1000).toLocaleDateString(undefined, {
@@ -93,6 +96,13 @@ export function PaywallModal({
 	const { provider, isTrialing, cancelAtPeriodEnd, currentPeriodEnd } =
 		useNativeSubscription();
 	const billing = useBilling();
+
+	// Re-fetch offerings whenever the paywall opens, so prices and packages are
+	// fresh even if the initial app-start fetch raced with SDK/billing startup.
+	const { refresh: refreshBilling } = billing;
+	useEffect(() => {
+		if (visible) void refreshBilling();
+	}, [visible, refreshBilling]);
 	const cancelSubscription = useAction(api.stripe.actions.cancelSubscription);
 	const reactivateSubscription = useAction(
 		api.stripe.actions.reactivateSubscription,
@@ -477,6 +487,40 @@ export function PaywallModal({
 							</Text>
 						</Pressable>
 					) : null}
+
+					{/* Terms of Use + Privacy Policy — required by Apple (Guideline
+					    3.1.2) for auto-renewable subscription paywalls. */}
+					<View className="mt-2 flex-row items-center justify-center gap-1.5">
+						<Pressable
+							onPress={() =>
+								void WebBrowser.openBrowserAsync(
+									nativeLegalUrl(nativeLegalRoutes.terms),
+								)
+							}
+							accessibilityRole="link"
+							accessibilityLabel="Terms of Use"
+							className="active:opacity-70"
+						>
+							<Text className="text-primary-foreground/50 text-xs underline">
+								Terms of Use
+							</Text>
+						</Pressable>
+						<Text className="text-primary-foreground/40 text-xs">•</Text>
+						<Pressable
+							onPress={() =>
+								void WebBrowser.openBrowserAsync(
+									nativeLegalUrl(nativeLegalRoutes.privacy),
+								)
+							}
+							accessibilityRole="link"
+							accessibilityLabel="Privacy Policy"
+							className="active:opacity-70"
+						>
+							<Text className="text-primary-foreground/50 text-xs underline">
+								Privacy Policy
+							</Text>
+						</Pressable>
+					</View>
 				</View>
 			</View>
 		</Modal>
@@ -507,7 +551,7 @@ function PlanCard({
 			onPress={onPress}
 			accessibilityRole="radio"
 			accessibilityState={{ selected }}
-			accessibilityLabel={`${label}, ${price}`}
+			accessibilityLabel={`${label}, ${price}${isCurrent ? ", current plan" : ""}`}
 			className={`rounded-2xl border-2 px-4 py-4 active:opacity-90 ${
 				selected
 					? "border-primary-foreground bg-primary-foreground/15"
@@ -532,9 +576,11 @@ function PlanCard({
 						{sublabel}
 					</Text>
 					{isCurrent ? (
-						<Text className="mt-1 text-primary-foreground/80 text-xs">
-							Current plan
-						</Text>
+						<View className="mt-3 self-start rounded-full bg-primary-foreground px-3 py-1">
+							<Text className="font-semibold text-primary text-xs uppercase tracking-wide">
+								Current plan
+							</Text>
+						</View>
 					) : null}
 				</View>
 				<Text className="font-semibold text-base text-primary-foreground">

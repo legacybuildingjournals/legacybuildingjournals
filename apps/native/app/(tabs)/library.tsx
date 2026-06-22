@@ -11,11 +11,7 @@ import { LibraryEmptyState } from "@/components/library/library-empty-state";
 import { StoryTabs } from "@/components/library/story-tabs";
 import { DashboardScreenHeader } from "@/components/navigation/dashboard-screen-header";
 import { useNativeCurrentUser } from "@/hooks/use-native-current-user";
-import {
-	DEFAULT_STORY_TAB,
-	STORY_TABS,
-	type StoryTab,
-} from "@/lib/journal/story-types";
+import { DEFAULT_STORY_TAB, type StoryTab } from "@/lib/journal/story-types";
 
 export default function LibraryScreen() {
 	const router = useRouter();
@@ -41,8 +37,7 @@ export default function LibraryScreen() {
 		});
 	};
 
-	const storyLabel =
-		STORY_TABS.find((t) => t.id === storyType)?.label ?? "My Story";
+	const hasJournals = journals !== undefined && journals.length > 0;
 
 	return (
 		<View className="flex-1 bg-secondary/30">
@@ -62,8 +57,7 @@ export default function LibraryScreen() {
 						</View>
 					) : journals.length === 0 ? (
 						<LibraryEmptyState
-							storyLabel={storyLabel}
-							ctaLabel="Create Journal"
+							ctaLabel="Begin Your Legacy"
 							onPressCta={goToCreate}
 						/>
 					) : (
@@ -90,25 +84,27 @@ export default function LibraryScreen() {
 					)}
 				</View>
 
-				<View className="pt-2 pb-4">
-					<Pressable
-						onPress={goToCreate}
-						accessibilityRole="button"
-						accessibilityLabel="Create journal"
-						className="h-14 items-center justify-center rounded-full bg-background active:opacity-90"
-						style={{
-							shadowColor: "#000",
-							shadowOpacity: 0.08,
-							shadowRadius: 8,
-							shadowOffset: { width: 0, height: 2 },
-							elevation: 2,
-						}}
-					>
-						<Text className="font-semibold text-base text-primary">
-							Create Journal
-						</Text>
-					</Pressable>
-				</View>
+				{hasJournals ? (
+					<View className="pt-2 pb-4">
+						<Pressable
+							onPress={goToCreate}
+							accessibilityRole="button"
+							accessibilityLabel="Create journal"
+							className="h-14 items-center justify-center rounded-full border border-border/50 bg-background active:opacity-90"
+							style={{
+								shadowColor: "#000",
+								shadowOpacity: 0.2,
+								shadowRadius: 12,
+								shadowOffset: { width: 0, height: 4 },
+								elevation: 6,
+							}}
+						>
+							<Text className="font-semibold text-base text-primary">
+								Create Journal
+							</Text>
+						</Pressable>
+					</View>
+				) : null}
 			</ScrollView>
 		</View>
 	);

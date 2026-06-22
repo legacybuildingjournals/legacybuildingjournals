@@ -1,13 +1,24 @@
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useAction, useMutation, useQuery } from "convex/react";
+import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
 import { Spinner } from "heroui-native";
 import { useThemeColor } from "heroui-native/hooks";
-import { Alert, Image, Pressable, ScrollView, Text, View } from "react-native";
+import { useState } from "react";
+import {
+	Alert,
+	type AlertButton,
+	Image,
+	Pressable,
+	ScrollView,
+	Text,
+	View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useJournalPaywall } from "@/components/billing/journal-paywall-provider";
 import { EntryAudioPlayer } from "@/components/library/entry-audio-player";
 import { formatDateLong } from "@/lib/journal/formatDate";
 import { useMutationToast } from "@/lib/mutation-toast";
@@ -26,17 +37,64 @@ export default function JournalEntryDetailScreen() {
 		entryId ? { id: entryId } : "skip",
 	);
 	const removeEntry = useMutation(api.journal.entries.mutations.remove);
+	const exportJournal = useAction(api.journal.actions.exportJournal);
+	const { guardJournalAction } = useJournalPaywall();
+	const [exporting, setExporting] = useState(false);
 
 	const handleMenu = () => {
 		if (!entry) return;
-		Alert.alert(entry.title, undefined, [
+		const options: AlertButton[] = [
 			{
-				text: "Delete entry",
-				style: "destructive",
-				onPress: () => confirmDelete(),
+				text: "Edit",
+				onPress: () =>
+					router.push({
+						pathname: "/journal/entry/edit/[entryId]",
+						params: { entryId: entry._id },
+					}),
 			},
-			{ text: "Cancel", style: "cancel" },
-		]);
+		];
+		// PDF export only makes sense for written entries — recordings can't be
+		// rendered in a PDF (matches web).
+		if (entry.mode !== "recording") {
+			options.push({ text: "Export to PDF", onPress: () => handleExport() });
+		}
+		options.push({
+			text: "Delete entry",
+			style: "destructive",
+			onPress: () => confirmDelete(),
+		});
+		options.push({ text: "Cancel", style: "cancel" });
+		Alert.alert(entry.title, undefined, options);
+	};
+
+	const openExportedUrl = async (url: string) => {
+		if (!/^https:\/\//i.test(url) || /localhost|127\.0\.0\.1/i.test(url)) {
+			throw new Error("Export returned an invalid PDF link.");
+		}
+		await Linking.openURL(url);
+	};
+
+	const handleExport = () => {
+		if (!entry || exporting) return;
+		// PDF export is a paid feature — gate before generating the download.
+		guardJournalAction(() => void runExport());
+	};
+
+	const runExport = async () => {
+		if (!entry || exporting) return;
+		setExporting(true);
+		try {
+			const { url } = await exportJournal({
+				journalId: entry.journalId,
+				entryIds: [entry._id],
+			});
+			mutationToast.success("Export ready.");
+			await openExportedUrl(url);
+		} catch (err) {
+			mutationToast.error(err, "Could not export. Please try again.");
+		} finally {
+			setExporting(false);
+		}
 	};
 
 	const confirmDelete = () => {
@@ -138,7 +196,10 @@ export default function JournalEntryDetailScreen() {
 
 					{isRecording && entry.audioUrl ? (
 						<View className="mt-2">
-							<EntryAudioPlayer uri={entry.audioUrl} />
+							<EntryAudioPlayer
+								uri={entry.audioUrl}
+								durationMs={entry.audioDurationMs}
+							/>
 						</View>
 					) : null}
 

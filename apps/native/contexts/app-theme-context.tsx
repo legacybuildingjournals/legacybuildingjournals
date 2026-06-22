@@ -1,6 +1,16 @@
 import type React from "react";
-import { createContext, useCallback, useContext, useMemo } from "react";
+import {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+} from "react";
 import { Uniwind, useUniwind } from "uniwind";
+
+// The app is light-only — ignore the device's dark-mode setting. Setting it at
+// module load (before first paint) avoids a dark flash on launch.
+Uniwind.setTheme("light");
 
 type ThemeName = "light" | "dark";
 
@@ -22,6 +32,14 @@ export const AppThemeProvider = ({
 	children: React.ReactNode;
 }) => {
 	const { theme } = useUniwind();
+
+	// Keep the app in light mode regardless of the OS appearance — re-force it if
+	// the system theme changes while the app is open.
+	useEffect(() => {
+		if (theme !== "light") {
+			Uniwind.setTheme("light");
+		}
+	}, [theme]);
 
 	const isLight = useMemo(() => {
 		return theme === "light";

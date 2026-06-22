@@ -54,8 +54,25 @@ export const mirrorSubscriptionStatus = internalMutation({
 
 		if (!user) return;
 
+		const newStatus = mapStripeStatus(args.stripeStatus);
+
+		// If converting out of trial before day-5 email fires, cancel and clear it
+		const clearReminder =
+			user.subscriptionStatus === "trialing" &&
+			newStatus !== "trialing" &&
+			user.trialReminderJobId != null;
+
+		if (clearReminder && user.trialReminderJobId) {
+			try {
+				await ctx.scheduler.cancel(user.trialReminderJobId);
+			} catch {
+				// Already ran or was canceled — nothing to do
+			}
+		}
+
 		await ctx.db.patch(user._id, {
-			subscriptionStatus: mapStripeStatus(args.stripeStatus),
+			subscriptionStatus: newStatus,
+			...(clearReminder ? { trialReminderJobId: undefined } : {}),
 			...(args.stripeCustomerId &&
 			user.stripeCustomerId !== args.stripeCustomerId
 				? { stripeCustomerId: args.stripeCustomerId }

@@ -32,6 +32,12 @@ function StackLayout() {
 			<Stack.Screen name="index" />
 			<Stack.Screen name="(tabs)" />
 			<Stack.Screen name="(auth)" />
+			{/* First-run onboarding (username + welcome video). Gesture disabled so
+			    users can't swipe back out before completing it. */}
+			<Stack.Screen
+				name="welcome"
+				options={{ headerShown: false, gestureEnabled: false }}
+			/>
 			{/* Not a native modal: the paywall is itself a Modal, and iOS can't
 			    present a modal on top of a modal screen (Android can). Keeping
 			    this a normal pushed screen lets the paywall open on both platforms. */}
@@ -48,6 +54,10 @@ function StackLayout() {
 			/>
 			<Stack.Screen
 				name="journal/entry/[entryId]"
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="journal/entry/edit/[entryId]"
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen

@@ -17,6 +17,7 @@ export const create = mutation({
 		mode: v.union(v.literal("writing"), v.literal("recording")),
 		imageId: v.optional(v.id("_storage")),
 		audioId: v.optional(v.id("_storage")),
+		audioDurationMs: v.optional(v.number()),
 	},
 	handler: async (ctx, args) => {
 		const userId = await requirePaidJournalAccess(ctx);
@@ -69,6 +70,8 @@ export const create = mutation({
 			imageUrl,
 			audioId: args.audioId,
 			audioUrl,
+			audioDurationMs:
+				args.mode === "recording" ? args.audioDurationMs : undefined,
 		});
 
 		await ctx.db.patch(args.journalId, { updatedAtMs: Date.now() });
@@ -85,6 +88,7 @@ export const update = mutation({
 		body: v.optional(v.string()),
 		imageId: v.optional(v.id("_storage")),
 		audioId: v.optional(v.id("_storage")),
+		audioDurationMs: v.optional(v.number()),
 	},
 	handler: async (ctx, args) => {
 		const userId = await requirePaidJournalAccess(ctx);
@@ -127,6 +131,7 @@ export const update = mutation({
 
 		let audioId = entry.audioId;
 		let audioUrl = entry.audioUrl;
+		let audioDurationMs = entry.audioDurationMs;
 		if (entry.mode === "recording") {
 			if (args.audioId !== undefined && args.audioId !== entry.audioId) {
 				await deleteStorageFile(ctx, entry.audioId);
@@ -139,6 +144,7 @@ export const update = mutation({
 				}
 				audioId = args.audioId;
 				audioUrl = url;
+				audioDurationMs = args.audioDurationMs;
 			}
 			if (!audioId) {
 				throw new ConvexError({
@@ -157,6 +163,7 @@ export const update = mutation({
 			imageUrl,
 			audioId,
 			audioUrl,
+			audioDurationMs,
 		});
 
 		const now = Date.now();

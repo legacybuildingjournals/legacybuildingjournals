@@ -87,6 +87,23 @@ export const isCurrentUserAdmin = query({
 	},
 });
 
+/** Internal: user info needed to send the trial reminder email. */
+export const getTrialUserInfo = internalQuery({
+	args: { clerkId: v.string() },
+	handler: async (ctx, { clerkId }) => {
+		const user = await ctx.db
+			.query("users")
+			.withIndex("by_clerk_id", (q) => q.eq("clerkId", clerkId))
+			.unique();
+		if (!user) return null;
+		return {
+			email: user.email,
+			name: user.name,
+			subscriptionStatus: user.subscriptionStatus ?? "none",
+		};
+	},
+});
+
 export const me = query({
 	args: {},
 	handler: async (ctx) => {
