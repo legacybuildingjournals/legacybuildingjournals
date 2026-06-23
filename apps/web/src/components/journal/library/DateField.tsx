@@ -1,7 +1,7 @@
 import { brand } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
 import { CalendarIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/journal/ui/button";
 import { Calendar } from "@/components/journal/ui/calendar";
 import { CalendarFooter } from "@/components/journal/ui/calendar-footer";
@@ -33,10 +33,8 @@ export function DateField({
 }: DateFieldProps) {
 	const [open, setOpen] = useState(false);
 
-	const placeholder = useMemo(() => toDisplayDate(new Date()), []);
-
 	const display = value !== undefined ? toDisplayDate(value) : "";
-	const emptyLabel = invalid && !display ? "Select date" : placeholder;
+	const emptyLabel = "Select date";
 
 	const handleSelect = (date: Date | undefined) => {
 		onChange(date);
