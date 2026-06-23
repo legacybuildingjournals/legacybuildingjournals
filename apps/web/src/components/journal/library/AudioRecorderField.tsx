@@ -3,6 +3,26 @@ import { cn } from "@legacy-building/ui/lib/utils";
 import { Pause, Play, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+function pickMimeType(): string {
+	const candidates = [
+		"audio/mp4",
+		"audio/mp4;codecs=mp4a.40.2",
+		"audio/webm;codecs=opus",
+		"audio/webm",
+	];
+	for (const type of candidates) {
+		if (MediaRecorder.isTypeSupported(type)) return type;
+	}
+	return "";
+}
+
+function mimeToExtension(mimeType: string): string {
+	if (mimeType.startsWith("audio/mp4") || mimeType.startsWith("audio/mpeg"))
+		return "mp4";
+	if (mimeType.startsWith("audio/ogg")) return "ogg";
+	return "webm";
+}
+
 const VISUALIZER_BAR_IDS = Array.from(
 	{ length: 40 },
 	(_, n) => `recorder-bar-${n}`,
@@ -146,7 +166,10 @@ export function AudioRecorderField({
 			source.connect(analyser);
 			analyserRef.current = analyser;
 
-			const recorder = new MediaRecorder(stream);
+			const preferredMimeType = pickMimeType();
+			const recorder = preferredMimeType
+				? new MediaRecorder(stream, { mimeType: preferredMimeType })
+				: new MediaRecorder(stream);
 			chunksRef.current = [];
 			shouldSaveOnStopRef.current = true;
 			recorder.ondataavailable = (e) => {
@@ -154,9 +177,12 @@ export function AudioRecorderField({
 			};
 			recorder.onstop = () => {
 				if (shouldSaveOnStopRef.current && chunksRef.current.length > 0) {
-					const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-					const file = new File([blob], `recording-${Date.now()}.webm`, {
-						type: blob.type || "audio/webm",
+					const actualMimeType =
+						recorder.mimeType || preferredMimeType || "audio/mp4";
+					const ext = mimeToExtension(actualMimeType);
+					const blob = new Blob(chunksRef.current, { type: actualMimeType });
+					const file = new File([blob], `recording-${Date.now()}.${ext}`, {
+						type: actualMimeType,
 					});
 					onChange(file);
 				}

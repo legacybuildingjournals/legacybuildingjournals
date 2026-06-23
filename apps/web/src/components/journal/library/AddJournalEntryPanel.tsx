@@ -230,7 +230,7 @@ export function AddJournalEntryPanel({
 				audioId = await uploadToStorage(
 					audioFile,
 					() => generateUploadUrl(),
-					audioFile.type || "audio/webm",
+					audioFile.type || "audio/mp4",
 				);
 			}
 

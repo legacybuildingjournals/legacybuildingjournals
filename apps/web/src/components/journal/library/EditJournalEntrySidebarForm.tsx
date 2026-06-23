@@ -209,7 +209,7 @@ export function EditJournalEntrySidebarForm({
 				audioId = await uploadToStorage(
 					audioFile,
 					() => generateUploadUrl(),
-					audioFile.type || "audio/webm",
+					audioFile.type || "audio/mp4",
 				);
 			}
 

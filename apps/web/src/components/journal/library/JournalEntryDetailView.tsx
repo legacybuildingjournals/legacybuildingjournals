@@ -15,6 +15,7 @@ import {
 } from "@/components/journal/library/libraryFormStyles";
 import { useCollapsingSidebarCover } from "@/components/journal/library/useCollapsingSidebarCover";
 import { Button } from "@/components/journal/ui/button";
+import { convertWebmToMp4 } from "@/lib/journal/convertToMp4";
 import { formatDate } from "@/lib/journal/formatDate";
 import {
 	type EnrichedJournalEntry,
@@ -122,11 +123,12 @@ export function JournalEntryDetailView({
 		if (!enriched.audioUrl) return;
 		try {
 			const res = await fetch(enriched.audioUrl);
-			const blob = await res.blob();
-			const url = URL.createObjectURL(blob);
+			const webmBlob = await res.blob();
+			const mp4Blob = await convertWebmToMp4(webmBlob);
+			const url = URL.createObjectURL(mp4Blob);
 			const a = document.createElement("a");
 			a.href = url;
-			a.download = `${enriched.title || "recording"}.webm`;
+			a.download = `${enriched.title || "recording"}.mp4`;
 			a.click();
 			URL.revokeObjectURL(url);
 		} catch {
