@@ -122,11 +122,48 @@ const handleRevenueCatWebhook = httpAction(async (ctx, request) => {
 	const event = body?.event;
 	if (!event) return new Response("Missing event", { status: 400 });
 
+	// TRANSFER moves a store purchase between app_user_ids (e.g. a user restoring
+	// on a different app account, same Apple ID). Its payload carries no
+	// product/expiry detail — only the from/to id lists — so handle it explicitly
+	// instead of through the generic mapping below: expire the losing accounts so
+	// they stop showing Pro, and re-sync the gaining accounts from RevenueCat's
+	// API to grant Pro with full detail.
+	if (event.type === "TRANSFER") {
+		const transferredFrom = Array.isArray(event.transferred_from)
+			? event.transferred_from
+			: [];
+		const transferredTo = Array.isArray(event.transferred_to)
+			? event.transferred_to
+			: [];
+		try {
+			for (const id of transferredFrom) {
+				if (typeof id === "string") {
+					await ctx.runMutation(
+						internal.revenuecat.mutations.expireByAppUserId,
+						{ appUserId: id },
+					);
+				}
+			}
+			for (const id of transferredTo) {
+				if (typeof id === "string") {
+					await ctx.runAction(internal.revenuecat.actions.syncSubscriber, {
+						appUserId: id,
+					});
+				}
+			}
+		} catch (err) {
+			console.error("RevenueCat TRANSFER handler failed:", err);
+			return new Response("Webhook handler failed", { status: 500 });
+		}
+		return new Response(null, { status: 200 });
+	}
+
 	const provider = storeToProvider(event.store);
 	const status = eventToStatus(event.type, event.period_type);
 	const appUserId = event.app_user_id;
 
-	// Ignore events we don't track (unknown store, TEST/TRANSFER, or missing user).
+	// Ignore events we don't track (unknown store, TEST/SUBSCRIBER_ALIAS, or
+	// missing user). TRANSFER is handled above.
 	if (!provider || !status || typeof appUserId !== "string") {
 		return new Response(null, { status: 200 });
 	}

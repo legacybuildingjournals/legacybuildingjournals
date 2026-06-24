@@ -107,6 +107,12 @@ export function PaywallModal({
 	const reactivateSubscription = useAction(
 		api.stripe.actions.reactivateSubscription,
 	);
+	// Re-syncs the signed-in user's RevenueCat entitlement into Convex. Used after
+	// a restore so a transferred subscription is reflected server-side (web app,
+	// access gates) without waiting on webhook delivery.
+	const syncMySubscription = useAction(
+		api.revenuecat.actions.syncMySubscription,
+	);
 
 	const isActive = currentInterval !== null;
 	const isStripe = provider === "stripe";
@@ -215,6 +221,15 @@ export function PaywallModal({
 		try {
 			const restored = await billing.restore();
 			if (restored) {
+				// RevenueCat has transferred the purchase to this account; mirror it
+				// into Convex now so the web app / server gates see it immediately
+				// (the webhook also does this, but may lag). Best-effort — a failure
+				// here shouldn't block the success the user just earned.
+				try {
+					await syncMySubscription({});
+				} catch (syncErr) {
+					console.warn("[Billing] post-restore Convex sync failed", syncErr);
+				}
 				toast.success("Purchases restored! Welcome back.");
 				onClose();
 			} else {
@@ -376,7 +391,13 @@ export function PaywallModal({
 							<Text className="mb-1 font-semibold text-base text-primary-foreground">
 								Manage Subscription
 							</Text>
-							<Text className="mb-4 text-primary-foreground/75 text-sm leading-relaxed">
+							<Text
+								className={
+									isStripe
+										? "mb-4 text-primary-foreground/75 text-sm leading-relaxed"
+										: "text-primary-foreground/75 text-sm leading-relaxed"
+								}
+							>
 								{!isStripe
 									? `This subscription is managed through ${providerStoreLabel(
 											provider,
@@ -411,18 +432,10 @@ export function PaywallModal({
 														: " automatically"
 												}.`}
 							</Text>
-							{!isStripe ? (
-								<Pressable
-									onPress={() => void billing.manage(provider)}
-									accessibilityRole="button"
-									accessibilityLabel={`Manage in ${providerStoreLabel(provider)}`}
-									className="h-12 flex-row items-center justify-center gap-2 rounded-full bg-primary-foreground active:opacity-90"
-								>
-									<Text className="font-semibold text-base text-primary">
-										Manage in {providerStoreLabel(provider)}
-									</Text>
-								</Pressable>
-							) : cancelAtPeriodEnd ? (
+							{/* Store-managed subs (App Store / Play) are managed via the
+							    sticky bottom CTA, which already reads "Manage in <store>".
+							    Only Stripe needs an in-card action here. */}
+							{!isStripe ? null : cancelAtPeriodEnd ? (
 								<Pressable
 									onPress={() => void runReactivate()}
 									disabled={busy}
