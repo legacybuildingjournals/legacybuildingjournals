@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
+	getRecordingPermissionsAsync,
 	RecordingPresets,
 	requestRecordingPermissionsAsync,
 	setAudioModeAsync,
@@ -83,19 +84,23 @@ export function AudioRecorderField({
 		setPreparing(true);
 		let recordingStarted = false;
 		try {
+			const existing = await getRecordingPermissionsAsync();
+			const previouslyDenied = existing.status === "denied";
 			const permission = await requestRecordingPermissionsAsync();
 			if (!permission.granted) {
-				Alert.alert(
-					"Microphone access needed",
-					"Allow microphone access in Settings to record audio entries.",
-					[
-						{ text: "Cancel", style: "cancel" },
-						{
-							text: "Open Settings",
-							onPress: () => void Linking.openSettings(),
-						},
-					],
-				);
+				if (previouslyDenied) {
+					Alert.alert(
+						"Microphone access needed",
+						"Enable microphone access in Settings to record audio entries.",
+						[
+							{ text: "Cancel", style: "cancel" },
+							{
+								text: "Open Settings",
+								onPress: () => void Linking.openSettings(),
+							},
+						],
+					);
+				}
 				return;
 			}
 			// Switch to record mode for capture.

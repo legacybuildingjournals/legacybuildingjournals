@@ -140,17 +140,19 @@ export default function CreateJournalScreen() {
 		const picked = await pickCoverImage();
 		if (picked.kind === "canceled") return;
 		if (picked.kind === "permission-denied") {
-			Alert.alert(
-				"Photo access needed",
-				"Allow photo access in Settings to add a cover image.",
-				[
-					{ text: "Cancel", style: "cancel" },
-					{
-						text: "Open Settings",
-						onPress: () => void Linking.openSettings(),
-					},
-				],
-			);
+			if (picked.previouslyDenied) {
+				Alert.alert(
+					"Photo access needed",
+					"Enable photo access in Settings to add a cover image.",
+					[
+						{ text: "Cancel", style: "cancel" },
+						{
+							text: "Open Settings",
+							onPress: () => void Linking.openSettings(),
+						},
+					],
+				);
+			}
 			return;
 		}
 		if (picked.kind === "error") {

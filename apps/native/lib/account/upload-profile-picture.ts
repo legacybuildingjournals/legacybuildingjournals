@@ -20,7 +20,7 @@ type PickedImage = {
 export type PickProfileImageResult =
 	| { kind: "picked"; image: PickedImage }
 	| { kind: "canceled" }
-	| { kind: "permission-denied" }
+	| { kind: "permission-denied"; previouslyDenied: boolean }
 	| { kind: "error"; message: string };
 
 /**
@@ -29,9 +29,12 @@ export type PickProfileImageResult =
  */
 export async function pickProfileImage(): Promise<PickProfileImageResult> {
 	try {
+		const existing = await ImagePicker.getMediaLibraryPermissionsAsync();
+		const previouslyDenied =
+			existing.status === ImagePicker.PermissionStatus.DENIED;
 		const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 		if (!permission.granted) {
-			return { kind: "permission-denied" };
+			return { kind: "permission-denied", previouslyDenied };
 		}
 
 		const result = await ImagePicker.launchImageLibraryAsync({
