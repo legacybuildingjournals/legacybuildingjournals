@@ -22,7 +22,8 @@
 			[
 				"expo-audio",
 				{
-					"microphonePermission": "Legacy Building uses your microphone to record journal entries."
+					"microphonePermission": "Legacy Building uses your microphone to record journal entries.",
+					"enableBackgroundPlayback": false
 				}
 			],
 			"expo-router",
