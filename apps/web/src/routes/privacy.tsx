@@ -5,7 +5,8 @@ import {
 import { createFileRoute } from "@tanstack/react-router";
 
 import { LegalDocumentPage } from "@/components/legal/legal-document-page";
-import { PRIVACY_POLICY_HTML } from "@/lib/legal/privacy-policy-html";
+
+const PRIVACY_POLICY_TERMLY_ID = "fc0b2b2c-efee-4315-81c9-e6df3baa2696";
 
 export const Route = createFileRoute("/privacy")({
 	component: PrivacyPage,
@@ -19,7 +20,7 @@ function PrivacyPage() {
 		<LegalDocumentPage
 			title={PRIVACY_TITLE}
 			description={PRIVACY_DESCRIPTION}
-			htmlContent={PRIVACY_POLICY_HTML}
+			termlyId={PRIVACY_POLICY_TERMLY_ID}
 		/>
 	);
 }

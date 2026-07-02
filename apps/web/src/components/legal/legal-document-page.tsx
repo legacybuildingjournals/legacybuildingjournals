@@ -2,25 +2,24 @@ import { brand, dashboardLayout } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
 
 import { LegalPageNavbar } from "@/components/legal/legal-page-navbar";
+import { TermlyEmbed } from "@/components/legal/termly-embed";
 
 type LegalDocumentPageProps = {
 	title: string;
 	description: string;
 	paragraphs?: readonly string[];
-	htmlContent?: string;
+	termlyId?: string;
 };
 
 export function LegalDocumentPage({
 	title,
 	description,
 	paragraphs,
-	htmlContent,
+	termlyId,
 }: LegalDocumentPageProps) {
 	const bodyClassName = cn(
-		"mt-6 pr-1 text-[#595959] text-sm leading-relaxed",
-		htmlContent
-			? "legal-termly-content library-modal-scroll max-h-[min(70svh,720px)] overflow-y-auto"
-			: "max-h-[min(60svh,520px)] space-y-4 overflow-y-auto",
+		"mt-6 text-[#595959] text-sm leading-relaxed",
+		termlyId ? "legal-termly-content" : "space-y-4",
 	);
 
 	return (
@@ -42,7 +41,7 @@ export function LegalDocumentPage({
 						"border-[#e6e6e6] p-6 sm:p-8 md:p-10",
 					)}
 				>
-					{htmlContent ? null : (
+					{termlyId ? null : (
 						<header className="border-[#e6e6e6] border-b pb-5">
 							<h1 className="font-semibold text-2xl text-[#1a1a1a] tracking-tight sm:text-3xl">
 								{title}
@@ -54,9 +53,8 @@ export function LegalDocumentPage({
 					)}
 
 					<div className={bodyClassName}>
-						{htmlContent ? (
-							// biome-ignore lint/security/noDangerouslySetInnerHtml: Termly HTML is trusted counsel-provided legal copy.
-							<div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+						{termlyId ? (
+							<TermlyEmbed key={termlyId} dataId={termlyId} title={title} />
 						) : (
 							paragraphs?.map((paragraph) => (
 								<p key={paragraph.slice(0, 32)}>{paragraph}</p>

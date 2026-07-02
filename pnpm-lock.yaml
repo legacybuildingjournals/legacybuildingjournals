@@ -347,6 +347,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.4.0(react-hook-form@7.77.0(react@19.2.7))
+      '@iframe-resizer/react':
+        specifier: ^5.5.9
+        version: 5.5.9(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@legacy-building/assets':
         specifier: workspace:*
         version: link:../../packages/assets
@@ -389,6 +392,9 @@ importers:
       dotenv:
         specifier: 'catalog:'
         version: 17.4.2
+      iframe-resizer:
+        specifier: ^5.5.9
+        version: 5.5.9
       lucide-react:
         specifier: ^1.8.0
         version: 1.17.0(react@19.2.7)
@@ -1618,6 +1624,24 @@ packages:
     resolution: {integrity: sha512-EIsqr/t/qbinPIhGjMdtvutIN1Kk4uwbROE9/UQ93CAVGR7GkA7Y92+fX80OzXi/OB67jVFYwKGO1WzkxmkFZw==}
     peerDependencies:
       react-hook-form: ^7.55.0
+
+  '@iframe-resizer/child@5.5.9':
+    resolution: {integrity: sha512-kX4GeGvlfu9S0XfDgSEy+O36q6qFz17kslLYdBT1evBTCK7Q3ETYtZMzVnHlB5PKc9co699kWEZbmpUGtE9IQw==}
+
+  '@iframe-resizer/core@5.5.9':
+    resolution: {integrity: sha512-HacDQx81pgHlmY48tRogcX02TOXfvjllJzI+xfVYmvEXhxoViyi9yEobhNQEt8Mq6NmrH1vHhz6FRfQ9uBTsjQ==}
+
+  '@iframe-resizer/jquery@5.5.9':
+    resolution: {integrity: sha512-ihGJOv7K3tWT+HjLRKcM+9USqo7B3nrN8J5YEBH1Br+45E36uKeUq0JSrPckv9TFdjB0Xqc+le2f33lfrsRuAg==}
+
+  '@iframe-resizer/parent@5.5.9':
+    resolution: {integrity: sha512-DfNb9KlOf7WyCNOM2xWPGxJfWtqA/gg7sjHvqvD4k6cfpntPXrKfCd3WdOPNKA980urGkhOdM9Ye0unV2gnYYw==}
+
+  '@iframe-resizer/react@5.5.9':
+    resolution: {integrity: sha512-PXzQ9m594JsUWjfgk0BIvd9Boow/GSBhViwxlHoHPRsZGsLMqsELvdlcnCEL3acKVl5mDl2KF+hIImA98vPalA==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0  || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0  || ^19.0.0
 
   '@inquirer/ansi@2.0.7':
     resolution: {integrity: sha512-3eTuUO1vH2cZm2ZKHeQxnOqlTi9EfZDGgIe3BL3I4u+rJHocr9Fz86M4fjYABPvFnQG/gGK551HqDiIcETwU6Q==}
@@ -3469,6 +3493,9 @@ packages:
     resolution: {integrity: sha512-6t10qk83GOG8p0vKmaCr8eiilZwO171AvbROMtvvNiwrTly62t+7XkA8RdIIVbpMhCASAsxgAzdRSwh6nw/5Dg==}
     engines: {node: '>=4'}
 
+  auto-console-group@1.3.0:
+    resolution: {integrity: sha512-W/G5jy1ZPeVYPyqOVGND7EjbzrsLgRD3s+1QegXfJ7bYlphFxjqG60rviFXWw0d2YCj0Clc7hU5/nTqrBEhBIw==}
+
   babel-dead-code-elimination@1.0.12:
     resolution: {integrity: sha512-GERT7L2TiYcYDtYk1IpD+ASAYXjKbLTDPhBtYj7X1NuRMDTMtAx9kyBenub1Ev41lo91OHCKdmP+egTDmfQ7Ig==}
 
@@ -4728,6 +4755,9 @@ packages:
 
   ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
+
+  iframe-resizer@5.5.9:
+    resolution: {integrity: sha512-PpzCs5rBzNJFa7agEw8Q46sxDy1SrRAZEznpqP9KxWeL6ea895Xlv90fVswozey7Jzldzi2eeNqg2FMZ0Lfjrw==}
 
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
@@ -8280,6 +8310,31 @@ snapshots:
       '@standard-schema/utils': 0.3.0
       react-hook-form: 7.77.0(react@19.2.7)
 
+  '@iframe-resizer/child@5.5.9':
+    dependencies:
+      auto-console-group: 1.3.0
+
+  '@iframe-resizer/core@5.5.9':
+    dependencies:
+      auto-console-group: 1.3.0
+
+  '@iframe-resizer/jquery@5.5.9':
+    dependencies:
+      '@iframe-resizer/core': 5.5.9
+
+  '@iframe-resizer/parent@5.5.9':
+    dependencies:
+      '@iframe-resizer/core': 5.5.9
+      auto-console-group: 1.3.0
+
+  '@iframe-resizer/react@5.5.9(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+    dependencies:
+      '@babel/runtime': 7.29.7
+      '@iframe-resizer/core': 5.5.9
+      auto-console-group: 1.3.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+
   '@inquirer/ansi@2.0.7': {}
 
   '@inquirer/confirm@6.1.1(@types/node@22.19.19)':
@@ -10485,6 +10540,8 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  auto-console-group@1.3.0: {}
+
   babel-dead-code-elimination@1.0.12:
     dependencies:
       '@babel/core': 7.29.7
@@ -11855,6 +11912,12 @@ snapshots:
   idb-keyval@6.2.1: {}
 
   ieee754@1.2.1: {}
+
+  iframe-resizer@5.5.9:
+    dependencies:
+      '@iframe-resizer/child': 5.5.9
+      '@iframe-resizer/jquery': 5.5.9
+      '@iframe-resizer/parent': 5.5.9
 
   ignore@5.3.2: {}
 

@@ -57,11 +57,16 @@
 	height: 0;
 }
 
-/* Termly-exported Terms of Service HTML */
+/* Termly policy iframe — sized by iframe-resizer; page scroll only */
 .legal-termly-content {
 	color: #595959;
 	font-size: 0.9375rem;
 	line-height: 1.65;
+}
+
+.legal-termly-content iframe {
+	display: block;
+	overflow: hidden;
 }
 
 .legal-termly-content h1 {
