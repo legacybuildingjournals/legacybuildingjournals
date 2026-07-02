@@ -1,6 +1,6 @@
 import { ActivityIndicator, Image, View } from "react-native";
 
-import { nativeAssets } from "@/lib/assets";
+import { nativeImages } from "@/lib/assets";
 
 /**
  * Full-screen branded loader shown while auth / first data load resolves.
@@ -14,8 +14,8 @@ export function LoadingScreen() {
 	return (
 		<View className="flex-1 items-center justify-center gap-8 bg-primary">
 			<Image
-				source={{ uri: nativeAssets.whiteLogo }}
-				className="h-[110px] w-[260px]"
+				source={nativeImages.verticalLogo}
+				className="h-[124px] w-[180px]"
 				resizeMode="contain"
 				accessibilityLabel="Legacy Building"
 			/>

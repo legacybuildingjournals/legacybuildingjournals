@@ -133,11 +133,11 @@ export default function NewEntryScreen() {
 		setShowErrors(true);
 
 		if (mode === "writing") {
-			if (!title.trim() || dateMs === null || !body.trim() || !image) return;
+			if (!title.trim() || dateMs === null || !body.trim()) return;
 		} else if (!audio) {
 			Alert.alert("No audio yet", "Tap the mic to record before saving.");
 			return;
-		} else if (!title.trim() || dateMs === null || !image) {
+		} else if (!title.trim() || dateMs === null) {
 			return;
 		}
 
@@ -207,11 +207,7 @@ export default function NewEntryScreen() {
 	const showRecordingDetails = isRecordingMode && audio !== null;
 
 	const imagePickerSection = (
-		<View
-			className={`gap-3 rounded-2xl border bg-secondary/20 p-3 ${
-				showErrors && !image ? "border-destructive" : "border-border/60"
-			}`}
-		>
+		<View className="gap-3 rounded-2xl border border-border/60 bg-secondary/20 p-3">
 			{image ? (
 				<View className="overflow-hidden rounded-xl">
 					<Image
@@ -370,10 +366,13 @@ export default function NewEntryScreen() {
 								/>
 							</View>
 
-							{/* Photo (required) */}
+							{/* Photo (optional) */}
 							<View className="gap-1.5">
 								<Text className="font-semibold text-base text-foreground">
-									Photo
+									Photo{" "}
+									<Text className="font-normal text-muted-foreground text-sm">
+										(optional)
+									</Text>
 								</Text>
 								{imagePickerSection}
 							</View>
@@ -419,7 +418,10 @@ export default function NewEntryScreen() {
 
 									<View className="gap-1.5">
 										<Text className="font-semibold text-base text-foreground">
-											Photo
+											Photo{" "}
+											<Text className="font-normal text-muted-foreground text-sm">
+												(optional)
+											</Text>
 										</Text>
 										{imagePickerSection}
 									</View>
@@ -438,18 +440,18 @@ export default function NewEntryScreen() {
 
 					{showErrors &&
 					mode === "writing" &&
-					(!title.trim() || dateMs === null || !body.trim() || !image) ? (
+					(!title.trim() || dateMs === null || !body.trim()) ? (
 						<Text className="text-center text-destructive text-sm">
-							Please fill in the title, start date, entry log, and add a photo.
+							Please fill in the title, start date, and entry log.
 						</Text>
 					) : null}
 
 					{showErrors &&
 					mode === "recording" &&
 					audio &&
-					(!title.trim() || dateMs === null || !image) ? (
+					(!title.trim() || dateMs === null) ? (
 						<Text className="text-center text-destructive text-sm">
-							Please add a title, start date, and a photo for this recording.
+							Please add a title and start date for this recording.
 						</Text>
 					) : null}
 				</ScrollView>

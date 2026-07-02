@@ -1,3 +1,9 @@
+/** Local image assets bundled with the app. */
+export const nativeImages = {
+	/** Vertical stacked wordmark (book icon above "LEGACY BUILDING"), matches the splash screen. */
+	verticalLogo: require("../assets/images/logo-stacked.png"),
+} as const;
+
 /** Remote image URLs for native screens (not design tokens — use global.css for colors). */
 export const nativeAssets = {
 	whiteLogo:
