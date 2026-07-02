@@ -4,7 +4,7 @@ import { firstClerkErrorMessage } from "@legacy-building/ui/lib/clerk-errors";
 import { type Href, useRouter } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Text, View } from "react-native";
+import { Platform, Text, View } from "react-native";
 
 import { AuthField } from "@/components/auth/auth-field";
 import { AuthHeader } from "@/components/auth/auth-header";
@@ -167,7 +167,7 @@ export default function SignUpPage() {
 					loading={fetchStatus === "fetching"}
 				/>
 
-				<OrDivider />
+				{Platform.OS !== "ios" && <OrDivider />}
 
 				<GoogleOAuthButton />
 			</View>

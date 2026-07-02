@@ -18,7 +18,11 @@ export type PickedEntryImage = {
 export type PickEntryImageResult =
 	| { kind: "picked"; image: PickedEntryImage }
 	| { kind: "canceled" }
-	| { kind: "permission-denied"; reason: "camera" | "library" }
+	| {
+			kind: "permission-denied";
+			reason: "camera" | "library";
+			previouslyDenied: boolean;
+	  }
 	| { kind: "error"; message: string };
 
 function guessMimeFromUri(uri: string): string {
@@ -82,9 +86,12 @@ async function processResult(
 
 /** "Choose from Library" flow. */
 export async function pickEntryImageFromLibrary(): Promise<PickEntryImageResult> {
+	const existing = await ImagePicker.getMediaLibraryPermissionsAsync();
+	const previouslyDenied =
+		existing.status === ImagePicker.PermissionStatus.DENIED;
 	const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
 	if (!permission.granted) {
-		return { kind: "permission-denied", reason: "library" };
+		return { kind: "permission-denied", reason: "library", previouslyDenied };
 	}
 	try {
 		const result = await ImagePicker.launchImageLibraryAsync({
@@ -104,9 +111,12 @@ export async function pickEntryImageFromLibrary(): Promise<PickEntryImageResult>
 
 /** "Take Photo" flow. */
 export async function pickEntryImageFromCamera(): Promise<PickEntryImageResult> {
+	const existing = await ImagePicker.getCameraPermissionsAsync();
+	const previouslyDenied =
+		existing.status === ImagePicker.PermissionStatus.DENIED;
 	const permission = await ImagePicker.requestCameraPermissionsAsync();
 	if (!permission.granted) {
-		return { kind: "permission-denied", reason: "camera" };
+		return { kind: "permission-denied", reason: "camera", previouslyDenied };
 	}
 	try {
 		const result = await ImagePicker.launchCameraAsync({

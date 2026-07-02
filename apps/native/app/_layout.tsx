@@ -10,6 +10,7 @@ import { HeroUINativeProvider } from "heroui-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { JournalPaywallProvider } from "@/components/billing/journal-paywall-provider";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { NativeAppProviders } from "@/components/native-app-providers";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
 import { RevenueCatProvider } from "@/contexts/revenuecat-context";
@@ -82,27 +83,29 @@ function StackLayout() {
 
 export default function Layout() {
 	return (
-		<ClerkProvider
-			tokenCache={tokenCache}
-			publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
-		>
-			<ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-				<GestureHandlerRootView style={{ flex: 1 }}>
-					<KeyboardProvider>
-						<AppThemeProvider>
-							<HeroUINativeProvider>
-								<RevenueCatProvider>
-									<NativeAppProviders>
-										<JournalPaywallProvider>
-											<StackLayout />
-										</JournalPaywallProvider>
-									</NativeAppProviders>
-								</RevenueCatProvider>
-							</HeroUINativeProvider>
-						</AppThemeProvider>
-					</KeyboardProvider>
-				</GestureHandlerRootView>
-			</ConvexProviderWithClerk>
-		</ClerkProvider>
+		<ErrorBoundary>
+			<ClerkProvider
+				tokenCache={tokenCache}
+				publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
+			>
+				<ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+					<GestureHandlerRootView style={{ flex: 1 }}>
+						<KeyboardProvider>
+							<AppThemeProvider>
+								<HeroUINativeProvider>
+									<RevenueCatProvider>
+										<NativeAppProviders>
+											<JournalPaywallProvider>
+												<StackLayout />
+											</JournalPaywallProvider>
+										</NativeAppProviders>
+									</RevenueCatProvider>
+								</HeroUINativeProvider>
+							</AppThemeProvider>
+						</KeyboardProvider>
+					</GestureHandlerRootView>
+				</ConvexProviderWithClerk>
+			</ClerkProvider>
+		</ErrorBoundary>
 	);
 }

@@ -85,3 +85,100 @@ export function normalizeEnvironment(
 	if (environment === "PRODUCTION") return "production";
 	return undefined;
 }
+
+// ──────────────────────────────────────────────────────────
+// REST API (`GET /v1/subscribers/{app_user_id}`) mapping
+// ──────────────────────────────────────────────────────────
+//
+// The webhook describes a single *event*; the REST subscriber endpoint returns
+// the user's *current* entitlements + subscriptions. We read it to re-sync
+// authoritative state on restore/transfer (when no usable event is delivered).
+// Note its `store` / `period_type` values are lower-cased vs the webhook's.
+
+type RcEntitlement = {
+	expires_date?: string | null;
+	product_identifier?: string;
+};
+
+type RcSubscription = {
+	expires_date?: string | null;
+	store?: string;
+	period_type?: string;
+	unsubscribe_detected_at?: string | null;
+	billing_issues_detected_at?: string | null;
+};
+
+export type RcSubscriber = {
+	entitlements?: Record<string, RcEntitlement>;
+	subscriptions?: Record<string, RcSubscription>;
+};
+
+export type MappedSubscription = {
+	provider: SubscriptionProvider;
+	status: IapSubscriptionStatus;
+	interval?: PlanInterval;
+	storeProductId: string;
+	currentPeriodEnd?: number;
+	willRenew: boolean;
+	isTrial: boolean;
+};
+
+/**
+ * Map a RevenueCat REST subscriber payload to our subscription shape. Picks the
+ * active entitlement with the furthest expiry. Returns null when the subscriber
+ * has no active entitlement — the caller should then expire any stored row.
+ */
+export function mapSubscriberResponse(
+	subscriber: RcSubscriber,
+	now: number = Date.now(),
+): MappedSubscription | null {
+	const entitlements = subscriber.entitlements ?? {};
+
+	let productId: string | null = null;
+	let expiresMs: number | null = null;
+	let found = false;
+
+	for (const ent of Object.values(entitlements)) {
+		const ms = ent.expires_date ? Date.parse(ent.expires_date) : null;
+		// `null` expiry = non-expiring (lifetime) entitlement → always active.
+		const isActive = ms === null || ms > now;
+		if (!isActive) continue;
+
+		const cmp = ms ?? Number.POSITIVE_INFINITY;
+		const bestCmp = expiresMs ?? Number.POSITIVE_INFINITY;
+		if (!found || cmp > bestCmp) {
+			found = true;
+			productId = ent.product_identifier ?? null;
+			expiresMs = ms;
+		}
+	}
+
+	if (!found || !productId) return null;
+
+	const sub = subscriber.subscriptions?.[productId];
+	// REST stores are lower-case ("app_store"); reuse the webhook mapper upper-cased.
+	const provider = storeToProvider(String(sub?.store ?? "").toUpperCase());
+	if (!provider) return null;
+
+	const isTrial = isTrialPeriod(String(sub?.period_type ?? "").toUpperCase());
+
+	let status: IapSubscriptionStatus;
+	if (sub?.billing_issues_detected_at) {
+		status = "grace_period";
+	} else if (sub?.unsubscribe_detected_at) {
+		// Auto-renew off, but access remains until expiry.
+		status = "canceled";
+	} else {
+		status = isTrial ? "trialing" : "active";
+	}
+
+	return {
+		provider,
+		status,
+		interval: productToInterval(productId),
+		storeProductId: productId,
+		currentPeriodEnd: expiresMs ?? undefined,
+		willRenew: !sub?.unsubscribe_detected_at,
+		isTrial,
+	};
+}

@@ -3,6 +3,7 @@ import { type Href, Link, Redirect, useRouter } from "expo-router";
 import { Image, Pressable, Text, View } from "react-native";
 import { AuthPrimaryButton } from "@/components/auth/auth-primary-button";
 import { AuthScreen } from "@/components/auth/auth-screen";
+import { LoadingScreen } from "@/components/loading-screen";
 import { nativeAssets } from "@/lib/assets";
 
 export default function AuthHomePage() {
@@ -10,7 +11,7 @@ export default function AuthHomePage() {
 	const { isLoaded, isSignedIn } = useAuth();
 
 	if (!isLoaded) {
-		return null;
+		return <LoadingScreen />;
 	}
 
 	if (isSignedIn) {

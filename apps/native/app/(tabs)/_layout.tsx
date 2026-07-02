@@ -4,6 +4,7 @@ import { Redirect, Tabs, useRouter } from "expo-router";
 import { useThemeColor } from "heroui-native/hooks";
 import { useEffect, useMemo, useRef } from "react";
 
+import { LoadingScreen } from "@/components/loading-screen";
 import { useNativeCurrentUser } from "@/hooks/use-native-current-user";
 
 export default function TabLayout() {
@@ -46,13 +47,13 @@ export default function TabLayout() {
 	);
 
 	if (!isLoaded || !isSignedIn) {
-		return null;
+		return <LoadingScreen />;
 	}
 
 	// Wait for the Convex user before deciding, then send first-run users through
 	// onboarding (username + welcome video) until `welcomeCompletedAt` is set.
 	if (userLoading) {
-		return null;
+		return <LoadingScreen />;
 	}
 
 	if (!convexUser || !convexUser.welcomeCompletedAt) {

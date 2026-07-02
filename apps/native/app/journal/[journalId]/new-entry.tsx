@@ -80,17 +80,19 @@ export default function NewEntryScreen() {
 		const picked = await pickEntryImageFromLibrary();
 		if (picked.kind === "canceled") return;
 		if (picked.kind === "permission-denied") {
-			Alert.alert(
-				"Photo access needed",
-				"Allow photo access in Settings to attach a photo.",
-				[
-					{ text: "Cancel", style: "cancel" },
-					{
-						text: "Open Settings",
-						onPress: () => void Linking.openSettings(),
-					},
-				],
-			);
+			if (picked.previouslyDenied) {
+				Alert.alert(
+					"Photo access needed",
+					"Enable photo access in Settings to attach a photo.",
+					[
+						{ text: "Cancel", style: "cancel" },
+						{
+							text: "Open Settings",
+							onPress: () => void Linking.openSettings(),
+						},
+					],
+				);
+			}
 			return;
 		}
 		if (picked.kind === "error") {
@@ -104,17 +106,19 @@ export default function NewEntryScreen() {
 		const picked = await pickEntryImageFromCamera();
 		if (picked.kind === "canceled") return;
 		if (picked.kind === "permission-denied") {
-			Alert.alert(
-				"Camera access needed",
-				"Allow camera access in Settings to take a photo.",
-				[
-					{ text: "Cancel", style: "cancel" },
-					{
-						text: "Open Settings",
-						onPress: () => void Linking.openSettings(),
-					},
-				],
-			);
+			if (picked.previouslyDenied) {
+				Alert.alert(
+					"Camera access needed",
+					"Enable camera access in Settings to take a photo.",
+					[
+						{ text: "Cancel", style: "cancel" },
+						{
+							text: "Open Settings",
+							onPress: () => void Linking.openSettings(),
+						},
+					],
+				);
+			}
 			return;
 		}
 		if (picked.kind === "error") {

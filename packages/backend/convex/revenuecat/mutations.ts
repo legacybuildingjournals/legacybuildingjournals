@@ -84,3 +84,33 @@ export const upsertFromWebhook = internalMutation({
 		}
 	},
 });
+
+/**
+ * Expire a user's native subscription(s). Used for the *losing* side of a
+ * RevenueCat TRANSFER: when a store purchase moves to a different app_user_id
+ * (e.g. a restore on a new account, same Apple ID), the old account must stop
+ * showing Pro. No-op when there's no row. Internal only.
+ */
+export const expireByAppUserId = internalMutation({
+	args: { appUserId: v.string() },
+	handler: async (ctx, { appUserId }) => {
+		if (appUserId.startsWith("$RCAnonymousID")) return;
+
+		const rows = await ctx.db
+			.query("subscriptions")
+			.withIndex("by_userId", (q) => q.eq("userId", appUserId))
+			.collect();
+
+		for (const row of rows) {
+			if (row.status === "expired") continue;
+			await ctx.db.patch(row._id, {
+				status: "expired",
+				willRenew: false,
+				updatedAt: Date.now(),
+			});
+		}
+
+		// The old account no longer has a live trial → drop any pending reminder.
+		await cancelTrialReminderForUser(ctx, appUserId);
+	},
+});

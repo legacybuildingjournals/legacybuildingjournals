@@ -36,8 +36,8 @@ export function JournalListItem({
 			className="overflow-hidden rounded-2xl bg-primary active:opacity-95"
 		>
 			{hasImage ? (
-				<View className="bg-background p-2">
-					<View className="overflow-hidden rounded-xl bg-background">
+				<View className="border border-[#d4d4d4] bg-[#e8e8e8] p-3">
+					<View className="overflow-hidden rounded-xl bg-[#e8e8e8]">
 						<Image
 							source={{ uri: coverImageUrl ?? undefined }}
 							className="h-56 w-full"

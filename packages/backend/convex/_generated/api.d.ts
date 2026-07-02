@@ -31,6 +31,7 @@ import type * as journal_orderQueries from "../journal/orderQueries.js";
 import type * as journal_queries from "../journal/queries.js";
 import type * as journal_sort from "../journal/sort.js";
 import type * as journal_storage from "../journal/storage.js";
+import type * as revenuecat_actions from "../revenuecat/actions.js";
 import type * as revenuecat_helpers from "../revenuecat/helpers.js";
 import type * as revenuecat_mutations from "../revenuecat/mutations.js";
 import type * as stripe_access from "../stripe/access.js";
@@ -82,6 +83,7 @@ declare const fullApi: ApiFromModules<{
   "journal/queries": typeof journal_queries;
   "journal/sort": typeof journal_sort;
   "journal/storage": typeof journal_storage;
+  "revenuecat/actions": typeof revenuecat_actions;
   "revenuecat/helpers": typeof revenuecat_helpers;
   "revenuecat/mutations": typeof revenuecat_mutations;
   "stripe/access": typeof stripe_access;

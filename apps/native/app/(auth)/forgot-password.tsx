@@ -69,6 +69,15 @@ export default function ForgotPasswordPage() {
 		}
 	};
 
+	const resendCode = async () => {
+		if (!signIn) return;
+		setCodeRootError(undefined);
+		const { error } = await signIn.resetPasswordEmailCode.sendCode();
+		if (error) {
+			setCodeRootError(error.longMessage ?? "Could not send a new code.");
+		}
+	};
+
 	const submitPassword = passwordForm.handleSubmit(async ({ password }) => {
 		if (!signIn) return;
 		const { error } = await signIn.resetPasswordEmailCode.submitPassword({
@@ -148,6 +157,7 @@ export default function ForgotPasswordPage() {
 					rootError={codeRootError}
 					loading={fetchStatus === "fetching"}
 					onVerify={verifyCode}
+					onResend={resendCode}
 				/>
 			</AuthScreen>
 		);
