@@ -2,6 +2,7 @@ import { api } from "@legacy-building/backend/convex/_generated/api";
 import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
 import { cn } from "@legacy-building/ui/lib/utils";
 import { useQuery } from "convex/react";
+import { ImageIcon } from "lucide-react";
 import { useState } from "react";
 
 type EntryCoverImageProps = {
@@ -41,7 +42,19 @@ export function EntryCoverImage({
 
 	if (!src || loadError) {
 		return (
-			<div className={cn("size-full bg-[#f2f2f2]", className)} aria-hidden />
+			<div
+				className={cn(
+					"flex size-full items-center justify-center bg-[#e2e2e2]",
+					className,
+				)}
+				aria-hidden
+			>
+				<ImageIcon
+					className="size-10 text-[#a3a3a3]"
+					strokeWidth={1.5}
+					aria-hidden
+				/>
+			</div>
 		);
 	}
 
