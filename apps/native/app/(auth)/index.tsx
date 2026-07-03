@@ -4,7 +4,7 @@ import { Image, Pressable, Text, View } from "react-native";
 import { AuthPrimaryButton } from "@/components/auth/auth-primary-button";
 import { AuthScreen } from "@/components/auth/auth-screen";
 import { LoadingScreen } from "@/components/loading-screen";
-import { nativeAssets } from "@/lib/assets";
+import { nativeImages } from "@/lib/assets";
 
 export default function AuthHomePage() {
 	const router = useRouter();
@@ -22,8 +22,8 @@ export default function AuthHomePage() {
 		<AuthScreen scroll={false}>
 			<View className="items-center gap-7">
 				<Image
-					source={{ uri: nativeAssets.whiteLogo }}
-					className="h-[120px] w-[280px]"
+					source={nativeImages.verticalLogo}
+					className="h-[124px] w-[180px]"
 					resizeMode="contain"
 					accessibilityLabel="Legacy Building"
 				/>

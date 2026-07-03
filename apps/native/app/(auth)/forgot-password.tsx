@@ -27,10 +27,17 @@ function pushDecoratedUrl(
 	router.replace(nextHref as Href);
 }
 
+type ResetStep = "email" | "code" | "password";
+
 export default function ForgotPasswordPage() {
 	const { signIn, errors, fetchStatus } = useSignIn();
 	const router = useRouter();
 	const [codeRootError, setCodeRootError] = useState<string | undefined>();
+	// Drive the flow from our own state, not the ambient `signIn.status`, which
+	// persists across screens — a stale sign-in attempt from a previous session
+	// would otherwise skip the email step and drop the user straight on the code
+	// screen with nothing ever sent.
+	const [step, setStep] = useState<ResetStep>("email");
 
 	const emailForm = useForm<ForgotPasswordEmailFormValues>({
 		resolver: zodResolver(forgotPasswordEmailSchema),
@@ -57,7 +64,9 @@ export default function ForgotPasswordPage() {
 			emailForm.setError("root", {
 				message: sendError.longMessage ?? "Could not send reset email.",
 			});
+			return;
 		}
+		setStep("code");
 	});
 
 	const verifyCode = async (code: string) => {
@@ -66,7 +75,9 @@ export default function ForgotPasswordPage() {
 		const { error } = await signIn.resetPasswordEmailCode.verifyCode({ code });
 		if (error) {
 			setCodeRootError(error.longMessage ?? "Could not verify reset code.");
+			return;
 		}
+		setStep("password");
 	};
 
 	const resendCode = async () => {
@@ -103,7 +114,7 @@ export default function ForgotPasswordPage() {
 		});
 	});
 
-	if (signIn.status === "needs_new_password") {
+	if (step === "password") {
 		const fieldErrors = passwordForm.formState.errors;
 		return (
 			<AuthScreen
@@ -140,7 +151,7 @@ export default function ForgotPasswordPage() {
 		);
 	}
 
-	if (signIn.status === "needs_first_factor") {
+	if (step === "code") {
 		return (
 			<AuthScreen
 				header={

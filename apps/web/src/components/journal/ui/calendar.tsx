@@ -41,6 +41,7 @@ function Calendar({
 	buttonVariant?: React.ComponentProps<typeof Button>["variant"];
 }) {
 	const defaultClassNames = getDefaultClassNames();
+	const hasSelection = props.selected != null;
 
 	return (
 		<DayPicker
@@ -172,7 +173,11 @@ function Calendar({
 					</div>
 				),
 				DayButton: ({ ...dayButtonProps }) => (
-					<CalendarDayButton locale={locale} {...dayButtonProps} />
+					<CalendarDayButton
+						locale={locale}
+						hasSelection={hasSelection}
+						{...dayButtonProps}
+					/>
 				),
 				WeekNumber: ({ children, ...weekProps }) => {
 					return (
@@ -195,15 +200,23 @@ function CalendarDayButton({
 	day,
 	modifiers,
 	locale,
+	hasSelection = false,
 	children,
 	...props
-}: React.ComponentProps<typeof DayButton> & { locale?: Partial<Locale> }) {
+}: React.ComponentProps<typeof DayButton> & {
+	locale?: Partial<Locale>;
+	hasSelection?: boolean;
+}) {
 	const defaultClassNames = getDefaultClassNames();
 	const isSelected =
 		modifiers.selected &&
 		!modifiers.range_start &&
 		!modifiers.range_end &&
 		!modifiers.range_middle;
+	// When nothing is selected yet, today gets the filled circle; once the user
+	// picks a date, the circle moves to that date and today falls back to teal text.
+	const isToday = modifiers.today && !isSelected;
+	const todayFilled = isToday && !hasSelection;
 
 	const ref = React.useRef<HTMLButtonElement>(null);
 	React.useEffect(() => {
@@ -224,19 +237,18 @@ function CalendarDayButton({
 				"relative size-full min-h-8 min-w-8 rounded-[2px] border border-transparent font-normal text-[#1a1a1a] text-sm leading-none hover:bg-[#f3f9fd] hover:text-[#1a1a1a]",
 				modifiers.outside && "text-[#d0d0d0] hover:text-[#d0d0d0]",
 				isSelected &&
-					"border-[#6eb5e0] bg-[#ecf6fc] text-[#1a1a1a] hover:bg-[#ecf6fc] hover:text-[#1a1a1a]",
+					"rounded-full border-[#008080] bg-[#008080] font-medium text-white hover:bg-[#008080] hover:text-white",
+				isToday &&
+					!todayFilled &&
+					"font-medium text-[#008080] hover:text-[#008080]",
+				todayFilled &&
+					"rounded-full border-[#008080] bg-[#008080] font-medium text-white hover:bg-[#008080] hover:text-white",
 				"group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-2 group-data-[focused=true]/day:ring-[#6eb5e0]/35",
 				defaultClassNames.day,
 				className,
 			)}
 			{...props}
 		>
-			{isSelected ? (
-				<span
-					className="pointer-events-none absolute top-0 right-0 size-0 border-t-[#6eb5e0] border-t-[7px] border-l-[7px] border-l-transparent"
-					aria-hidden
-				/>
-			) : null}
 			{children}
 		</Button>
 	);

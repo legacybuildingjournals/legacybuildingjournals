@@ -110,13 +110,11 @@ export function AddJournalEntryPanel({
 	const dateInvalid = date === undefined;
 	const bodyInvalid = mode === "writing" && !body.trim();
 	const audioInvalid = mode === "recording" && audioFile === null;
-	const imageInvalid = imageFile === null;
 	const journalInvalid = selectedJournalId === null;
 
 	const isValid =
 		!titleInvalid &&
 		!dateInvalid &&
-		!imageInvalid &&
 		!journalInvalid &&
 		(mode === "writing" ? !bodyInvalid : !audioInvalid);
 
@@ -208,22 +206,19 @@ export function AddJournalEntryPanel({
 
 	const handleCreate = async () => {
 		setShowErrors(true);
-		if (
-			!isValid ||
-			!selectedJournalId ||
-			date === undefined ||
-			imageFile === null
-		)
-			return;
+		if (!isValid || !selectedJournalId || date === undefined) return;
 
 		setSubmitting(true);
 		setError(null);
 		try {
-			const imageId = await uploadToStorage(
-				imageFile,
-				() => generateUploadUrl(),
-				imageFile.type || "image/jpeg",
-			);
+			let imageId: Id<"_storage"> | undefined;
+			if (imageFile) {
+				imageId = await uploadToStorage(
+					imageFile,
+					() => generateUploadUrl(),
+					imageFile.type || "image/jpeg",
+				);
+			}
 
 			let audioId: Id<"_storage"> | undefined;
 			if (mode === "recording" && audioFile) {
@@ -302,11 +297,10 @@ export function AddJournalEntryPanel({
 
 	const imageUpload = (
 		<div className={bubbleFieldStack}>
-			<span className={bubbleLabelClass}>Upload image</span>
+			<span className={bubbleLabelClass}>Upload image (optional)</span>
 			<EntryImageUpload
 				accentColor={accent}
 				imagePreview={imagePreview}
-				invalid={showErrors && imageInvalid}
 				onFileChange={handleImageChange}
 			/>
 		</div>
