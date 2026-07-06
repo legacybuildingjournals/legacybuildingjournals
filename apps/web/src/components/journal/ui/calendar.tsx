@@ -41,7 +41,7 @@ function Calendar({
 	buttonVariant?: React.ComponentProps<typeof Button>["variant"];
 }) {
 	const defaultClassNames = getDefaultClassNames();
-	const hasSelection = props.selected != null;
+	const hasSelection = "selected" in props && props.selected != null;
 
 	return (
 		<DayPicker

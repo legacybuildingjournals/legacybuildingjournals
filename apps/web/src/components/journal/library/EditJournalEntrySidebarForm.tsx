@@ -117,13 +117,11 @@ export function EditJournalEntrySidebarForm({
 	const bodyInvalid = !isRecording && !body.trim();
 	const hasExistingAudio = Boolean(entry.audioUrl) && !existingAudioCleared;
 	const audioInvalid = isRecording && audioFile === null && !hasExistingAudio;
-	const imageInvalid = imageFile === null && !imagePreview;
 	const journalInvalid = selectedJournalId === null;
 
 	const isValid =
 		!titleInvalid &&
 		!dateInvalid &&
-		!imageInvalid &&
 		!journalInvalid &&
 		(isRecording ? !audioInvalid : !bodyInvalid);
 
@@ -364,11 +362,10 @@ export function EditJournalEntrySidebarForm({
 				</div>
 
 				<div className={bubbleFieldStack}>
-					<span className={bubbleLabelClass}>Update image</span>
+					<span className={bubbleLabelClass}>Update image (optional)</span>
 					<EntryImageUpload
 						accentColor={accent}
 						imagePreview={imagePreview}
-						invalid={showErrors && imageInvalid}
 						fullWidth
 						onFileChange={handleImageChange}
 					/>
