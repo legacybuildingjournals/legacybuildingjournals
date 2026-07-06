@@ -10,6 +10,7 @@ import {
 	planIntervalValidator,
 	subscriptionProviderValidator,
 } from "../schema";
+import { syncUserSubscriptionMirror } from "../subscriptions/helpers";
 
 /**
  * Upsert a user's native (Apple/Google) subscription from a RevenueCat webhook.
@@ -70,6 +71,10 @@ export const upsertFromWebhook = internalMutation({
 		// so it maps directly to a `users` row for the reminder helpers.
 		const clerkUserId = args.appUserId;
 
+		// Reflect the new IAP status on the cheap `users.subscriptionStatus` mirror
+		// so admin list views / filters show Apple/Google subscribers.
+		await syncUserSubscriptionMirror(ctx, clerkUserId);
+
 		if (args.status === "trialing" && args.currentPeriodEnd) {
 			// Trial active → schedule the day-5 reminder (idempotent).
 			await scheduleTrialReminderForUser(ctx, {
@@ -112,5 +117,9 @@ export const expireByAppUserId = internalMutation({
 
 		// The old account no longer has a live trial → drop any pending reminder.
 		await cancelTrialReminderForUser(ctx, appUserId);
+
+		// Recompute the display mirror — clears it to `none` unless the user still
+		// has a live Stripe subscription.
+		await syncUserSubscriptionMirror(ctx, appUserId);
 	},
 });
