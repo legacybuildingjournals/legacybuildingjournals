@@ -79,6 +79,7 @@ function UsersPage() {
 		hasPrevPage,
 		hasNextPage,
 		rangeLabel,
+		totalPages,
 		isPageTransitioning,
 		resetPage,
 		goToPrev,
@@ -180,6 +181,7 @@ function UsersPage() {
 					hasPrevPage={hasPrevPage}
 					hasNextPage={hasNextPage}
 					rangeLabel={rangeLabel}
+					totalPages={totalPages}
 					isPageTransitioning={isPageTransitioning}
 					onPrev={goToPrev}
 					onNext={goToNext}

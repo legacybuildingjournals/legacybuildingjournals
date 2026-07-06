@@ -68,6 +68,7 @@ function SubscriptionsPage() {
 		hasPrevPage,
 		hasNextPage,
 		rangeLabel,
+		totalPages,
 		isPageTransitioning,
 		resetPage,
 		goToPrev,
@@ -203,6 +204,7 @@ function SubscriptionsPage() {
 					hasPrevPage={hasPrevPage}
 					hasNextPage={hasNextPage}
 					rangeLabel={rangeLabel}
+					totalPages={totalPages}
 					isPageTransitioning={isPageTransitioning}
 					onPrev={goToPrev}
 					onNext={goToNext}

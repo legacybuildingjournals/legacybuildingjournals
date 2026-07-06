@@ -33,6 +33,17 @@ export function usePaginatedPage<T>(
 	const isPageTransitioning = pendingPageIndex !== null || isLoadingMore;
 
 	const totalCount = isExhausted ? items.length : undefined;
+	const totalPages =
+		totalCount !== undefined
+			? Math.max(1, Math.ceil(totalCount / pageSize))
+			: undefined;
+
+	// Preload remaining pages so total page count is available on first view.
+	useEffect(() => {
+		if (status === "CanLoadMore") {
+			loadMore(Math.max(pageSize * 5, 50));
+		}
+	}, [status, loadMore, pageSize]);
 
 	const rangeLabel =
 		pageItems.length === 0
@@ -104,6 +115,7 @@ export function usePaginatedPage<T>(
 		hasPrevPage,
 		hasNextPage,
 		rangeLabel,
+		totalPages,
 		isPageTransitioning,
 		isLoadingMore,
 		resetPage,

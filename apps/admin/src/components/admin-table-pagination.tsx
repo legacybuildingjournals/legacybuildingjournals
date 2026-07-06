@@ -6,16 +6,35 @@ type AdminTablePaginationProps = {
 	hasPrevPage: boolean;
 	hasNextPage: boolean;
 	rangeLabel: string | null;
+	totalPages?: number;
 	isPageTransitioning?: boolean;
 	onPrev: () => void;
 	onNext: () => void;
 };
+
+function formatPageLabel(
+	displayPage: number,
+	totalPages: number | undefined,
+	isPageTransitioning: boolean,
+) {
+	if (isPageTransitioning) {
+		const nextPage = displayPage + 1;
+		return totalPages !== undefined
+			? `Page ${nextPage} of ${totalPages}…`
+			: `Page ${nextPage}…`;
+	}
+
+	return totalPages !== undefined
+		? `Page ${displayPage} of ${totalPages}`
+		: `Page ${displayPage}`;
+}
 
 export function AdminTablePagination({
 	pageIndex,
 	hasPrevPage,
 	hasNextPage,
 	rangeLabel,
+	totalPages,
 	isPageTransitioning = false,
 	onPrev,
 	onNext,
@@ -47,11 +66,13 @@ export function AdminTablePagination({
 					<ChevronLeft className="size-4" aria-hidden />
 					Previous
 				</Button>
-				<span className="min-w-20 text-center text-muted-foreground text-sm tabular-nums">
+				<span className="min-w-28 text-center text-muted-foreground text-sm tabular-nums">
 					{isPageTransitioning ? (
-						<span className="text-foreground/80">Page {displayPage + 1}…</span>
+						<span className="text-foreground/80">
+							{formatPageLabel(displayPage, totalPages, true)}
+						</span>
 					) : (
-						`Page ${displayPage}`
+						formatPageLabel(displayPage, totalPages, false)
 					)}
 				</span>
 				<Button
