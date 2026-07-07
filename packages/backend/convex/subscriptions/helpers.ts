@@ -30,10 +30,17 @@ export function iapGrantsAccess(sub: IapSubscription, now: number): boolean {
 /**
  * The user's active Apple/Google subscription (the one to surface), or null.
  * Picks the row with the furthest period end when several exist.
+ *
+ * `productionOnly` drops `environment === "sandbox"` rows (TestFlight / Apple &
+ * Google sandbox test purchases). Use it for anything the admin panel counts as a
+ * real paying user — RevenueCat sends sandbox purchases to the same webhook, so
+ * without this a tester shows up as a production subscriber. Legacy rows with no
+ * `environment` are treated as production (not dropped).
  */
 export async function getActiveIapSubscription(
 	ctx: Ctx,
 	clerkUserId: string,
+	options?: { productionOnly?: boolean },
 ): Promise<IapSubscription | null> {
 	const subs = await ctx.db
 		.query("subscriptions")
@@ -41,7 +48,11 @@ export async function getActiveIapSubscription(
 		.collect();
 
 	const now = Date.now();
-	const granting = subs.filter((s) => iapGrantsAccess(s, now));
+	const granting = subs.filter((s) => {
+		if (!iapGrantsAccess(s, now)) return false;
+		if (options?.productionOnly && s.environment === "sandbox") return false;
+		return true;
+	});
 	if (granting.length === 0) return null;
 
 	return (
@@ -74,6 +85,9 @@ export function iapStatusToMirror(
  *   user has no live Stripe subscription either — never clobber a paying Stripe
  *   customer's mirror (Stripe owns it via `stripe/mutations.mirrorSubscriptionStatus`).
  *
+ * Sandbox (TestFlight / store test) purchases are excluded — the mirror drives the
+ * admin panel, which must only reflect real production subscribers.
+ *
  * The mirror is a display/filter hint only; `userHasPaidFeatureAccess` remains the
  * authoritative gate and already reads both Stripe and IAP.
  */
@@ -87,7 +101,9 @@ export async function syncUserSubscriptionMirror(
 		.unique();
 	if (!user) return;
 
-	const activeIap = await getActiveIapSubscription(ctx, clerkUserId);
+	const activeIap = await getActiveIapSubscription(ctx, clerkUserId, {
+		productionOnly: true,
+	});
 	if (activeIap) {
 		const next = iapStatusToMirror(activeIap.status);
 		if (user.subscriptionStatus !== next) {

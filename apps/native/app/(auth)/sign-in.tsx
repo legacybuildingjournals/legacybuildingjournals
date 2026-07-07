@@ -265,7 +265,6 @@ export default function SignInPage() {
 						/>
 					)}
 				/>
-
 				<Link href={"/forgot-password" as Href} asChild>
 					<Pressable className="-mt-2 active:opacity-60">
 						<Text className="text-primary-foreground text-sm">

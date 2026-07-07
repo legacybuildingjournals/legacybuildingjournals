@@ -22,7 +22,6 @@ export const unstable_settings = {
 const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
 	unsavedChangesWarning: false,
 });
-
 function StackLayout() {
 	return (
 		<Stack
@@ -71,6 +70,10 @@ function StackLayout() {
 			/>
 			<Stack.Screen
 				name="account/change-password"
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen
+				name="account/notifications"
 				options={{ headerShown: false }}
 			/>
 			<Stack.Screen

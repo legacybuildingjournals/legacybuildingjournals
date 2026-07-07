@@ -75,9 +75,12 @@ export async function getAdminUserBillingDetail(
 	ctx: QueryCtx,
 	user: Doc<"users">,
 ): Promise<AdminUserBillingDetail> {
+	// Admin panel counts only real production subscribers — exclude sandbox/TestFlight
+	// test purchases (the app's own access gate still honors them for testers).
 	const hasPaidFeatureAccess = await userHasPaidFeatureAccess(
 		ctx,
 		user.clerkId,
+		{ productionOnly: true },
 	);
 
 	const subscriptions: StripeComponentSubscription[] =

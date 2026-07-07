@@ -27,6 +27,25 @@ const accountStatusValidator = v.union(
 	v.literal("suspended"),
 );
 
+/**
+ * Per-user push notification settings. Daily prompts + the first-entry
+ * celebration are scheduled locally on-device; the `inactivity` and
+ * `exportReminders` toggles gate the server-driven (Expo Push) reminders sent
+ * by the daily cron sweep. `dailyPromptHour`/`Minute` are the user's chosen
+ * local time for daily prompts, mirrored here so preferences survive reinstalls
+ * and stay in sync across a user's devices.
+ */
+const notificationPreferencesValidator = v.object({
+	dailyPrompts: v.boolean(),
+	inactivity: v.boolean(),
+	exportReminders: v.boolean(),
+	/** Local hour (0-23) the user wants the daily journaling prompt. */
+	dailyPromptHour: v.number(),
+	/** Local minute (0-59) the user wants the daily journaling prompt. */
+	dailyPromptMinute: v.number(),
+	updatedAt: v.number(),
+});
+
 export const journalType = v.union(
 	v.literal("my_story"),
 	v.literal("their_story"),
@@ -103,10 +122,36 @@ export default defineSchema({
 		 * email is actually sent.
 		 */
 		trialReminderEmailSent: v.optional(v.boolean()),
+		/** Push notification settings. Absent until the user opts in on-device. */
+		notificationPreferences: v.optional(notificationPreferencesValidator),
+		/** Unix ms of the user's most recent journal entry — drives inactivity reminders. */
+		lastEntryAt: v.optional(v.number()),
+		/** Total number of journal entries created (used to detect the first entry). */
+		entryCount: v.optional(v.number()),
+		/** Unix ms the last inactivity push was sent — throttles the daily sweep. */
+		lastInactivityPushAt: v.optional(v.number()),
+		/** Unix ms the last export reminder push was sent — throttles the export sweep. */
+		lastExportReminderAt: v.optional(v.number()),
 	})
 		.index("by_clerk_id", ["clerkId"])
 		.index("by_email", ["email"])
 		.index("by_stripe_customer_id", ["stripeCustomerId"]),
+
+	/**
+	 * Expo push tokens, one row per device. A user can have several (phone +
+	 * tablet), so this is a separate table keyed by Clerk id. Tokens are unique
+	 * per install; we upsert on `token` to avoid duplicates when a device
+	 * re-registers.
+	 */
+	pushTokens: defineTable({
+		userId: v.string(),
+		token: v.string(),
+		platform: v.union(v.literal("ios"), v.literal("android"), v.literal("web")),
+		deviceName: v.optional(v.string()),
+		updatedAt: v.number(),
+	})
+		.index("by_userId", ["userId"])
+		.index("by_token", ["token"]),
 
 	journals: defineTable({
 		userId: v.string(),

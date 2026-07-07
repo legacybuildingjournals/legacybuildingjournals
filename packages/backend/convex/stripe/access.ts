@@ -12,6 +12,7 @@ type AccessCtx = QueryCtx | MutationCtx;
 export async function userHasPaidFeatureAccess(
 	ctx: AccessCtx,
 	clerkUserId: string,
+	options?: { productionOnly?: boolean },
 ): Promise<boolean> {
 	const user = await ctx.db
 		.query("users")
@@ -24,8 +25,9 @@ export async function userHasPaidFeatureAccess(
 
 	// Native IAP (Apple/Google) subscribers — synced from RevenueCat. This makes
 	// access work cross-platform: someone who subscribed in the app still has
-	// access on the web, and vice versa.
-	const iap = await getActiveIapSubscription(ctx, clerkUserId);
+	// access on the web, and vice versa. `productionOnly` excludes sandbox/TestFlight
+	// test purchases — used by the admin panel, which must only count real subscribers.
+	const iap = await getActiveIapSubscription(ctx, clerkUserId, options);
 	if (iap) return true;
 
 	// Never trust the mirrored `users.subscriptionStatus` alone — it can lag after

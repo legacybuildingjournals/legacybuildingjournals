@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 
 import { mutation } from "../../_generated/server";
+import { recordEntryCreated } from "../../notifications/helpers";
 import {
 	assertEntryOwner,
 	getOwnedJournal,
@@ -75,7 +76,13 @@ export const create = mutation({
 		});
 
 		await ctx.db.patch(args.journalId, { updatedAtMs: Date.now() });
-		return entryId;
+
+		// Track journaling activity (drives inactivity reminders) and report
+		// whether this was the user's first entry so the client can fire the
+		// local first-entry celebration notification.
+		const { isFirstEntry } = await recordEntryCreated(ctx, userId);
+
+		return { entryId, isFirstEntry };
 	},
 });
 

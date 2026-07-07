@@ -27,6 +27,12 @@
 				}
 			],
 			"expo-router",
+			[
+				"expo-notifications",
+				{
+					"color": "#008080"
+				}
+			],
 			"./plugins/with-google-modular-headers",
 			"expo-asset",
 			[

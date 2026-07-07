@@ -35,6 +35,10 @@ import {
 } from "@/lib/journal/pick-entry-image";
 import { uploadBinaryToConvex } from "@/lib/journal/upload-binary";
 import { useMutationToast } from "@/lib/mutation-toast";
+import {
+	ensureNotificationPermission,
+	scheduleFirstEntryCelebration,
+} from "@/lib/notifications/scheduler";
 
 export default function NewEntryScreen() {
 	const insets = useSafeAreaInsets();
@@ -169,7 +173,7 @@ export default function NewEntryScreen() {
 			const entryTitle = title.trim();
 			const entryDateMs = dateMs as number;
 
-			await createEntry({
+			const result = await createEntry({
 				journalId,
 				title: entryTitle,
 				dateMs: entryDateMs,
@@ -182,6 +186,16 @@ export default function NewEntryScreen() {
 			});
 
 			mutationToast.success("Entry saved!");
+
+			// Celebrate the very first entry with a local push right after saving.
+			if (result?.isFirstEntry) {
+				void (async () => {
+					if (await ensureNotificationPermission()) {
+						await scheduleFirstEntryCelebration();
+					}
+				})();
+			}
+
 			router.back();
 		} catch (err) {
 			mutationToast.error(err, "Could not save entry. Please try again.");

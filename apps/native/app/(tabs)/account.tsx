@@ -230,6 +230,12 @@ export default function AccountScreen() {
 						chevronColor={accent}
 					/>
 				) : null}
+				<AccountRow
+					title="Notifications"
+					subtitle="Reminders and journaling prompts"
+					onPress={() => router.push("/account/notifications")}
+					chevronColor={accent}
+				/>
 
 				<View className="h-6 bg-secondary/20" />
 
