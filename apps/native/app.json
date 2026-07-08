@@ -8,9 +8,11 @@
 		},
 		"name": "Legacy Building",
 		"slug": "legacy-building",
+		"version": "1.0.1",
 		"icon": "./assets/images/icon.png",
 		"plugins": [
 			"expo-font",
+			"expo-apple-authentication",
 			[
 				"expo-image-picker",
 				{

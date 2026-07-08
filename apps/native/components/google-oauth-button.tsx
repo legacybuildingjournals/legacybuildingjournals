@@ -56,9 +56,6 @@ export function GoogleOAuthButton() {
 		}
 	};
 
-	// Hidden on iOS until Sign in with Apple is configured (App Store guideline 4.8).
-	if (Platform.OS === "ios") return null;
-
 	return (
 		<Pressable
 			className="h-12 flex-row items-center justify-center gap-2 rounded-full border border-border bg-popover px-4 active:opacity-70 disabled:opacity-50"

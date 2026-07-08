@@ -21,7 +21,6 @@ const userSubscriptionStatusValidator = v.union(
 	v.literal("canceled"),
 	v.literal("none"),
 );
-
 const accountStatusValidator = v.union(
 	v.literal("active"),
 	v.literal("suspended"),

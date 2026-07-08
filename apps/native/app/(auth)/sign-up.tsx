@@ -4,8 +4,8 @@ import { firstClerkErrorMessage } from "@legacy-building/ui/lib/clerk-errors";
 import { type Href, useRouter } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Platform, Text, View } from "react-native";
-
+import { Text, View } from "react-native";
+import { AppleOAuthButton } from "@/components/apple-oauth-button";
 import { AuthField } from "@/components/auth/auth-field";
 import { AuthHeader } from "@/components/auth/auth-header";
 import { AuthPrimaryButton } from "@/components/auth/auth-primary-button";
@@ -167,8 +167,9 @@ export default function SignUpPage() {
 					loading={fetchStatus === "fetching"}
 				/>
 
-				{Platform.OS !== "ios" && <OrDivider />}
+				<OrDivider />
 
+				<AppleOAuthButton />
 				<GoogleOAuthButton />
 			</View>
 			<View nativeID="clerk-captcha" />

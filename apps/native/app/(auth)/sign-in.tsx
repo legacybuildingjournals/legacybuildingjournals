@@ -4,8 +4,8 @@ import { firstClerkErrorMessage } from "@legacy-building/ui/lib/clerk-errors";
 import { type Href, Link, useRouter } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import { Platform, Pressable, Text, View } from "react-native";
-
+import { Pressable, Text, View } from "react-native";
+import { AppleOAuthButton } from "@/components/apple-oauth-button";
 import { AuthCodeField } from "@/components/auth/auth-code-field";
 import { AuthField } from "@/components/auth/auth-field";
 import { AuthHeader } from "@/components/auth/auth-header";
@@ -288,8 +288,9 @@ export default function SignInPage() {
 					loading={fetchStatus === "fetching"}
 				/>
 
-				{Platform.OS !== "ios" && <OrDivider />}
+				<OrDivider />
 
+				<AppleOAuthButton />
 				<GoogleOAuthButton />
 			</View>
 		</AuthScreen>
