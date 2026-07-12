@@ -113,19 +113,6 @@ export function buildUserListPredicate(args: {
 	};
 }
 
-export function buildSubscriberPredicate(args: {
-	search?: string;
-	status?: Exclude<SubscriptionStatusFilter, "unset" | "none">;
-}) {
-	return (user: Doc<"users">) => {
-		const sub = user.subscriptionStatus;
-		if (!sub || sub === "none") return false;
-		if (args.status && sub !== args.status) return false;
-		if (args.search && !userMatchesSearch(user, args.search)) return false;
-		return true;
-	};
-}
-
 /**
  * Cap on documents scanned per call. Without this, a sparse predicate (e.g.
  * "has billing history" when most users don't) makes the loop below keep
@@ -184,5 +171,72 @@ export async function paginateUsersFiltered(
 		page,
 		isDone: !hasMore,
 		continueCursor: hasMore && cursor !== null ? cursor : "",
+	};
+}
+
+const SUBSCRIBER_STATUSES = [
+	"active",
+	"trialing",
+	"grace_period",
+	"canceled",
+] as const satisfies readonly Exclude<
+	SubscriptionStatusFilter,
+	"unset" | "none" | "beta"
+>[];
+
+/** Hard cap on total subscriber rows read across all statuses in one call. */
+const MAX_SUBSCRIBERS_READ = 4000;
+
+/**
+ * Subscribers ("has billing history") are a small slice of `users` — most
+ * users have no subscription at all. Filtering the whole table in memory
+ * (as `paginateUsersFiltered` does) means reading thousands of non-matching
+ * rows to find a handful of matches, which blows Convex's per-query
+ * document-read budget and surfaces as an opaque "Server Error".
+ *
+ * Instead, use the `by_subscription_status` index to read only rows that
+ * already match — at most one indexed query per status (1 or 4), each
+ * bounded by MAX_SUBSCRIBERS_READ. Merge, sort, apply search, then paginate
+ * in memory with a simple offset cursor (safe because the merged set is
+ * bounded, unlike the full `users` table).
+ */
+export async function paginateSubscribers(
+	ctx: QueryCtx,
+	paginationOpts: PaginationOptions,
+	args: {
+		search?: string;
+		status?: Exclude<SubscriptionStatusFilter, "unset" | "none" | "beta">;
+	},
+): Promise<PaginationResult<AdminUserSummary>> {
+	const statuses = args.status ? [args.status] : SUBSCRIBER_STATUSES;
+	const perStatusCap = Math.ceil(MAX_SUBSCRIBERS_READ / statuses.length);
+
+	const rows: Doc<"users">[] = [];
+	for (const status of statuses) {
+		const batch = await ctx.db
+			.query("users")
+			.withIndex("by_subscription_status", (q) =>
+				q.eq("subscriptionStatus", status),
+			)
+			.order("desc")
+			.take(perStatusCap);
+		rows.push(...batch);
+	}
+	rows.sort((a, b) => b._creationTime - a._creationTime);
+
+	const filtered = args.search
+		? rows.filter((user) => userMatchesSearch(user, args.search as string))
+		: rows;
+
+	const targetCount = paginationOpts.numItems;
+	const start = paginationOpts.cursor ? Number(paginationOpts.cursor) : 0;
+	const pageRows = filtered.slice(start, start + targetCount);
+	const nextStart = start + pageRows.length;
+	const isDone = nextStart >= filtered.length;
+
+	return {
+		page: pageRows.map(toAdminUserSummary),
+		isDone,
+		continueCursor: isDone ? "" : String(nextStart),
 	};
 }

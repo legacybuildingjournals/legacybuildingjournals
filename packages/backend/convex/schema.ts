@@ -135,7 +135,8 @@ export default defineSchema({
 	})
 		.index("by_clerk_id", ["clerkId"])
 		.index("by_email", ["email"])
-		.index("by_stripe_customer_id", ["stripeCustomerId"]),
+		.index("by_stripe_customer_id", ["stripeCustomerId"])
+		.index("by_subscription_status", ["subscriptionStatus"]),
 
 	/**
 	 * Expo push tokens, one row per device. A user can have several (phone +
