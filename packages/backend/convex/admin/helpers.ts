@@ -126,6 +126,15 @@ export function buildSubscriberPredicate(args: {
 	};
 }
 
+/**
+ * Cap on documents scanned per call. Without this, a sparse predicate (e.g.
+ * "has billing history" when most users don't) makes the loop below keep
+ * re-paginating the full `users` table within a single query execution,
+ * which blows Convex's per-query document-read limit and surfaces as an
+ * opaque "Server Error" on the client.
+ */
+const MAX_DOCS_SCANNED_PER_CALL = 512;
+
 /** Cursor pagination with in-query filters (Convex-native continueCursor). */
 export async function paginateUsersFiltered(
 	ctx: QueryCtx,
@@ -136,13 +145,22 @@ export async function paginateUsersFiltered(
 	const matched: Doc<"users">[] = [];
 	let cursor = paginationOpts.cursor ?? null;
 	let underlyingDone = false;
+	let scanned = 0;
 
-	while (matched.length < targetCount && !underlyingDone) {
-		const batchSize = Math.max((targetCount - matched.length) * 4, 25);
+	while (
+		matched.length < targetCount &&
+		!underlyingDone &&
+		scanned < MAX_DOCS_SCANNED_PER_CALL
+	) {
+		const batchSize = Math.min(
+			Math.max((targetCount - matched.length) * 4, 25),
+			MAX_DOCS_SCANNED_PER_CALL - scanned,
+		);
 		const batch = await ctx.db.query("users").order("desc").paginate({
 			numItems: batchSize,
 			cursor,
 		});
+		scanned += batch.page.length;
 
 		for (const user of batch.page) {
 			if (matches(user)) {
@@ -157,8 +175,10 @@ export async function paginateUsersFiltered(
 	}
 
 	const page = matched.slice(0, targetCount).map(toAdminUserSummary);
-	const hasMore =
-		matched.length >= targetCount && cursor !== null && !underlyingDone;
+	// More to fetch whenever the underlying table isn't exhausted yet — even
+	// if this call stopped early (scan cap) without filling a full page, so
+	// the client's usePaginatedQuery keeps calling loadMore until it is.
+	const hasMore = !underlyingDone && cursor !== null;
 
 	return {
 		page,
