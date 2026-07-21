@@ -7,10 +7,10 @@ import {
 	mirroredPaidJournalAccess,
 } from "./billing";
 import {
-	buildSubscriberPredicate,
 	buildUserListPredicate,
 	effectiveAccountStatus,
 	normalizeSearchQuery,
+	paginateSubscribers,
 	paginateUsersFiltered,
 	requireAdmin,
 	toAdminUserSummary,
@@ -235,13 +235,9 @@ export const listSubscribers = query({
 
 		const search = args.search?.trim() ?? "";
 
-		return await paginateUsersFiltered(
-			ctx,
-			args.paginationOpts,
-			buildSubscriberPredicate({
-				search: search || undefined,
-				status: args.status,
-			}),
-		);
+		return await paginateSubscribers(ctx, args.paginationOpts, {
+			search: search || undefined,
+			status: args.status,
+		});
 	},
 });
