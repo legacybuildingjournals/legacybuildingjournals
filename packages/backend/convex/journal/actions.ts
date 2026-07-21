@@ -10,12 +10,37 @@ import {
 	createPeechoPublication,
 	DOCUGENERATE_TEMPLATE_IDS,
 	estimateBookPages,
+	generateAudioQrBlob,
 	generateBookPdf,
 	MIN_BOOK_ORDER_ENTRIES,
 	mapEntriesForDocugenerate,
 	minimumBookOrderMessage,
 	resolveThumbnailUrl,
 } from "./orderHelpers";
+
+/**
+ * For any entry with audio, renders a "scan to listen" QR (pointing at the
+ * audio file) and uploads it to storage so Docugenerate can fetch it by URL.
+ */
+async function attachAudioQrUrls<T extends { audioUrl?: string }>(
+	ctx: ActionCtx,
+	entries: T[],
+): Promise<(T & { audioQrUrl?: string })[]> {
+	return Promise.all(
+		entries.map(async (entry) => {
+			if (!entry.audioUrl) return entry;
+			try {
+				const qrBlob = await generateAudioQrBlob(entry.audioUrl);
+				const storageId = await ctx.storage.store(qrBlob);
+				const audioQrUrl = await ctx.storage.getUrl(storageId);
+				return { ...entry, audioQrUrl: audioQrUrl ?? undefined };
+			} catch (error) {
+				console.error("Failed to generate audio QR code:", error);
+				return entry;
+			}
+		}),
+	);
+}
 
 export const createBookOrderCheckout = action({
 	args: {
@@ -53,7 +78,8 @@ export const createBookOrderCheckout = action({
 		const templateId = DOCUGENERATE_TEMPLATE_IDS[journal.type];
 		const bookName = journal.title?.trim() || "My Legacy Book";
 		const dedicationLine = journal.dedication?.trim() ?? "";
-		const journalEntries = mapEntriesForDocugenerate(entries);
+		const entriesWithQr = await attachAudioQrUrls(ctx, entries);
+		const journalEntries = mapEntriesForDocugenerate(entriesWithQr);
 
 		let pdfUrl: string;
 		try {
@@ -127,33 +153,12 @@ const PEECHO_URL = "https://www.peecho.com/rest/v2/publication/create";
 /** Peecho checkout page base; publication id is appended: `/print/{id}`. */
 const PEECHO_CHECKOUT_BASE = "https://www.peecho.com/print";
 
-/** DocuGenerate template IDs (Bubble app parity). */
-const EXPORT_DOCUGENERATE_TEMPLATE_IDS = {
-	my_story: "Z4tiXWnYwPWKuxzYgVji",
-	their_story: "QXlgtyJlnKdT13ymRvyp",
-} as const;
-
 /**
  * Peecho async-print-button credentials (Bubble parity). These are the public
  * button credentials embedded in Peecho's print button widget, not server
  * secrets — override via env if you rotate them.
  */
 const PEECHO_BUTTON_KEY_DEFAULT = "177583738174766789";
-
-function formatDate(ms: number): string {
-	return new Date(ms).toLocaleDateString("en-US", {
-		year: "numeric",
-		month: "short",
-		day: "numeric",
-	});
-}
-
-type DocuGenerateEntry = {
-	image: string;
-	journal_title: string;
-	entry_date: string;
-	journal_entry: string;
-};
 
 type GeneratedPdf = {
 	/** URL of the generated PDF. */
@@ -202,7 +207,7 @@ async function generateJournalPdf(
 		throw new ConvexError({ code: "NOT_FOUND", message: "Journal not found." });
 	}
 
-	const templateId = EXPORT_DOCUGENERATE_TEMPLATE_IDS[journal.type];
+	const templateId = DOCUGENERATE_TEMPLATE_IDS[journal.type];
 
 	const allEntries = await ctx.runQuery(
 		api.journal.entries.queries.listByJournal,
@@ -223,13 +228,8 @@ async function generateJournalPdf(
 
 	// Oldest-first reads more naturally in a printed book.
 	const ordered = [...entries].sort((a, b) => a.dateMs - b.dateMs);
-
-	const journalEntries: DocuGenerateEntry[] = ordered.map((entry) => ({
-		image: entry.imageUrl ?? "",
-		journal_title: entry.title,
-		entry_date: formatDate(entry.dateMs),
-		journal_entry: entry.body ?? "",
-	}));
+	const orderedWithQr = await attachAudioQrUrls(ctx, ordered);
+	const journalEntries = mapEntriesForDocugenerate(orderedWithQr);
 
 	const record = {
 		book_name: journal.title,

@@ -1,4 +1,4 @@
-/** Peecho minimum writing entries required to order a printed book. */
+/** Peecho minimum entries required to order a printed book. */
 export const MIN_BOOK_ORDER_ENTRIES = 22;
 
 export function minimumBookOrderMessage(selectedCount: number): string {

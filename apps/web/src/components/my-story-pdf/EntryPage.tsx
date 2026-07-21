@@ -52,6 +52,21 @@ const styles = StyleSheet.create({
 		marginTop: 14,
 		textAlign: "left",
 	},
+	qrWrap: {
+		alignItems: "center",
+		marginTop: 20,
+	},
+	qrImage: {
+		width: 110,
+		height: 110,
+	},
+	qrCaption: {
+		fontFamily: "Helvetica-Oblique",
+		fontSize: 9,
+		color: "#888888",
+		marginTop: 6,
+		textAlign: "center",
+	},
 });
 
 type EntryPageProps = MyStoryEntry;
@@ -63,6 +78,7 @@ export function EntryPage({
 	imageBase64,
 	imageWidth,
 	imageHeight,
+	audioQrBase64,
 }: EntryPageProps) {
 	const photoSize =
 		imageWidth && imageHeight ? fitPdfImageSize(imageWidth, imageHeight) : null;
@@ -88,13 +104,19 @@ export function EntryPage({
 									}
 						}
 					/>
-				) : (
+				) : audioQrBase64 ? null : (
 					<View style={styles.photoPlaceholder} />
 				)}
 			</View>
 			<Text style={styles.heading}>{heading}</Text>
 			<Text style={styles.date}>{date}</Text>
 			{body.trim() ? <Text style={styles.body}>{body.trim()}</Text> : null}
+			{audioQrBase64 ? (
+				<View style={styles.qrWrap}>
+					<Image src={audioQrBase64} style={styles.qrImage} />
+					<Text style={styles.qrCaption}>Scan to listen to this recording</Text>
+				</View>
+			) : null}
 		</Page>
 	);
 }

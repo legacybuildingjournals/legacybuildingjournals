@@ -7,6 +7,7 @@ export type MyStoryEntry = {
 	imageBase64?: string;
 	imageWidth?: number;
 	imageHeight?: number;
+	audioQrBase64?: string;
 };
 
 export type MyStoryDocumentProps = {

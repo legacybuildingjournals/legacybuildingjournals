@@ -118,11 +118,9 @@ export function JournalDetailSheet({
 		[entries],
 	);
 
-	/** Only writing entries can be exported to PDF (no audio) */
-	const exportableEntries = useMemo(
-		() => enrichedEntries.filter((entry) => entry.mode === "writing"),
-		[enrichedEntries],
-	);
+	// Recording entries render as a "scan to listen" QR in the PDF, so every
+	// entry is exportable regardless of mode.
+	const exportableEntries = useMemo(() => enrichedEntries, [enrichedEntries]);
 
 	const allExportableSelected =
 		exportableEntries.length > 0 &&
@@ -538,11 +536,7 @@ export function JournalDetailSheet({
 													{entries === undefined ? (
 														<div className="mx-3 h-24 animate-pulse rounded bg-[#ececec]" />
 													) : entriesToShow.length === 0 ? (
-														<div className="px-3 py-6 text-center text-[#525252] text-sm">
-															{exportMode && enrichedEntries.length > 0
-																? "Recording entries are not included in PDF export."
-																: null}
-														</div>
+														<div className="px-3 py-6 text-center text-[#525252] text-sm" />
 													) : (
 														<div className="flex flex-col">
 															{entriesToShow.map((entry) => (

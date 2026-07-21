@@ -1,3 +1,5 @@
+import QRCode from "qrcode";
+
 import type { Doc, Id } from "../_generated/dataModel";
 
 /** Peecho minimum writing entries required to order a printed book. */
@@ -24,10 +26,21 @@ export const DOCUGENERATE_TEMPLATE_IDS = {
 
 export type DocugenerateJournalEntry = {
 	image: string;
+	second_image: string;
 	journal_title: string;
 	entry_date: string;
 	journal_entry: string;
 };
+
+/** Renders a QR code (as a PNG blob) that opens `audioUrl` when scanned. */
+export async function generateAudioQrBlob(audioUrl: string): Promise<Blob> {
+	const buffer = await QRCode.toBuffer(audioUrl, {
+		type: "png",
+		margin: 1,
+		width: 400,
+	});
+	return new Blob([new Uint8Array(buffer)], { type: "image/png" });
+}
 
 export function requireDocugenerateApiKey(): string {
 	const key = process.env.DOCUGENERATE_API_KEY;
@@ -74,14 +87,23 @@ export function mapEntriesForDocugenerate(
 		dateMs: number;
 		body?: string;
 		imageUrl?: string;
+		audioQrUrl?: string;
 	}>,
 ): DocugenerateJournalEntry[] {
-	return entries.map((entry) => ({
-		image: entry.imageUrl ?? "",
-		journal_title: entry.title?.trim() || "Untitled entry",
-		entry_date: formatOrderEntryDate(entry.dateMs),
-		journal_entry: entry.body?.trim() ?? "",
-	}));
+	return entries.map((entry) => {
+		const photo = entry.imageUrl?.trim() || "";
+		const qr = entry.audioQrUrl?.trim() || "";
+		return {
+			// No photo: QR takes the primary image slot. With a photo: QR goes
+			// in the second slot below it (template has both `%image` and
+			// `%second_image` placeholders).
+			image: photo || qr,
+			second_image: photo && qr ? qr : "",
+			journal_title: entry.title?.trim() || "Untitled entry",
+			entry_date: formatOrderEntryDate(entry.dateMs),
+			journal_entry: entry.body?.trim() ?? "",
+		};
+	});
 }
 
 /** Rough page count for Peecho product selection (cover + ~2 pages per entry). */

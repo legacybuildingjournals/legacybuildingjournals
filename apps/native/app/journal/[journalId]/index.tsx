@@ -57,13 +57,9 @@ export default function JournalDetailScreen() {
 	const [ordering, setOrdering] = useState(false);
 
 	const isLoading = journal === undefined || entries === undefined;
-	// Only non-recording entries are exportable/printable — audio can't go into a
-	// PDF or printed book — so recording entries are hidden from the selection
-	// list entirely (matches web).
-	const exportableEntries = useMemo(
-		() => (entries ?? []).filter((e) => e.mode !== "recording"),
-		[entries],
-	);
+	// Recording entries are exportable/printable too — the Docugenerate
+	// template renders a "scan to listen" QR for their audio.
+	const exportableEntries = useMemo(() => entries ?? [], [entries]);
 	const exportableCount = exportableEntries.length;
 	const resolvedSelectedIds = useMemo(() => {
 		const valid = new Set(exportableEntries.map((e) => e._id));
@@ -116,8 +112,7 @@ export default function JournalDetailScreen() {
 
 	const startExportSelection = () => {
 		if (!journal) return;
-		// Pre-select all exportable (non-recording) entries so "export all" is one
-		// tap; user can deselect.
+		// Pre-select all entries so "export all" is one tap; user can deselect.
 		setSelectedIds(new Set(exportableEntries.map((e) => e._id)));
 		setSelectionMode(true);
 	};

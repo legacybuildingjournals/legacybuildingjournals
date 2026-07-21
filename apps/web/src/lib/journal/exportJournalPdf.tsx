@@ -1,4 +1,5 @@
 import { pdf } from "@react-pdf/renderer";
+import QRCode from "qrcode";
 
 import { MyStoryDocument } from "@/components/my-story-pdf/MyStoryDocument";
 import type { MyStoryEntry } from "@/components/my-story-pdf/types";
@@ -14,6 +15,16 @@ export type JournalForPdfExport = {
 	dedication?: string;
 	coverImageUrl?: string;
 };
+
+async function generateAudioQrDataUrl(
+	audioUrl: string,
+): Promise<string | null> {
+	try {
+		return await QRCode.toDataURL(audioUrl, { margin: 1, width: 400 });
+	} catch {
+		return null;
+	}
+}
 
 async function fetchImageDataUrl(url: string): Promise<string | null> {
 	try {
@@ -46,9 +57,8 @@ function downloadPdfBlob(blob: Blob, filename: string) {
 async function mapEntriesToMyStory(
 	entries: EnrichedJournalEntry[],
 ): Promise<MyStoryEntry[]> {
-	const writingEntries = entries.filter((entry) => entry.mode === "writing");
 	return Promise.all(
-		writingEntries.map(async (entry) => {
+		entries.map(async (entry) => {
 			let imageBase64: string | undefined;
 			let imageWidth: number | undefined;
 			let imageHeight: number | undefined;
@@ -63,6 +73,10 @@ async function mapEntriesToMyStory(
 				}
 			}
 
+			const audioQrBase64 = entry.audioUrl
+				? ((await generateAudioQrDataUrl(entry.audioUrl)) ?? undefined)
+				: undefined;
+
 			return {
 				heading: entry.title?.trim() || "Untitled entry",
 				date: formatPdfLongDate(entry.dateMs),
@@ -70,6 +84,7 @@ async function mapEntriesToMyStory(
 				imageBase64,
 				imageWidth,
 				imageHeight,
+				audioQrBase64,
 			};
 		}),
 	);
