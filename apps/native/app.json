@@ -16,8 +16,9 @@
 			[
 				"expo-image-picker",
 				{
-					"photosPermission": "Legacy Building uses your photos so you can choose a profile picture.",
-					"cameraPermission": "Legacy Building uses your camera so you can take a profile picture."
+					"photosPermission": "Legacy Building uses your photos so you can add pictures and videos to your journal.",
+					"cameraPermission": "Legacy Building uses your camera so you can take photos and record video journal entries.",
+					"microphonePermission": "Legacy Building uses your microphone to record audio for your video journal entries."
 				}
 			],
 			"@react-native-community/datetimepicker",
@@ -45,7 +46,8 @@
 					"resizeMode": "contain",
 					"backgroundColor": "#008080"
 				}
-			]
+			],
+			"expo-video"
 		],
 		"experiments": {
 			"typedRoutes": true,
@@ -65,6 +67,7 @@
 		"ios": {
 			"bundleIdentifier": "com.legacybuildingjournals.app",
 			"deploymentTarget": "17.0",
+			"supportsTablet": true,
 			"infoPlist": {
 				"ITSAppUsesNonExemptEncryption": false
 			}

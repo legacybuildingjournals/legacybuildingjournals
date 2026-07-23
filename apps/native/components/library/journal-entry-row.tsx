@@ -8,7 +8,7 @@ import { formatDateLong } from "@/lib/journal/formatDate";
 type JournalEntryRowProps = {
 	title: string;
 	dateMs: number;
-	mode?: "writing" | "recording";
+	mode?: "writing" | "recording" | "video";
 	onPress?: () => void;
 	/** When true, render a selection checkbox instead of the action icon. */
 	selectable?: boolean;
@@ -59,11 +59,14 @@ export function JournalEntryRow({
 			: "ellipse-outline"
 		: mode === "recording"
 			? "mic"
-			: null;
+			: mode === "video"
+				? "videocam"
+				: null;
 
-	// Recording entries get the amber tile (matches web); writing entries stay
-	// teal. Selection mode keeps the teal accent.
-	const recordingTile = !selectable && mode === "recording";
+	// Recorded entries (audio and video) get the amber tile (matches web);
+	// writing entries stay teal. Selection mode keeps the teal accent.
+	const recordingTile =
+		!selectable && (mode === "recording" || mode === "video");
 	const tileBg = selectable
 		? selected
 			? accent

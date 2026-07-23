@@ -58,7 +58,7 @@ export const bubbleDownloadButtonClass =
 export const bubbleCreateButtonClass =
 	"h-11 min-w-[60px] max-w-[200px] flex-1 rounded-[12px] bg-[#008080] px-5 font-medium text-sm text-white leading-none shadow-none hover:opacity-95 disabled:opacity-60";
 
-export function accentForMode(mode: "writing" | "recording") {
+export function accentForMode(mode: "writing" | "recording" | "video") {
 	return mode === "writing" ? brand.primary : brand.alert;
 }
 

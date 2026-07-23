@@ -57,14 +57,19 @@ export function JournalEntryRow({
 }: JournalEntryRowProps) {
 	const accent = entryAccentColor(entry.mode);
 	const isRecording = entry.mode === "recording";
+	const isVideo = entry.mode === "video";
 	const showDownload =
 		!selectionMode &&
-		((isRecording && entry.audioUrl) || (!isRecording && entry.imageUrl));
+		((isRecording && entry.audioUrl) ||
+			(isVideo && entry.videoUrl) ||
+			(!isRecording && !isVideo && entry.imageUrl));
 
 	const handleDownload = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		if (isRecording && entry.audioUrl) {
 			void downloadUrl(entry.audioUrl, `${entry.title || "recording"}.webm`);
+		} else if (isVideo && entry.videoUrl) {
+			void downloadUrl(entry.videoUrl, `${entry.title || "video"}.mp4`);
 		} else if (entry.imageUrl) {
 			void downloadUrl(entry.imageUrl, `${entry.title || "entry"}.jpg`);
 		}

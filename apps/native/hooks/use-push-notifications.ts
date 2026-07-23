@@ -41,9 +41,11 @@ export function usePushNotifications(): void {
 	const router = useRouter();
 	const { isSignedIn, convexUser } = useNativeCurrentUser();
 
+	const isWeb = Platform.OS === "web";
+
 	const preferences = useQuery(
 		api.notifications.queries.getMyPreferences,
-		isSignedIn && convexUser ? {} : "skip",
+		!isWeb && isSignedIn && convexUser ? {} : "skip",
 	);
 	const registerPushToken = useMutation(
 		api.notifications.mutations.registerPushToken,
@@ -53,7 +55,7 @@ export function usePushNotifications(): void {
 
 	// Register (or refresh) the Expo push token once we have a Convex user.
 	useEffect(() => {
-		if (!isSignedIn || !convexUser) return;
+		if (isWeb || !isSignedIn || !convexUser) return;
 		let cancelled = false;
 
 		void (async () => {
@@ -80,7 +82,7 @@ export function usePushNotifications(): void {
 
 	// Keep the local daily-prompt queue in sync with the user's preferences.
 	const syncDailyPrompts = useCallback(() => {
-		if (!preferences) return;
+		if (isWeb || !preferences) return;
 		void rescheduleDailyPrompts({
 			dailyPrompts: preferences.dailyPrompts,
 			dailyPromptHour: preferences.dailyPromptHour,
@@ -112,11 +114,13 @@ export function usePushNotifications(): void {
 	);
 
 	useEffect(() => {
+		// expo-notifications doesn't implement the response APIs on web.
+		if (isWeb) return;
 		// Cold start: the app was opened by tapping a notification.
 		void Notifications.getLastNotificationResponseAsync().then(handleResponse);
 		// Warm taps while the app is running.
 		const sub =
 			Notifications.addNotificationResponseReceivedListener(handleResponse);
 		return () => sub.remove();
-	}, [handleResponse]);
+	}, [handleResponse, isWeb]);
 }

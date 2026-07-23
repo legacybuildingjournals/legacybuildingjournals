@@ -1,6 +1,8 @@
 import { File } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 
+import { isCameraAvailable, NO_CAMERA_MESSAGE } from "./camera-availability";
+
 const MAX_BYTES = 8 * 1024 * 1024;
 const ACCEPTED_MIME = [
 	"image/jpeg",
@@ -111,6 +113,10 @@ export async function pickEntryImageFromLibrary(): Promise<PickEntryImageResult>
 
 /** "Take Photo" flow. */
 export async function pickEntryImageFromCamera(): Promise<PickEntryImageResult> {
+	if (!isCameraAvailable()) {
+		return { kind: "error", message: NO_CAMERA_MESSAGE };
+	}
+
 	const existing = await ImagePicker.getCameraPermissionsAsync();
 	const previouslyDenied =
 		existing.status === ImagePicker.PermissionStatus.DENIED;

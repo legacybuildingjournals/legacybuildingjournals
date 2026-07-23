@@ -7,5 +7,6 @@ export type EnrichedJournalEntry = Doc<"journalEntries"> & {
 };
 
 export function entryAccentColor(mode: EnrichedJournalEntry["mode"]): string {
-	return mode === "recording" ? "#dca114" : "#008080";
+	// Both recorded kinds share the amber accent.
+	return mode === "recording" || mode === "video" ? "#dca114" : "#008080";
 }

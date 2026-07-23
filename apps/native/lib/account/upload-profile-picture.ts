@@ -23,11 +23,19 @@ export type PickProfileImageResult =
 	| { kind: "permission-denied"; previouslyDenied: boolean }
 	| { kind: "error"; message: string };
 
+export type PickImageOptions = {
+	/** Square crop suits avatars and covers; backgrounds want the whole frame. */
+	aspect?: [number, number] | null;
+};
+
 /**
- * Prompt the user to pick a square-ish profile photo from their library.
- * Handles permission requests and basic validation (size + mime type).
+ * Prompt the user to pick an image from their library. Handles permission
+ * requests and basic validation (size + mime type). Defaults to a square crop.
  */
-export async function pickProfileImage(): Promise<PickProfileImageResult> {
+export async function pickProfileImage(
+	options: PickImageOptions = {},
+): Promise<PickProfileImageResult> {
+	const aspect = options.aspect === undefined ? [1, 1] : options.aspect;
 	try {
 		const existing = await ImagePicker.getMediaLibraryPermissionsAsync();
 		const previouslyDenied =
@@ -39,8 +47,8 @@ export async function pickProfileImage(): Promise<PickProfileImageResult> {
 
 		const result = await ImagePicker.launchImageLibraryAsync({
 			mediaTypes: ["images"],
-			allowsEditing: true,
-			aspect: [1, 1],
+			allowsEditing: aspect !== null,
+			...(aspect ? { aspect: aspect as [number, number] } : {}),
 			quality: 0.85,
 			exif: false,
 		});

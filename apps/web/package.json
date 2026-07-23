@@ -25,6 +25,7 @@
 		"@legacy-building/assets": "workspace:*",
 		"@legacy-building/backend": "workspace:*",
 		"@legacy-building/env": "workspace:*",
+		"@legacy-building/pdf": "workspace:*",
 		"@legacy-building/ui": "workspace:*",
 		"@react-pdf/renderer": "^4.3.0",
 		"@stripe/react-stripe-js": "^6.6.0",

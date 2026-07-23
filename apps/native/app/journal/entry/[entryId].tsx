@@ -20,6 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useJournalPaywall } from "@/components/billing/journal-paywall-provider";
 import { EntryAudioPlayer } from "@/components/library/entry-audio-player";
+import { EntryVideoPlayer } from "@/components/library/entry-video-player";
 import { formatDateLong } from "@/lib/journal/formatDate";
 import { useMutationToast } from "@/lib/mutation-toast";
 
@@ -53,11 +54,9 @@ export default function JournalEntryDetailScreen() {
 					}),
 			},
 		];
-		// PDF export only makes sense for written entries — recordings can't be
-		// rendered in a PDF (matches web).
-		if (entry.mode !== "recording") {
-			options.push({ text: "Export to PDF", onPress: () => handleExport() });
-		}
+		// Recordings export too: the template gives their audio a scannable
+		// memory page instead of prose.
+		options.push({ text: "Export to PDF", onPress: () => handleExport() });
 		options.push({
 			text: "Delete entry",
 			style: "destructive",
@@ -120,6 +119,7 @@ export default function JournalEntryDetailScreen() {
 	};
 
 	const isRecording = entry?.mode === "recording";
+	const isVideo = entry?.mode === "video";
 
 	return (
 		<View className="flex-1 bg-background">
@@ -183,13 +183,22 @@ export default function JournalEntryDetailScreen() {
 						</Text>
 					</View>
 
-					{entry.imageUrl ? (
+					{entry.imageUrl && !isVideo ? (
 						<View className="mt-2 overflow-hidden rounded-2xl">
 							<Image
 								source={{ uri: entry.imageUrl }}
 								className="h-60 w-full"
 								resizeMode="contain"
 								accessibilityLabel="Entry photo"
+							/>
+						</View>
+					) : null}
+
+					{isVideo && entry.videoUrl ? (
+						<View className="mt-2">
+							<EntryVideoPlayer
+								uri={entry.videoUrl}
+								posterUri={entry.imageUrl}
 							/>
 						</View>
 					) : null}

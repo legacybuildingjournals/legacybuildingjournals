@@ -1,6 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
+import {
+	MIN_BOOK_ORDER_ENTRIES,
+	minimumBookOrderMessage,
+} from "@legacy-building/backend/convex/journal/orderRules";
+import { needsLightForeground } from "@legacy-building/ui/lib/color";
 import { useAction, useMutation, useQuery } from "convex/react";
 import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
@@ -10,6 +15,7 @@ import { useMemo, useState } from "react";
 import {
 	ActivityIndicator,
 	Alert,
+	Image,
 	Pressable,
 	ScrollView,
 	Text,
@@ -18,12 +24,14 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useJournalPaywall } from "@/components/billing/journal-paywall-provider";
+import { JournalColorSheet } from "@/components/library/journal-color-sheet";
 import { JournalEntryRow } from "@/components/library/journal-entry-row";
 import { formatDateLong } from "@/lib/journal/formatDate";
+import {
+	pickBackgroundImage,
+	uploadCoverImage,
+} from "@/lib/journal/upload-cover-image";
 import { useMutationToast } from "@/lib/mutation-toast";
-
-/** Peecho requires at least this many entries to print/order a book. */
-const MIN_ORDER_ENTRIES = 22;
 
 export default function JournalDetailScreen() {
 	const insets = useSafeAreaInsets();
@@ -47,18 +55,37 @@ export default function JournalDetailScreen() {
 		journalId ? { journalId } : "skip",
 	);
 	const removeJournal = useMutation(api.journal.mutations.remove);
+	const setAppearance = useMutation(api.journal.mutations.setAppearance);
+	const generateUploadUrl = useMutation(
+		api.journal.mutations.generateUploadUrl,
+	);
 	const exportJournal = useAction(api.journal.actions.exportJournal);
-	const orderBook = useAction(api.journal.actions.orderBook);
+	const createBookOrderCheckout = useAction(
+		api.journal.actions.createBookOrderCheckout,
+	);
 	const [selectionMode, setSelectionMode] = useState(false);
 	const [selectedIds, setSelectedIds] = useState<Set<Id<"journalEntries">>>(
 		new Set(),
 	);
 	const [exporting, setExporting] = useState(false);
 	const [ordering, setOrdering] = useState(false);
+	const [colorSheetOpen, setColorSheetOpen] = useState(false);
+	// Set while dragging in the picker so the screen repaints live, before
+	// anything is written to the server.
+	const [previewColor, setPreviewColor] = useState<string | null>(null);
+	const [savingAppearance, setSavingAppearance] = useState(false);
 
 	const isLoading = journal === undefined || entries === undefined;
-	// Recording entries are exportable/printable too — the Docugenerate
-	// template renders a "scan to listen" QR for their audio.
+	const backgroundColor = previewColor ?? journal?.backgroundColor ?? null;
+	const backgroundImageUrl = journal?.backgroundImageUrl ?? null;
+	// A picked colour can be anything, so the header text has to follow it
+	// rather than assume the app's usual dark-on-light.
+	const onDarkBackground = Boolean(
+		backgroundColor && needsLightForeground(backgroundColor),
+	);
+	const headingColor = onDarkBackground ? "#ffffff" : undefined;
+	// Recording entries are exportable too — the template gives their audio a
+	// dedicated "scan to hear" QR page.
 	const exportableEntries = useMemo(() => entries ?? [], [entries]);
 	const exportableCount = exportableEntries.length;
 	const resolvedSelectedIds = useMemo(() => {
@@ -69,12 +96,9 @@ export default function JournalDetailScreen() {
 	const allSelected = exportableCount > 0 && selectedCount === exportableCount;
 
 	const showMinimumOrderAlert = (count: number) => {
-		const remaining = MIN_ORDER_ENTRIES - count;
 		Alert.alert(
 			"A few more entries needed",
-			`A printed book needs at least ${MIN_ORDER_ENTRIES} entries. Your journal has ${count}, so add ${remaining} more ${
-				remaining === 1 ? "entry" : "entries"
-			} to place an order.`,
+			minimumBookOrderMessage(count),
 			[{ text: "Got it", style: "default" }],
 			{ cancelable: true },
 		);
@@ -100,6 +124,99 @@ export default function JournalDetailScreen() {
 		} finally {
 			setExporting(false);
 		}
+	};
+
+	const applyAppearance = async (
+		patch: Parameters<typeof setAppearance>[0],
+		successMessage: string,
+	) => {
+		if (savingAppearance) return;
+		setSavingAppearance(true);
+		try {
+			await setAppearance(patch);
+			mutationToast.success(successMessage);
+		} catch (err) {
+			mutationToast.error(
+				err,
+				"Could not update the journal. Please try again.",
+			);
+		} finally {
+			setSavingAppearance(false);
+		}
+	};
+
+	const handleCommitColor = (color: string | null) => {
+		setColorSheetOpen(false);
+		setPreviewColor(null);
+		if (!journalId) return;
+		void applyAppearance(
+			{ id: journalId, backgroundColor: color },
+			color ? "Journal color updated." : "Journal color reset.",
+		);
+	};
+
+	const pickAndUploadBackground = async () => {
+		if (!journalId) return;
+		const picked = await pickBackgroundImage();
+
+		if (picked.kind === "permission-denied") {
+			Alert.alert(
+				"Photo access needed",
+				"Allow photo access in Settings to choose a background image.",
+				picked.previouslyDenied
+					? [
+							{ text: "Cancel", style: "cancel" },
+							{
+								text: "Open Settings",
+								onPress: () => void Linking.openSettings(),
+							},
+						]
+					: [{ text: "OK" }],
+			);
+			return;
+		}
+		if (picked.kind === "error") {
+			mutationToast.error(new Error(picked.message), picked.message);
+			return;
+		}
+		if (picked.kind === "canceled") return;
+
+		setSavingAppearance(true);
+		try {
+			const backgroundImageId = await uploadCoverImage(picked.image, () =>
+				generateUploadUrl(),
+			);
+			await setAppearance({ id: journalId, backgroundImageId });
+			mutationToast.success("Background image updated.");
+		} catch (err) {
+			mutationToast.error(err, "Could not set the background image.");
+		} finally {
+			setSavingAppearance(false);
+		}
+	};
+
+	const handleBackgroundImage = () => {
+		if (!journalId || savingAppearance) return;
+
+		guardJournalAction(() => {
+			if (!backgroundImageUrl) {
+				void pickAndUploadBackground();
+				return;
+			}
+			Alert.alert("Background image", undefined, [
+				{ text: "Replace", onPress: () => void pickAndUploadBackground() },
+				{
+					text: "Remove",
+					style: "destructive",
+					onPress: () =>
+						void applyAppearance(
+							{ id: journalId, backgroundImageId: null },
+							"Background image removed.",
+						),
+				},
+				{ text: "Cancel", style: "cancel" },
+			]);
+		});
 	};
 
 	const goToEditJournal = () => {
@@ -185,7 +302,7 @@ export default function JournalDetailScreen() {
 				return;
 			}
 
-			if (resolvedSelectedIds.length < MIN_ORDER_ENTRIES) {
+			if (resolvedSelectedIds.length < MIN_BOOK_ORDER_ENTRIES) {
 				showMinimumOrderAlert(resolvedSelectedIds.length);
 				return;
 			}
@@ -198,12 +315,14 @@ export default function JournalDetailScreen() {
 		if (!journalId || ordering) return;
 		setOrdering(true);
 		try {
-			const { url } = await orderBook({
+			const { checkoutUrl } = await createBookOrderCheckout({
 				journalId,
 				entryIds: orderEntryIds,
+				// Selecting everything is what earns the cover and dedication pages.
+				includeJournal: orderEntryIds.length === exportableCount,
 			});
 			mutationToast.success("Opening checkout…");
-			await openExportedUrl(url);
+			await openExportedUrl(checkoutUrl);
 			exitSelection();
 		} catch (err) {
 			mutationToast.error(err, "Could not start the order. Please try again.");
@@ -222,7 +341,22 @@ export default function JournalDetailScreen() {
 	};
 
 	return (
-		<View className="flex-1 bg-secondary/30">
+		<View
+			className="flex-1 bg-secondary/30"
+			// The journal's colour is user data, so it can't come from a token.
+			style={backgroundColor ? { backgroundColor } : undefined}
+		>
+			{backgroundImageUrl ? (
+				<Image
+					source={{ uri: backgroundImageUrl }}
+					// Sits behind everything: later siblings paint on top, so the
+					// header and content stay legible above it.
+					className="absolute inset-0 h-full w-full"
+					resizeMode="cover"
+					accessibilityIgnoresInvertColors
+				/>
+			) : null}
+
 			{/* Teal header */}
 			<View
 				className="bg-primary px-4 pb-4"
@@ -301,11 +435,40 @@ export default function JournalDetailScreen() {
 					<>
 						<View className="gap-2 pb-2">
 							<View className="flex-row items-center gap-2">
-								<Text className="flex-1 font-semibold text-3xl text-foreground leading-tight">
+								<Text
+									className="flex-1 font-semibold text-3xl text-foreground leading-tight"
+									style={headingColor ? { color: headingColor } : undefined}
+								>
 									{journal.title}
 								</Text>
 								{!selectionMode ? (
 									<View className="flex-row items-center gap-2">
+										<Pressable
+											onPress={() =>
+												guardJournalAction(() => setColorSheetOpen(true))
+											}
+											disabled={savingAppearance}
+											accessibilityRole="button"
+											accessibilityLabel="Change journal color"
+											className="size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 active:opacity-70 disabled:opacity-40"
+											hitSlop={6}
+										>
+											<Ionicons name="color-palette" size={19} color={accent} />
+										</Pressable>
+										<Pressable
+											onPress={handleBackgroundImage}
+											disabled={savingAppearance}
+											accessibilityRole="button"
+											accessibilityLabel={
+												backgroundImageUrl
+													? "Change background image"
+													: "Add background image"
+											}
+											className="size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 active:opacity-70 disabled:opacity-40"
+											hitSlop={6}
+										>
+											<Ionicons name="images" size={19} color={accent} />
+										</Pressable>
 										<Pressable
 											onPress={goToEditJournal}
 											accessibilityRole="button"
@@ -343,8 +506,15 @@ export default function JournalDetailScreen() {
 							</View>
 
 							<View className="flex-row items-center gap-2">
-								<Ionicons name="calendar-outline" size={18} color={accent} />
-								<Text className="text-base text-foreground">
+								<Ionicons
+									name="calendar-outline"
+									size={18}
+									color={headingColor ?? accent}
+								/>
+								<Text
+									className="text-base text-foreground"
+									style={headingColor ? { color: headingColor } : undefined}
+								>
 									{formatDateLong(journal.dateMs)}
 									{journal.endDateMs
 										? ` – ${formatDateLong(journal.endDateMs)}`
@@ -469,6 +639,17 @@ export default function JournalDetailScreen() {
 					</Pressable>
 				)}
 			</View>
+
+			<JournalColorSheet
+				visible={colorSheetOpen}
+				selected={journal?.backgroundColor ?? null}
+				onPreview={setPreviewColor}
+				onCommit={handleCommitColor}
+				onClose={() => {
+					setColorSheetOpen(false);
+					setPreviewColor(null);
+				}}
+			/>
 		</View>
 	);
 }

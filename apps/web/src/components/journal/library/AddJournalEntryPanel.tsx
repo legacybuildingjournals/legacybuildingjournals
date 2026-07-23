@@ -16,6 +16,7 @@ import {
 	type EntryMode,
 	EntryModeTabs,
 } from "@/components/journal/library/EntryModeTabs";
+import { EntryVideoUpload } from "@/components/journal/library/EntryVideoUpload";
 import {
 	accentForMode,
 	bubbleCreateButtonClass,
@@ -100,6 +101,7 @@ export function AddJournalEntryPanel({
 	const [imageFile, setImageFile] = useState<File | null>(null);
 	const [imagePreview, setImagePreview] = useState<string | null>(null);
 	const [audioFile, setAudioFile] = useState<File | null>(null);
+	const [videoFile, setVideoFile] = useState<File | null>(null);
 	const [submitting, setSubmitting] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [showErrors, setShowErrors] = useState(false);
@@ -110,13 +112,18 @@ export function AddJournalEntryPanel({
 	const dateInvalid = date === undefined;
 	const bodyInvalid = mode === "writing" && !body.trim();
 	const audioInvalid = mode === "recording" && audioFile === null;
+	const videoInvalid = mode === "video" && videoFile === null;
 	const journalInvalid = selectedJournalId === null;
 
 	const isValid =
 		!titleInvalid &&
 		!dateInvalid &&
 		!journalInvalid &&
-		(mode === "writing" ? !bodyInvalid : !audioInvalid);
+		(mode === "writing"
+			? !bodyInvalid
+			: mode === "video"
+				? !videoInvalid
+				: !audioInvalid);
 
 	const resetForm = useCallback(() => {
 		setMode("writing");
@@ -220,6 +227,14 @@ export function AddJournalEntryPanel({
 				);
 			}
 
+			let videoId: Id<"_storage"> | undefined;
+			if (mode === "video" && videoFile) {
+				videoId = await uploadToStorage(
+					videoFile,
+					() => generateUploadUrl(),
+					videoFile.type || "video/mp4",
+				);
+			}
 			let audioId: Id<"_storage"> | undefined;
 			if (mode === "recording" && audioFile) {
 				audioId = await uploadToStorage(
@@ -237,6 +252,7 @@ export function AddJournalEntryPanel({
 				body: mode === "writing" ? body.trim() : undefined,
 				imageId,
 				audioId,
+				videoId,
 			});
 
 			toastMutationSuccess("Entry added.");
@@ -389,7 +405,29 @@ export function AddJournalEntryPanel({
 							</div>
 						</div>
 
-						{mode === "writing" ? (
+						{mode === "video" ? (
+							<>
+								{journalSelect}
+								<div className={bubbleFieldStack}>
+									<EntryVideoUpload
+										accentColor={accent}
+										value={videoFile}
+										onChange={setVideoFile}
+										invalid={showErrors && videoInvalid}
+									/>
+								</div>
+								{showErrors && videoInvalid ? (
+									<p className="text-[#b0200c] text-sm" role="alert">
+										Choose a video before creating your entry.
+									</p>
+								) : null}
+								<p className="text-[#8a8a8a] text-sm">
+									Videos can&apos;t be embedded in the PDF. A QR code is
+									generated so anyone reading the journal can scan it to watch
+									this memory.
+								</p>
+							</>
+						) : mode === "writing" ? (
 							<>
 								<div className={bubbleFieldStack}>
 									<label

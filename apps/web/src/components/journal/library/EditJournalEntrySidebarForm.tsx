@@ -81,6 +81,9 @@ export function EditJournalEntrySidebarForm({
 	}, [allJournals, preselectedJournal]);
 
 	const isRecording = entry.mode === "recording";
+	const isVideo = entry.mode === "video";
+	// Only writing entries carry prose; the other two are media-led.
+	const isWriting = entry.mode === "writing";
 	const accent = entryAccentColor(entry.mode);
 
 	const [title, setTitle] = useState(entry.title);
@@ -114,7 +117,7 @@ export function EditJournalEntrySidebarForm({
 
 	const titleInvalid = !title.trim();
 	const dateInvalid = Number.isNaN(date.getTime());
-	const bodyInvalid = !isRecording && !body.trim();
+	const bodyInvalid = isWriting && !body.trim();
 	const hasExistingAudio = Boolean(entry.audioUrl) && !existingAudioCleared;
 	const audioInvalid = isRecording && audioFile === null && !hasExistingAudio;
 	const journalInvalid = selectedJournalId === null;
@@ -123,7 +126,7 @@ export function EditJournalEntrySidebarForm({
 		!titleInvalid &&
 		!dateInvalid &&
 		!journalInvalid &&
-		(isRecording ? !audioInvalid : !bodyInvalid);
+		(isRecording ? !audioInvalid : isVideo ? true : !bodyInvalid);
 
 	const handleCancel = useCallback(() => {
 		if (imagePreview?.startsWith("blob:")) {
@@ -152,7 +155,7 @@ export function EditJournalEntrySidebarForm({
 	};
 
 	const handleDownload = () => {
-		if (!isRecording && body.trim()) {
+		if (isWriting && body.trim()) {
 			const blob = new Blob([body], { type: "text/plain" });
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement("a");
@@ -216,7 +219,7 @@ export function EditJournalEntrySidebarForm({
 				journalId: selectedJournalId,
 				title: title.trim(),
 				dateMs: date.getTime(),
-				body: isRecording ? undefined : body.trim(),
+				body: isWriting ? body.trim() : undefined,
 				imageId,
 				audioId,
 			});
@@ -267,7 +270,11 @@ export function EditJournalEntrySidebarForm({
 						/>
 					</Button>
 					<h2 className="font-semibold text-[#1a1a1a] text-base leading-[1.4]">
-						{isRecording ? "Edit your recording" : "Edit your story"}
+						{isRecording
+							? "Edit your recording"
+							: isVideo
+								? "Edit your video"
+								: "Edit your story"}
 					</h2>
 				</div>
 
@@ -301,7 +308,20 @@ export function EditJournalEntrySidebarForm({
 					</div>
 				</div>
 
-				{isRecording ? (
+				{isVideo ? (
+					entry.videoUrl ? (
+						<div className={bubbleFieldStack}>
+							<span className={bubbleLabelClass}>Video</span>
+							{/* biome-ignore lint/a11y/useMediaCaption: user-supplied journal footage has no caption track */}
+							<video
+								src={entry.videoUrl}
+								controls
+								poster={entry.imageUrl}
+								className="w-full rounded-[12px] bg-black"
+							/>
+						</div>
+					) : null
+				) : isRecording ? (
 					<div className={bubbleFieldStack}>
 						<AudioRecorderField
 							accentColor={accent}

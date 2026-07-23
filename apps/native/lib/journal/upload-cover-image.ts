@@ -9,6 +9,8 @@ import { uploadBinaryToConvex } from "./upload-binary";
  * helper from there to avoid duplicating permission + validation logic.
  */
 export { pickProfileImage as pickCoverImage } from "@/lib/account/upload-profile-picture";
+
+import { pickProfileImage as pickProfileImageRaw } from "@/lib/account/upload-profile-picture";
 export type PickCoverImageResult = PickProfileImageResult;
 
 type PickedImage = {
@@ -30,4 +32,12 @@ export async function uploadCoverImage(
 		mimeType: image.mimeType,
 		generateUploadUrl,
 	});
+}
+
+/**
+ * Background images fill the whole journal screen, so they are picked without
+ * the square crop that covers and avatars use.
+ */
+export function pickBackgroundImage() {
+	return pickProfileImageRaw({ aspect: null });
 }
