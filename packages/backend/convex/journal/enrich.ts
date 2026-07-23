@@ -17,9 +17,29 @@ export async function resolveCoverImageUrl(
 	return undefined;
 }
 
+/** Background images are stored like covers: storage id first, raw URL second. */
+export async function resolveBackgroundImageUrl(
+	ctx: QueryCtx,
+	journal: Doc<"journals">,
+): Promise<string | undefined> {
+	if (journal.backgroundImageId) {
+		return (await ctx.storage.getUrl(journal.backgroundImageId)) ?? undefined;
+	}
+
+	const url = journal.backgroundImageUrl;
+	if (url?.startsWith("https://") || url?.startsWith("http://")) {
+		return url;
+	}
+
+	return undefined;
+}
+
 export async function enrichJournal(ctx: QueryCtx, journal: Doc<"journals">) {
-	const coverImageUrl = await resolveCoverImageUrl(ctx, journal);
-	return { ...journal, coverImageUrl };
+	const [coverImageUrl, backgroundImageUrl] = await Promise.all([
+		resolveCoverImageUrl(ctx, journal),
+		resolveBackgroundImageUrl(ctx, journal),
+	]);
+	return { ...journal, coverImageUrl, backgroundImageUrl };
 }
 
 export function journalActivityMs(journal: Doc<"journals">): number {
@@ -54,10 +74,25 @@ export async function resolveEntryAudioUrl(
 	return undefined;
 }
 
+export async function resolveEntryVideoUrl(
+	ctx: QueryCtx,
+	entry: Doc<"journalEntries">,
+): Promise<string | undefined> {
+	if (entry.videoId) {
+		return (await ctx.storage.getUrl(entry.videoId)) ?? undefined;
+	}
+	const url = entry.videoUrl;
+	if (url?.startsWith("https://") || url?.startsWith("http://")) {
+		return url;
+	}
+	return undefined;
+}
+
 export async function enrichEntry(ctx: QueryCtx, entry: Doc<"journalEntries">) {
-	const [imageUrl, audioUrl] = await Promise.all([
+	const [imageUrl, audioUrl, videoUrl] = await Promise.all([
 		resolveEntryImageUrl(ctx, entry),
 		resolveEntryAudioUrl(ctx, entry),
+		resolveEntryVideoUrl(ctx, entry),
 	]);
-	return { ...entry, imageUrl, audioUrl };
+	return { ...entry, imageUrl, audioUrl, videoUrl };
 }

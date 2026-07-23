@@ -1,14 +1,23 @@
 import { ConvexError, v } from "convex/values";
 
+import type { Id } from "../_generated/dataModel";
 import { type MutationCtx, mutation } from "../_generated/server";
 import { journalType } from "../schema";
+import {
+	isJournalBackgroundColor,
+	normalizeJournalBackgroundColor,
+} from "./appearance";
 import {
 	getOwnedJournal,
 	requireClerkUserId,
 	requirePaidJournalAccess,
 } from "./auth";
 import { journalLibrarySortKey } from "./sort";
-import { deleteEntryStorageFiles, deleteJournalCoverStorage } from "./storage";
+import {
+	deleteEntryStorageFiles,
+	deleteJournalBackgroundStorage,
+	deleteJournalCoverStorage,
+} from "./storage";
 
 function normalizeJournalTitle(title: string): string {
 	const trimmed = title.trim();
@@ -208,6 +217,70 @@ export const update = mutation({
 	},
 });
 
+/**
+ * Sets a journal's background colour and/or image.
+ *
+ * Each field is tri-state: omitted leaves it untouched, `null` clears it, and a
+ * value sets it. That lets the colour picker and the image picker write
+ * independently without clobbering each other.
+ */
+export const setAppearance = mutation({
+	args: {
+		id: v.id("journals"),
+		backgroundColor: v.optional(v.union(v.string(), v.null())),
+		backgroundImageId: v.optional(v.union(v.id("_storage"), v.null())),
+	},
+	handler: async (ctx, args) => {
+		const userId = await requirePaidJournalAccess(ctx);
+		const journal = await getOwnedJournal(ctx, args.id, userId);
+
+		const patch: {
+			backgroundColor?: string | undefined;
+			backgroundImageId?: Id<"_storage"> | undefined;
+			backgroundImageUrl?: string | undefined;
+			updatedAtMs: number;
+		} = { updatedAtMs: Date.now() };
+
+		if (args.backgroundColor !== undefined) {
+			if (
+				args.backgroundColor !== null &&
+				!isJournalBackgroundColor(args.backgroundColor)
+			) {
+				throw new ConvexError({
+					code: "INVALID_ARGUMENT",
+					message: "That background colour isn't a valid hex value.",
+				});
+			}
+			patch.backgroundColor =
+				args.backgroundColor === null
+					? undefined
+					: normalizeJournalBackgroundColor(args.backgroundColor);
+		}
+
+		if (args.backgroundImageId !== undefined) {
+			// Replacing or clearing the image frees the old file either way.
+			await deleteJournalBackgroundStorage(ctx, journal);
+
+			if (args.backgroundImageId === null) {
+				patch.backgroundImageId = undefined;
+				patch.backgroundImageUrl = undefined;
+			} else {
+				const url = await ctx.storage.getUrl(args.backgroundImageId);
+				if (!url) {
+					throw new ConvexError({
+						code: "INVALID_ARGUMENT",
+						message: "Background image was not found in storage.",
+					});
+				}
+				patch.backgroundImageId = args.backgroundImageId;
+				patch.backgroundImageUrl = url;
+			}
+		}
+
+		await ctx.db.patch(args.id, patch);
+	},
+});
+
 /** Lightweight title-only rename (no paid gate, no cover/date handling). */
 export const rename = mutation({
 	args: {
@@ -243,6 +316,7 @@ export const remove = mutation({
 		}
 
 		await deleteJournalCoverStorage(ctx, journal);
+		await deleteJournalBackgroundStorage(ctx, journal);
 		await ctx.db.delete(args.id);
 	},
 });

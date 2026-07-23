@@ -1,57 +1,7 @@
-import QRCode from "qrcode";
-
 import type { Doc, Id } from "../_generated/dataModel";
 
-/** Peecho minimum writing entries required to order a printed book. */
-export const MIN_BOOK_ORDER_ENTRIES = 22;
-
-export function minimumBookOrderMessage(selectedCount: number): string {
-	if (selectedCount >= MIN_BOOK_ORDER_ENTRIES) {
-		return "";
-	}
-	const remaining = MIN_BOOK_ORDER_ENTRIES - selectedCount;
-	return `Books can be ordered with ${MIN_BOOK_ORDER_ENTRIES} entries or more. You have ${selectedCount} selected — add ${remaining} more ${
-		remaining === 1 ? "entry" : "entries"
-	}.`;
-}
-
-export const DOCUGENERATE_URL = "https://api.docugenerate.com/v1/document";
 export const PEECHO_PUBLICATION_URL =
 	"https://www.peecho.com/rest/v2/publication/create";
-
-export const DOCUGENERATE_TEMPLATE_IDS = {
-	my_story: "Z4tiXWnYwPWKuxzYgVji",
-	their_story: "QXlgtyJlnKdT13ymRvyp",
-} as const;
-
-export type DocugenerateJournalEntry = {
-	image: string;
-	second_image: string;
-	journal_title: string;
-	entry_date: string;
-	journal_entry: string;
-};
-
-/** Renders a QR code (as a PNG blob) that opens `audioUrl` when scanned. */
-export async function generateAudioQrBlob(audioUrl: string): Promise<Blob> {
-	const buffer = await QRCode.toBuffer(audioUrl, {
-		type: "png",
-		margin: 1,
-		width: 400,
-	});
-	return new Blob([new Uint8Array(buffer)], { type: "image/png" });
-}
-
-export function requireDocugenerateApiKey(): string {
-	const key = process.env.DOCUGENERATE_API_KEY;
-	if (!key) {
-		throw new Error(
-			"Book ordering is not configured. Set DOCUGENERATE_API_KEY in Convex environment variables.",
-		);
-	}
-	return key;
-}
-
 export function requirePeechoConfig(): {
 	apiKey: string;
 	buttonKey: string;
@@ -73,55 +23,9 @@ export function requirePeechoConfig(): {
 	};
 }
 
-export function formatOrderEntryDate(ms: number): string {
-	return new Date(ms).toLocaleDateString("en-US", {
-		month: "long",
-		day: "numeric",
-		year: "numeric",
-	});
-}
-
-export function mapEntriesForDocugenerate(
-	entries: Array<{
-		title: string;
-		dateMs: number;
-		body?: string;
-		imageUrl?: string;
-		audioQrUrl?: string;
-	}>,
-): DocugenerateJournalEntry[] {
-	return entries.map((entry) => {
-		const photo = entry.imageUrl?.trim() || "";
-		const qr = entry.audioQrUrl?.trim() || "";
-		return {
-			// No photo: QR takes the primary image slot. With a photo: QR goes
-			// in the second slot below it (template has both `%image` and
-			// `%second_image` placeholders).
-			image: photo || qr,
-			second_image: photo && qr ? qr : "",
-			journal_title: entry.title?.trim() || "Untitled entry",
-			entry_date: formatOrderEntryDate(entry.dateMs),
-			journal_entry: entry.body?.trim() ?? "",
-		};
-	});
-}
-
-/** Rough page count for Peecho product selection (cover + ~2 pages per entry). */
-export function estimateBookPages(
-	entryCount: number,
-	includeJournal: boolean,
-): number {
-	const coverPages = includeJournal ? 4 : 0;
-	return Math.max(24, coverPages + entryCount * 2);
-}
-
 export function buildPeechoReferenceId(journalId: Id<"journals">): string {
 	return `${journalId}-${Date.now()}`;
 }
-
-type DocugenerateResponse = {
-	document_uri?: string;
-};
 
 type PeechoPublicationResponse = Record<string, unknown>;
 
@@ -230,65 +134,6 @@ function summarizePeechoPayload(payload: unknown): string {
 	} catch {
 		return String(payload).slice(0, 200);
 	}
-}
-
-export async function generateBookPdf(args: {
-	templateId: string;
-	bookName: string;
-	dedicationLine: string;
-	journalEntries: DocugenerateJournalEntry[];
-}): Promise<string> {
-	const response = await fetchWithTimeout(DOCUGENERATE_URL, {
-		method: "POST",
-		headers: {
-			Authorization: requireDocugenerateApiKey(),
-			"Content-Type": "application/json",
-			Accept: "application/json",
-		},
-		body: JSON.stringify({
-			template_id: args.templateId,
-			data: [
-				{
-					book_name: args.bookName,
-					dedication_line: args.dedicationLine,
-					journal_entries: args.journalEntries,
-				},
-			],
-			file: "",
-			sheet: "",
-			name: "",
-			output_name: "",
-			output_format: ".pdf",
-			output_quality: 100,
-			single_file: true,
-			page_break: true,
-			merge_with: "",
-			attach: "",
-		}),
-	});
-
-	const payload = await parsePeechoResponseBody(response);
-	const record =
-		typeof payload === "object" && payload !== null
-			? (payload as DocugenerateResponse & {
-					message?: string;
-					error?: string;
-				})
-			: null;
-
-	if (!response.ok) {
-		throw new Error(
-			record?.message ??
-				record?.error ??
-				`DocuGenerate failed with status ${response.status}: ${summarizePeechoPayload(payload)}`,
-		);
-	}
-
-	if (!record?.document_uri) {
-		throw new Error("DocuGenerate did not return a PDF URL.");
-	}
-
-	return record.document_uri;
 }
 
 export async function createPeechoPublication(args: {

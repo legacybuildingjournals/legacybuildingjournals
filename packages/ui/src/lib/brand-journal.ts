@@ -19,6 +19,9 @@ export const brand = {
 	destructive: "#b0200c",
 	alert: "#dca114",
 	alertLight: "#fff4db",
+	/** Video entries — a third accent so they read apart from audio recordings. */
+	video: "#6d4aa7",
+	videoLight: "#f0eaf9",
 	overlay: "rgba(82, 82, 82, 0.6)",
 	cancelBg: "#f2f2f2",
 	cancelText: "#525252",

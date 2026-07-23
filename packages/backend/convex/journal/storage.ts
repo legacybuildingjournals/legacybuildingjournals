@@ -17,10 +17,11 @@ export async function deleteStorageFile(
 /** Removes all storage blobs attached to a journal entry. */
 export async function deleteEntryStorageFiles(
 	ctx: MutationCtx,
-	entry: Pick<Doc<"journalEntries">, "imageId" | "audioId">,
+	entry: Pick<Doc<"journalEntries">, "imageId" | "audioId" | "videoId">,
 ): Promise<void> {
 	await deleteStorageFile(ctx, entry.imageId);
 	await deleteStorageFile(ctx, entry.audioId);
+	await deleteStorageFile(ctx, entry.videoId);
 }
 
 /** Removes cover image storage for a journal. */
@@ -29,4 +30,11 @@ export async function deleteJournalCoverStorage(
 	journal: Pick<Doc<"journals">, "coverImageId">,
 ): Promise<void> {
 	await deleteStorageFile(ctx, journal.coverImageId);
+}
+
+export async function deleteJournalBackgroundStorage(
+	ctx: MutationCtx,
+	journal: Pick<Doc<"journals">, "backgroundImageId">,
+): Promise<void> {
+	await deleteStorageFile(ctx, journal.backgroundImageId);
 }

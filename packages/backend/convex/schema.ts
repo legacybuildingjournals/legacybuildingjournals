@@ -168,6 +168,11 @@ export default defineSchema({
 		endDateMs: v.optional(v.number()),
 		/** Optional inline entry log captured at journal creation. */
 		entryLog: v.optional(v.string()),
+		/** User-chosen background colour for the journal, as a hex string. */
+		backgroundColor: v.optional(v.string()),
+		/** User-chosen background image; takes precedence over the colour. */
+		backgroundImageId: v.optional(v.id("_storage")),
+		backgroundImageUrl: v.optional(v.string()),
 	})
 		.index("by_userId", ["userId"])
 		.index("by_userId_and_type", ["userId", "type"]),
@@ -203,7 +208,11 @@ export default defineSchema({
 		title: v.string(),
 		dateMs: v.number(),
 		body: v.optional(v.string()),
-		mode: v.union(v.literal("writing"), v.literal("recording")),
+		mode: v.union(
+			v.literal("writing"),
+			v.literal("recording"),
+			v.literal("video"),
+		),
 		imageUrl: v.optional(v.string()),
 		audioUrl: v.optional(v.string()),
 		imageId: v.optional(v.id("_storage")),
@@ -211,6 +220,14 @@ export default defineSchema({
 		/** Recorded clip length in ms, captured at record time so playback UIs can
 		 * show the duration without waiting on the player to load remote audio. */
 		audioDurationMs: v.optional(v.number()),
+		/**
+		 * Video entries. The poster frame is stored in `imageId` like any other
+		 * entry cover, so lists, the PDF and the detail view all treat it as the
+		 * entry's image without special-casing.
+		 */
+		videoId: v.optional(v.id("_storage")),
+		videoUrl: v.optional(v.string()),
+		videoDurationMs: v.optional(v.number()),
 	})
 		.index("by_journalId", ["journalId"])
 		.index("by_userId", ["userId"]),

@@ -3,10 +3,26 @@ import { cn } from "@legacy-building/ui/lib/utils";
 
 export type EntryMode = "writing" | "recording" | "video";
 
-const MODES: { id: EntryMode; label: string }[] = [
-	{ id: "writing", label: "Writing journal" },
-	{ id: "recording", label: "Recording journal" },
-	{ id: "video", label: "Video journal" },
+/** Each mode owns an accent so the three tabs never read as the same control. */
+const MODES: {
+	id: EntryMode;
+	label: string;
+	active: string;
+	inactive?: string;
+}[] = [
+	{ id: "writing", label: "Writing journal", active: brand.primary },
+	{
+		id: "recording",
+		label: "Recording journal",
+		active: brand.alert,
+		inactive: brand.alertLight,
+	},
+	{
+		id: "video",
+		label: "Video journal",
+		active: brand.video,
+		inactive: brand.videoLight,
+	},
 ];
 
 type EntryModeTabsProps = {
@@ -24,7 +40,6 @@ export function EntryModeTabs({ value, onChange }: EntryModeTabsProps) {
 		>
 			{MODES.map((option) => {
 				const isActive = value === option.id;
-				const isRecorded = option.id === "recording" || option.id === "video";
 				return (
 					<button
 						key={option.id}
@@ -36,17 +51,15 @@ export function EntryModeTabs({ value, onChange }: EntryModeTabsProps) {
 							"min-h-10 min-w-[170px] cursor-pointer self-start px-2.5 py-2.5 font-normal text-base leading-[1.4] transition-colors",
 							isActive
 								? "rounded-[3px] text-white"
-								: isRecorded
+								: option.inactive
 									? "rounded-none text-[#1a1a1a]"
 									: "rounded-none bg-white text-[#1a1a1a]",
 						)}
 						style={
 							isActive
-								? {
-										backgroundColor: isRecorded ? brand.alert : brand.primary,
-									}
-								: isRecorded
-									? { backgroundColor: brand.alertLight }
+								? { backgroundColor: option.active }
+								: option.inactive
+									? { backgroundColor: option.inactive }
 									: undefined
 						}
 					>
