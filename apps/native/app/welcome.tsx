@@ -1,5 +1,6 @@
 import { useUser } from "@clerk/expo";
 import { api } from "@legacy-building/backend/convex/_generated/api";
+import { isValidInviteCodeFormat } from "@legacy-building/backend/convex/referrals/codes";
 import { useConvexAuth, useMutation } from "convex/react";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -11,6 +12,10 @@ import { OnboardingBackground } from "@/components/welcome/onboarding-background
 import { WelcomeVideo } from "@/components/welcome/welcome-video";
 import { useNativeCurrentUser } from "@/hooks/use-native-current-user";
 import { useMutationToast } from "@/lib/mutation-toast";
+import {
+	clearPendingInviteCode,
+	readPendingInviteCode,
+} from "@/lib/referrals/pending-invite";
 
 type Step = "username" | "video";
 
@@ -37,6 +42,7 @@ export default function WelcomeScreen() {
 	// `ensureCurrentUser` throws UNAUTHENTICATED ("You must be signed in").
 	const { isAuthenticated } = useConvexAuth();
 	const ensureCurrentUser = useMutation(api.user.mutations.ensureCurrentUser);
+	const claimInvite = useMutation(api.referrals.mutations.claimInvite);
 	const updateProfile = useMutation(api.user.mutations.updateProfile);
 	const completeWelcome = useMutation(api.user.mutations.completeWelcome);
 	const toast = useMutationToast();
@@ -46,6 +52,12 @@ export default function WelcomeScreen() {
 	const [usernameTouched, setUsernameTouched] = useState(false);
 	const [videoCompleted, setVideoCompleted] = useState(false);
 	const [saving, setSaving] = useState(false);
+	// Prefilled when the user arrived through a universal link; otherwise they
+	// type the code they saw on the invite page.
+	const [inviteCode, setInviteCode] = useState(
+		() => readPendingInviteCode() ?? "",
+	);
+	const [inviteNote, setInviteNote] = useState<string | null>(null);
 
 	const suggestedUsername = useMemo(
 		() => defaultUsername(convexUser?.name, clerkUser?.fullName),
@@ -87,6 +99,27 @@ export default function WelcomeScreen() {
 			// persist the chosen username.
 			await ensureCurrentUser({ preferredName: trimmed });
 			await updateProfile({ name: trimmed });
+
+			const code = inviteCode.trim();
+			if (code) {
+				try {
+					const result = await claimInvite({ code, via: "ios" });
+					if (result.status === "not_found") {
+						setInviteNote("That invite code wasn't found.");
+						setSaving(false);
+						return;
+					}
+					if (result.status === "own_code") {
+						setInviteNote("You can't use your own invite code.");
+						setSaving(false);
+						return;
+					}
+					if (result.status === "claimed") clearPendingInviteCode();
+				} catch {
+					// An invite is a bonus, never a blocker — carry on regardless.
+				}
+			}
+
 			setStep("video");
 		} catch (err) {
 			toast.error(err, "Could not save your username. Please try again.");
@@ -139,6 +172,32 @@ export default function WelcomeScreen() {
 							autoCapitalize="none"
 							autoCorrect={false}
 							returnKeyType="done"
+							onSubmitEditing={() => void handleUsernameContinue()}
+						/>
+					</View>
+
+					<View className="mt-5">
+						<AuthField
+							label="Invite code (optional)"
+							value={inviteCode}
+							onChangeText={(text) => {
+								setInviteNote(null);
+								setInviteCode(text.toUpperCase());
+							}}
+							autoCapitalize="characters"
+							autoCorrect={false}
+							returnKeyType="done"
+							placeholder="ABCD1234"
+							error={inviteNote ?? undefined}
+							helper={
+								inviteNote === null &&
+								inviteCode.trim() !== "" &&
+								!isValidInviteCodeFormat(inviteCode) ? (
+									<Text className="text-primary-foreground/70 text-sm">
+										Invite codes are 8 characters.
+									</Text>
+								) : null
+							}
 							onSubmitEditing={() => void handleUsernameContinue()}
 						/>
 					</View>
