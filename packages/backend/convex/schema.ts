@@ -131,11 +131,34 @@ export default defineSchema({
 		lastInactivityPushAt: v.optional(v.number()),
 		/** Unix ms the last export reminder push was sent — throttles the export sweep. */
 		lastExportReminderAt: v.optional(v.number()),
+		/**
+		 * This user's own shareable invite code. Generated lazily the first time
+		 * they open Community, then never changes — it identifies the person, not
+		 * a device, so it is the same on web and native.
+		 */
+		inviteCode: v.optional(v.string()),
+		/**
+		 * Clerk id of whoever invited this user. Written once during onboarding and
+		 * never changed, so "invited" always means "arrived through an invite".
+		 */
+		invitedBy: v.optional(v.string()),
+		invitedAt: v.optional(v.number()),
+		/** Where the claim came from — kept because it can't be reconstructed later. */
+		invitedVia: v.optional(
+			v.union(
+				v.literal("web"),
+				v.literal("ios"),
+				v.literal("android"),
+				v.literal("manual"),
+			),
+		),
 	})
 		.index("by_clerk_id", ["clerkId"])
 		.index("by_email", ["email"])
 		.index("by_stripe_customer_id", ["stripeCustomerId"])
-		.index("by_subscription_status", ["subscriptionStatus"]),
+		.index("by_subscription_status", ["subscriptionStatus"])
+		.index("by_invite_code", ["inviteCode"])
+		.index("by_invited_by", ["invitedBy"]),
 
 	/**
 	 * Expo push tokens, one row per device. A user can have several (phone +

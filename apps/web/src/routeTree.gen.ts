@@ -21,6 +21,7 @@ import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as LoginContinueRouteImport } from './routes/login.continue'
+import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as DashboardLibraryRouteImport } from './routes/dashboard/library'
 import { Route as DashboardDeskRouteImport } from './routes/dashboard/desk'
 import { Route as DashboardBillingRouteImport } from './routes/dashboard/billing'
@@ -90,6 +91,11 @@ const LoginContinueRoute = LoginContinueRouteImport.update({
   path: '/continue',
   getParentRoute: () => LoginRoute,
 } as any)
+const InviteCodeRoute = InviteCodeRouteImport.update({
+  id: '/invite/$code',
+  path: '/invite/$code',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardLibraryRoute = DashboardLibraryRouteImport.update({
   id: '/library',
   path: '/library',
@@ -147,6 +153,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/billing': typeof DashboardBillingRouteWithChildren
   '/dashboard/desk': typeof DashboardDeskRoute
   '/dashboard/library': typeof DashboardLibraryRoute
+  '/invite/$code': typeof InviteCodeRoute
   '/login/continue': typeof LoginContinueRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/billing/checkout': typeof DashboardBillingCheckoutRoute
@@ -167,6 +174,7 @@ export interface FileRoutesByTo {
   '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard/desk': typeof DashboardDeskRoute
   '/dashboard/library': typeof DashboardLibraryRoute
+  '/invite/$code': typeof InviteCodeRoute
   '/login/continue': typeof LoginContinueRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/billing/checkout': typeof DashboardBillingCheckoutRoute
@@ -190,6 +198,7 @@ export interface FileRoutesById {
   '/dashboard/billing': typeof DashboardBillingRouteWithChildren
   '/dashboard/desk': typeof DashboardDeskRoute
   '/dashboard/library': typeof DashboardLibraryRoute
+  '/invite/$code': typeof InviteCodeRoute
   '/login/continue': typeof LoginContinueRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/billing/checkout': typeof DashboardBillingCheckoutRoute
@@ -214,6 +223,7 @@ export interface FileRouteTypes {
     | '/dashboard/billing'
     | '/dashboard/desk'
     | '/dashboard/library'
+    | '/invite/$code'
     | '/login/continue'
     | '/dashboard/'
     | '/dashboard/billing/checkout'
@@ -234,6 +244,7 @@ export interface FileRouteTypes {
     | '/dashboard/account'
     | '/dashboard/desk'
     | '/dashboard/library'
+    | '/invite/$code'
     | '/login/continue'
     | '/dashboard'
     | '/dashboard/billing/checkout'
@@ -256,6 +267,7 @@ export interface FileRouteTypes {
     | '/dashboard/billing'
     | '/dashboard/desk'
     | '/dashboard/library'
+    | '/invite/$code'
     | '/login/continue'
     | '/dashboard/'
     | '/dashboard/billing/checkout'
@@ -275,6 +287,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   WelcomeRoute: typeof WelcomeRoute
+  InviteCodeRoute: typeof InviteCodeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -362,6 +375,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/login/continue'
       preLoaderRoute: typeof LoginContinueRouteImport
       parentRoute: typeof LoginRoute
+    }
+    '/invite/$code': {
+      id: '/invite/$code'
+      path: '/invite/$code'
+      fullPath: '/invite/$code'
+      preLoaderRoute: typeof InviteCodeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/dashboard/library': {
       id: '/dashboard/library'
@@ -480,6 +500,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   WelcomeRoute: WelcomeRoute,
+  InviteCodeRoute: InviteCodeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

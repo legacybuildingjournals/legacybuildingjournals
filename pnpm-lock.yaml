@@ -196,6 +196,9 @@ importers:
       expo-auth-session:
         specifier: ~56.0.14
         version: 56.0.14(expo@56.0.11)(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.16)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6))(react@19.2.3)
+      expo-clipboard:
+        specifier: ~56.0.4
+        version: 56.0.4(expo@56.0.11)(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.16)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6))(react@19.2.3)
       expo-constants:
         specifier: ~56.0.18
         version: 56.0.18(expo@56.0.11)(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.16)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6))
@@ -277,6 +280,9 @@ importers:
       react-native-purchases:
         specifier: ^10.2.2
         version: 10.2.2(react-native-web@0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.16)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6))(react@19.2.3)
+      react-native-qrcode-svg:
+        specifier: ^6.3.21
+        version: 6.3.21(react-native-svg@15.15.4(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.16)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.16)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6))(react@19.2.3)
       react-native-reanimated:
         specifier: 4.3.1
         version: 4.3.1(react-native-worklets@0.8.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.16)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.16)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6))(react@19.2.3)
@@ -4422,6 +4428,13 @@ packages:
       react: '*'
       react-native: '*'
 
+  expo-clipboard@56.0.4:
+    resolution: {integrity: sha512-qb4DYlkiowHYHaUYVT2FN9nk/nI1xShXOUYsI7J9dVpQCOHcGFjCBPX1VAvEW4Ye4/Aagd6IuhOVAq/+scBOiA==}
+    peerDependencies:
+      expo: '*'
+      react: '*'
+      react-native: '*'
+
   expo-constants@56.0.18:
     resolution: {integrity: sha512-8AMtbDGl/WVPnWlmbpGmvcdnNCy9E4PFnwdVwj600vljkMDPSxcAcjw8GVXEPk3PpZ+ngTqsrkltWyj0UKYAxw==}
     peerDependencies:
@@ -6249,6 +6262,13 @@ packages:
       react-native-web:
         optional: true
 
+  react-native-qrcode-svg@6.3.21:
+    resolution: {integrity: sha512-6vcj4rcdpWedvphDR+NSJcudJykNuLgNGFwm2p4xYjR8RdyTzlrELKI5LkO4ANS9cQUbqsfkpippPv64Q2tUtA==}
+    peerDependencies:
+      react: '*'
+      react-native: '>=0.63.4'
+      react-native-svg: '>=14.0.0'
+
   react-native-reanimated@4.3.1:
     resolution: {integrity: sha512-KhGsS0YkCA+gusgyzlf9hnqzVPIR398KTpqXyqq/+yYJJPAvyEEPKcxlB0xtOOXSMrR2A9uRKVARVQhZwrOh+Q==}
     peerDependencies:
@@ -6851,6 +6871,10 @@ packages:
 
   text-encoding-utf-8@1.0.2:
     resolution: {integrity: sha512-8bw4MY9WjdsD2aMtO0OzOCY3pXGYNx2d2FfHRVUKkiCPDWjKuOlhLVASS+pD7VkLTVjW268LYJHwsnPFlBpbAg==}
+
+  text-encoding@0.7.0:
+    resolution: {integrity: sha512-oJQ3f1hrOnbRLOcwKz0Liq2IcrvDeZRHXhd9RgLrsT+DjWY/nty1Hi7v3dtkaEYbPYe0mUoOfzRrMwfXXwgPUA==}
+    deprecated: no longer maintained
 
   throat@5.0.0:
     resolution: {integrity: sha512-fcwX4mndzpLQKBS1DVYhGAcYaYt7vsHNIvQV+WXMvnow5cgjPphq5CaayLaGsjRdSCKZFNGt7/GYAuXaNOiYCA==}
@@ -11808,6 +11832,12 @@ snapshots:
       - expo
       - supports-color
 
+  expo-clipboard@56.0.4(expo@56.0.11)(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.16)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6))(react@19.2.3):
+    dependencies:
+      expo: 56.0.11(72f4c7e88641fd72bd22ce8f00a3956f)
+      react: 19.2.3
+      react-native: 0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.16)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6)
+
   expo-constants@56.0.18(expo@56.0.11)(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.16)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6)):
     dependencies:
       '@expo/env': 2.3.0
@@ -13759,6 +13789,15 @@ snapshots:
     optionalDependencies:
       react-native-web: 0.21.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
 
+  react-native-qrcode-svg@6.3.21(react-native-svg@15.15.4(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.16)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.16)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6))(react@19.2.3):
+    dependencies:
+      prop-types: 15.8.1
+      qrcode: 1.5.4
+      react: 19.2.3
+      react-native: 0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.16)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6)
+      react-native-svg: 15.15.4(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.16)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6))(react@19.2.3)
+      text-encoding: 0.7.0
+
   react-native-reanimated@4.3.1(react-native-worklets@0.8.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.16)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.7)(@react-native/metro-config@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(utf-8-validate@6.0.6))(@types/react@19.2.16)(bufferutil@4.1.0)(react@19.2.3)(utf-8-validate@6.0.6))(react@19.2.3):
     dependencies:
       react: 19.2.3
@@ -14523,6 +14562,8 @@ snapshots:
       source-map-support: 0.5.21
 
   text-encoding-utf-8@1.0.2: {}
+
+  text-encoding@0.7.0: {}
 
   throat@5.0.0: {}
 

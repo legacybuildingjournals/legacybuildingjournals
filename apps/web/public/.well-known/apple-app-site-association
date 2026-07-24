@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["QP59XV2BMK.com.legacybuildingjournals.app"],
+        "components": [
+          {
+            "/": "/invite/*",
+            "comment": "Invite links open the app when it is installed"
+          }
+        ]
+      }
+    ]
+  }
+}

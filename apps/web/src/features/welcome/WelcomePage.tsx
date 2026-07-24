@@ -3,6 +3,7 @@ import { cn } from "@legacy-building/ui/lib/utils";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/journal/ui/button";
+import { InviteCodeField } from "@/features/welcome/InviteCodeField";
 import { loadYouTubeIframeApi } from "@/features/welcome/loadYouTubeIframeApi";
 
 type WelcomePageProps = {
@@ -83,6 +84,8 @@ export function WelcomePage({
 							/>
 						</div>
 					</div>
+
+					<InviteCodeField />
 
 					<Button
 						type="button"

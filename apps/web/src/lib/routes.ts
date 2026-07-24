@@ -10,6 +10,8 @@ export const ROUTES = {
 	dashboardBillingCompare: "/dashboard/billing/compare",
 	dashboardBillingSuccess: "/dashboard/billing/success",
 	welcome: "/welcome",
+	/** Invite landing; append the code: `${ROUTES.invite}/ABCD1234`. */
+	invite: "/invite",
 	login: "/login",
 	signup: "/signup",
 	ssoCallback: "/sso-callback",
