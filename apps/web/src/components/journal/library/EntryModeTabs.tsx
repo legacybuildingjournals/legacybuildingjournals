@@ -3,70 +3,61 @@ import { cn } from "@legacy-building/ui/lib/utils";
 
 export type EntryMode = "writing" | "recording" | "video";
 
-/** Each mode owns an accent so the three tabs never read as the same control. */
-const MODES: {
-	id: EntryMode;
-	label: string;
-	active: string;
-	inactive?: string;
-}[] = [
-	{ id: "writing", label: "Writing journal", active: brand.primary },
-	{
-		id: "recording",
-		label: "Recording journal",
-		active: brand.alert,
-		inactive: brand.alertLight,
-	},
-	{
-		id: "video",
-		label: "Video journal",
-		active: brand.video,
-		inactive: brand.videoLight,
-	},
-];
-
 type EntryModeTabsProps = {
 	value: EntryMode;
 	onChange: (mode: EntryMode) => void;
+	/**
+	 * Fill for the active Recording tab. Audio and video are both "recording"
+	 * here — which one is chosen shows in the Journal type select, not the tab —
+	 * so the tab takes whichever accent the current medium owns.
+	 */
+	accent: string;
 };
 
-/** Bubble.io tab strip: one column per mode, 3px radius on the active tab. */
-export function EntryModeTabs({ value, onChange }: EntryModeTabsProps) {
+const tabClass =
+	"min-w-[150px] cursor-pointer rounded-[8px] px-6 py-2.5 text-center font-bold text-sm leading-5 transition-colors";
+
+/**
+ * Writing | Recording switcher.
+ *
+ * Two tabs rather than three: video is a kind of recording, picked from the
+ * Journal type select once Recording is active.
+ */
+export function EntryModeTabs({ value, onChange, accent }: EntryModeTabsProps) {
+	const isWriting = value === "writing";
+
 	return (
 		<div
-			className="mx-auto inline-grid min-w-[140px] grid-cols-3 gap-0"
+			className="inline-flex rounded-[12px] border border-[#e9ecef] bg-white p-1 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
 			role="tablist"
 			aria-label="Entry mode"
 		>
-			{MODES.map((option) => {
-				const isActive = value === option.id;
-				return (
-					<button
-						key={option.id}
-						type="button"
-						role="tab"
-						aria-selected={isActive}
-						onClick={() => onChange(option.id)}
-						className={cn(
-							"min-h-10 min-w-[170px] cursor-pointer self-start px-2.5 py-2.5 font-normal text-base leading-[1.4] transition-colors",
-							isActive
-								? "rounded-[3px] text-white"
-								: option.inactive
-									? "rounded-none text-[#1a1a1a]"
-									: "rounded-none bg-white text-[#1a1a1a]",
-						)}
-						style={
-							isActive
-								? { backgroundColor: option.active }
-								: option.inactive
-									? { backgroundColor: option.inactive }
-									: undefined
-						}
-					>
-						{option.label}
-					</button>
-				);
-			})}
+			<button
+				type="button"
+				role="tab"
+				aria-selected={isWriting}
+				onClick={() => onChange("writing")}
+				className={cn(tabClass, isWriting && "text-white")}
+				style={
+					isWriting
+						? { backgroundColor: brand.primary }
+						: { color: brand.primary }
+				}
+			>
+				Writing Journal
+			</button>
+
+			<button
+				type="button"
+				role="tab"
+				aria-selected={!isWriting}
+				// Coming from Writing there is no medium yet, so default to audio.
+				onClick={() => onChange(value === "video" ? "video" : "recording")}
+				className={cn(tabClass, !isWriting ? "text-white" : "text-[#6c757d]")}
+				style={!isWriting ? { backgroundColor: accent } : undefined}
+			>
+				Recording Journal
+			</button>
 		</div>
 	);
 }

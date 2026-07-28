@@ -46,11 +46,22 @@ export function JournalEntryRow({
 	selectable = false,
 	selected = false,
 }: JournalEntryRowProps) {
-	const [accent, accentForeground, foreground, warning] = useThemeColor([
+	const [
+		accent,
+		accentForeground,
+		foreground,
+		warning,
+		warningForeground,
+		danger,
+		dangerForeground,
+	] = useThemeColor([
 		"accent",
 		"accent-foreground",
 		"foreground",
 		"warning",
+		"warning-foreground",
+		"danger",
+		"danger-foreground",
 	]);
 
 	const rightIcon = selectable
@@ -63,17 +74,24 @@ export function JournalEntryRow({
 				? "videocam"
 				: null;
 
-	// Recorded entries (audio and video) get the amber tile (matches web);
-	// writing entries stay teal. Selection mode keeps the teal accent.
-	const recordingTile =
-		!selectable && (mode === "recording" || mode === "video");
+	// Each medium owns an accent: teal writing, amber audio, red video
+	// (matches web's `accentForMode`). Selection mode keeps the teal accent.
 	const tileBg = selectable
 		? selected
 			? accent
 			: `${accent}33`
-		: recordingTile
+		: mode === "recording"
 			? warning
-			: accent;
+			: mode === "video"
+				? danger
+				: accent;
+	const tileForeground = selectable
+		? accentForeground
+		: mode === "recording"
+			? warningForeground
+			: mode === "video"
+				? dangerForeground
+				: accentForeground;
 
 	return (
 		<Pressable
@@ -118,9 +136,9 @@ export function JournalEntryRow({
 					}}
 				>
 					{rightIcon ? (
-						<Ionicons name={rightIcon} size={24} color={accentForeground} />
+						<Ionicons name={rightIcon} size={24} color={tileForeground} />
 					) : (
-						<BookOpenTextIcon color={accentForeground} size={24} />
+						<BookOpenTextIcon color={tileForeground} size={24} />
 					)}
 				</View>
 			</View>

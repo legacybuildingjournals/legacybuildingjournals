@@ -34,6 +34,7 @@ import {
 } from "@/components/journal/ui/select";
 import { Textarea } from "@/components/journal/ui/textarea";
 import { compressImageFile } from "@/lib/journal/compressImageFile";
+import { extractVideoFirstFrame } from "@/lib/journal/extractVideoFrame";
 import {
 	type EnrichedJournalEntry,
 	entryAccentColor,
@@ -196,12 +197,20 @@ export function EditJournalEntrySidebarForm({
 		setSubmitting(true);
 		setError(null);
 		try {
+			// Video entries without a chosen cover fall back to the video's own
+			// first frame, so the library never shows a blank cover placeholder.
+			const coverFile =
+				imageFile ??
+				(isVideo && !entry.imageUrl && entry.videoUrl
+					? await extractVideoFirstFrame(entry.videoUrl)
+					: null);
+
 			let imageId: Id<"_storage"> | undefined;
-			if (imageFile) {
+			if (coverFile) {
 				imageId = await uploadToStorage(
-					imageFile,
+					coverFile,
 					() => generateUploadUrl(),
-					imageFile.type || "image/jpeg",
+					coverFile.type || "image/jpeg",
 				);
 			}
 

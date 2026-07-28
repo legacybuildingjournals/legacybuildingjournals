@@ -1,4 +1,4 @@
-import { Download, Mic } from "lucide-react";
+import { Download, Mic, Video as VideoIcon } from "lucide-react";
 
 const PHOSPHOR_SPRITE = "/static/icon_libraries/phosphor-2.1.0-regular.svg";
 
@@ -95,32 +95,25 @@ export function JournalEntryRow({
 					handleRowActivate();
 				}
 			}}
-			className="my-1.5 flex min-h-[60px] w-full cursor-pointer flex-row overflow-visible bg-white"
-			style={{ borderLeft: `5px solid ${accent}` }}
+			className="my-1.5 flex min-h-[68px] w-full cursor-pointer flex-row items-stretch rounded-2xl border border-[#eef0f0] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all hover:shadow-md active:scale-[0.99]"
 		>
 			{selectionMode ? (
-				<div className="flex items-center self-stretch py-3 pl-1.5">
+				<div className="flex items-center self-stretch py-3 pl-3">
 					<Checkbox
 						checked={selected}
 						onCheckedChange={() => onToggleSelect?.()}
 						onClick={(e) => e.stopPropagation()}
 						aria-label={`Select ${entry.title}`}
-						className="ml-1.5 size-5"
+						className="size-5"
 					/>
 				</div>
 			) : null}
-			<div
-				className={
-					selectionMode
-						? "flex min-w-0 flex-1 flex-col justify-center gap-1 py-3 pl-1.5"
-						: "flex min-w-0 flex-1 flex-col justify-center gap-1 py-3 pl-3"
-				}
-			>
-				<span className="truncate text-left font-semibold text-[#1a1a1a] text-sm leading-[1.4]">
+			<div className="flex min-w-0 flex-1 flex-col justify-center gap-1 py-3 pl-3">
+				<span className="truncate text-left font-semibold text-[#1a1a1a] text-base leading-[1.4]">
 					{entry.title || "Untitled entry"}
 				</span>
 				<span
-					className="text-left font-normal text-xs leading-none"
+					className="text-left font-normal text-sm leading-none"
 					style={{ color: "#a6a6a6" }}
 				>
 					{formatDate(entry.dateMs)}
@@ -143,15 +136,20 @@ export function JournalEntryRow({
 				</Button>
 			) : null}
 			<div
-				className="flex min-w-[40px] max-w-[20%] flex-1 items-center justify-center self-stretch"
+				className="flex w-16 shrink-0 items-center justify-center self-stretch"
 				style={{
 					backgroundColor: accent,
-					borderRadius: "50px 0 0 50px",
-					borderLeft: "1px solid #6b6b6b",
+					borderRadius: "999px 0 0 999px",
 				}}
 			>
 				{isRecording ? (
 					<Mic
+						className="size-5 shrink-0 text-white"
+						strokeWidth={2}
+						aria-hidden
+					/>
+				) : isVideo ? (
+					<VideoIcon
 						className="size-5 shrink-0 text-white"
 						strokeWidth={2}
 						aria-hidden

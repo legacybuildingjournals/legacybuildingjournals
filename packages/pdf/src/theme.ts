@@ -20,8 +20,13 @@
 export const pdfColors = {
 	/** Full-bleed bar across the top of every content page. */
 	headerBar: "#33766f",
-	/** Teal used for the memory label and the footer journal name. */
+	/** Teal used for the footer journal name. */
 	accent: "#0d524c",
+	/** Memory card label/icon, per memory kind — voice reads amber, video red. */
+	memoryAccent: {
+		voice: "#e0a824",
+		video: "#dc4b3f",
+	},
 	/** Primary body/heading text. */
 	text: "#191c1d",
 	/** Entry date and page number. */

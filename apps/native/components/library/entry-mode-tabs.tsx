@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useThemeColor } from "heroui-native/hooks";
 import { Pressable, Text, View } from "react-native";
 
@@ -7,83 +6,63 @@ export type EntryMode = "writing" | "recording" | "video";
 type EntryModeTabsProps = {
 	value: EntryMode;
 	onChange: (next: EntryMode) => void;
+	/**
+	 * Fill for the active Recording tab. Voice and video are both "recording"
+	 * here — which one is chosen shows in the medium select below, not the tab —
+	 * so the tab takes whichever accent the current medium owns.
+	 */
+	accent: string;
 };
 
-const TABS: Array<{
-	id: EntryMode;
-	label: string;
-	icon: keyof typeof Ionicons.glyphMap;
-	accessibilityLabel: string;
-}> = [
-	{
-		id: "writing",
-		label: "Writing",
-		icon: "create-outline",
-		accessibilityLabel: "Writing journal",
-	},
-	{
-		id: "recording",
-		label: "Recording",
-		icon: "mic-outline",
-		accessibilityLabel: "Recording journal",
-	},
-	{
-		id: "video",
-		label: "Video",
-		icon: "videocam-outline",
-		accessibilityLabel: "Video journal",
-	},
-];
-
 /**
- * Writing | Recording | Video selector. The active tab fills with the accent
- * for its medium — teal for writing, amber for the two recorded kinds, which
- * matches how those entries are coloured everywhere else.
+ * Writing | Recording switcher.
+ *
+ * Two tabs rather than three: video is a kind of recording, picked from the
+ * medium select once Recording is active.
  */
-export function EntryModeTabs({ value, onChange }: EntryModeTabsProps) {
-	const [accent, accentForeground, warning, warningForeground, foreground] =
-		useThemeColor([
-			"accent",
-			"accent-foreground",
-			"warning",
-			"warning-foreground",
-			"foreground",
-		]);
+export function EntryModeTabs({ value, onChange, accent }: EntryModeTabsProps) {
+	const [primary, primaryForeground] = useThemeColor([
+		"accent",
+		"accent-foreground",
+	]);
+	const isWriting = value === "writing";
 
 	return (
-		<View className="flex-row gap-1 rounded-2xl bg-background p-1">
-			{TABS.map((tab) => {
-				const active = tab.id === value;
-				const activeBg = tab.id === "writing" ? accent : warning;
-				const activeFg =
-					tab.id === "writing" ? accentForeground : warningForeground;
+		<View className="w-full flex-row gap-3">
+			<Pressable
+				onPress={() => onChange("writing")}
+				accessibilityRole="button"
+				accessibilityState={{ selected: isWriting }}
+				accessibilityLabel="Writing journal"
+				className="flex-1 items-center justify-center rounded-2xl px-4 py-3.5 active:opacity-85"
+				// The inactive tab keeps a muted fill rather than going transparent,
+				// so the pair still reads as one control.
+				style={{ backgroundColor: isWriting ? primary : `${primary}66` }}
+			>
+				<Text
+					className="font-bold text-base"
+					style={{ color: primaryForeground }}
+				>
+					Writing Journal
+				</Text>
+			</Pressable>
 
-				return (
-					<Pressable
-						key={tab.id}
-						onPress={() => onChange(tab.id)}
-						accessibilityRole="button"
-						accessibilityState={{ selected: active }}
-						accessibilityLabel={tab.accessibilityLabel}
-						className="flex-1 flex-row items-center justify-center gap-1.5 rounded-xl px-2 py-3 active:opacity-85"
-						// The active pill colour depends on the medium, so it can't be a
-						// static class.
-						style={active ? { backgroundColor: activeBg } : undefined}
-					>
-						<Ionicons
-							name={tab.icon}
-							size={17}
-							color={active ? activeFg : foreground}
-						/>
-						<Text
-							className="font-semibold text-sm"
-							style={{ color: active ? activeFg : foreground }}
-						>
-							{tab.label}
-						</Text>
-					</Pressable>
-				);
-			})}
+			<Pressable
+				// Coming from Writing there is no medium yet, so default to voice.
+				onPress={() => onChange(value === "video" ? "video" : "recording")}
+				accessibilityRole="button"
+				accessibilityState={{ selected: !isWriting }}
+				accessibilityLabel="Recording journal"
+				className="flex-1 items-center justify-center rounded-2xl px-4 py-3.5 active:opacity-85"
+				style={{ backgroundColor: isWriting ? `${accent}66` : accent }}
+			>
+				<Text
+					className="font-bold text-base"
+					style={{ color: primaryForeground }}
+				>
+					Recording Journal
+				</Text>
+			</Pressable>
 		</View>
 	);
 }

@@ -45,9 +45,9 @@ export function VideoEntryField({
 	onChange,
 	disabled = false,
 }: VideoEntryFieldProps) {
-	const [warning, warningForeground, foreground] = useThemeColor([
-		"warning",
-		"warning-foreground",
+	const [danger, dangerForeground, foreground] = useThemeColor([
+		"danger",
+		"danger-foreground",
 		"foreground",
 	]);
 	const [busy, setBusy] = useState(false);
@@ -100,10 +100,10 @@ export function VideoEntryField({
 
 	if (value) {
 		return (
-			<View className="gap-3 rounded-2xl border border-warning bg-warning-soft p-4">
+			<View className="gap-3 rounded-2xl border border-danger bg-danger-soft p-4">
 				<View className="flex-row items-center gap-3">
-					<View className="size-11 items-center justify-center rounded-full bg-warning/20">
-						<Ionicons name="videocam" size={22} color={warning} />
+					<View className="size-11 items-center justify-center rounded-full bg-danger/20">
+						<Ionicons name="videocam" size={22} color={danger} />
 					</View>
 					<View className="flex-1">
 						<Text className="font-semibold text-base text-foreground">
@@ -158,9 +158,9 @@ export function VideoEntryField({
 	}
 
 	return (
-		<View className="items-center gap-3 rounded-2xl border border-warning bg-warning-soft px-4 py-6">
-			<View className="size-12 items-center justify-center rounded-full bg-warning/20">
-				<Ionicons name="videocam" size={24} color={warning} />
+		<View className="items-center gap-3 rounded-2xl border border-danger bg-danger-soft px-4 py-6">
+			<View className="size-12 items-center justify-center rounded-full bg-danger/20">
+				<Ionicons name="videocam" size={24} color={danger} />
 			</View>
 			<Text className="font-semibold text-foreground text-lg">
 				Capture Your Memory
@@ -175,16 +175,16 @@ export function VideoEntryField({
 				accessibilityRole="button"
 				accessibilityLabel="Record video"
 				className="w-full flex-row items-center justify-center gap-2 rounded-xl py-4 active:opacity-90 disabled:opacity-50"
-				style={{ backgroundColor: warning }}
+				style={{ backgroundColor: danger }}
 			>
 				{busy ? (
-					<ActivityIndicator color={warningForeground} />
+					<ActivityIndicator color={dangerForeground} />
 				) : (
-					<Ionicons name="camera" size={19} color={warningForeground} />
+					<Ionicons name="camera" size={19} color={dangerForeground} />
 				)}
 				<Text
 					className="font-semibold text-base"
-					style={{ color: warningForeground }}
+					style={{ color: dangerForeground }}
 				>
 					Record Video
 				</Text>
@@ -197,10 +197,10 @@ export function VideoEntryField({
 				disabled={disabled || busy}
 				accessibilityRole="button"
 				accessibilityLabel="Choose from gallery"
-				className="w-full flex-row items-center justify-center gap-2 rounded-xl border border-warning bg-background py-4 active:opacity-90 disabled:opacity-50"
+				className="w-full flex-row items-center justify-center gap-2 rounded-xl border border-danger bg-background py-4 active:opacity-90 disabled:opacity-50"
 			>
-				<Ionicons name="images-outline" size={19} color={warning} />
-				<Text className="font-semibold text-base" style={{ color: warning }}>
+				<Ionicons name="images-outline" size={19} color={danger} />
+				<Text className="font-semibold text-base" style={{ color: danger }}>
 					Choose From Gallery
 				</Text>
 			</Pressable>

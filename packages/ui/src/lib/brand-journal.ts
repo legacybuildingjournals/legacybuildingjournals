@@ -17,14 +17,37 @@ export const brand = {
 	dateMuted: "#f2f2f2",
 	textSecondary: "#a6a6a6",
 	destructive: "#b0200c",
-	alert: "#dca114",
+	/** Audio entries. `alertSurface` tints the whole add-entry panel. */
+	alert: "#e9a746",
 	alertLight: "#fff4db",
-	/** Video entries — a third accent so they read apart from audio recordings. */
-	video: "#6d4aa7",
-	videoLight: "#f0eaf9",
+	alertSurface: "#f0e8d5",
+	/** Video entries — red, so they read apart from audio's amber. */
+	video: "#e05150",
+	videoLight: "#fef2f2",
+	videoSurface: "#fef0f0",
 	overlay: "rgba(82, 82, 82, 0.6)",
 	cancelBg: "#f2f2f2",
 	cancelText: "#525252",
+} as const;
+
+/**
+ * Community page palette.
+ *
+ * A deeper teal than `brand.primary` — the page sits on near-white rather than
+ * mint, where #008080 reads too bright against large areas of card white.
+ */
+export const community = {
+	pageBackground: "#fafafa",
+	heading: "#33766f",
+	/** Links and badge text — one step darker so it passes contrast on tints. */
+	headingDeep: "#2d6a64",
+	bodyMuted: "#6b7280",
+	cardBorder: "#f3f4f6",
+	/** Category badge on an update card. */
+	badgeBg: "#e6f0ef",
+	/** Status pill ("Coming Soon", a date) on an update card. */
+	metaBg: "#fff7ed",
+	metaText: "#9a3412",
 } as const;
 
 export const dashboardLayout = {

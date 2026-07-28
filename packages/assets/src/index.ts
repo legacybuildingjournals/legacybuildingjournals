@@ -1,4 +1,6 @@
 import authPanelBackground from "../images/auth-panel-background.jpg";
+import communityMemories from "../images/community-memories.jpeg";
+import communityQrExport from "../images/community-qr-export.jpeg";
 import defaultAvatar from "../images/default-avatar.jpg";
 import deskHeroBackground from "../images/desk-hero-background.jpeg";
 import digLogo from "../images/dig-logo.png";
@@ -28,4 +30,6 @@ export const imageAssets = {
 	defaultAvatar,
 	headerAvatar: defaultAvatar,
 	libraryEmptyImage,
+	communityQrExport,
+	communityMemories,
 } as const;

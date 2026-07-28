@@ -24,6 +24,7 @@ import { Route as LoginContinueRouteImport } from './routes/login.continue'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as DashboardLibraryRouteImport } from './routes/dashboard/library'
 import { Route as DashboardDeskRouteImport } from './routes/dashboard/desk'
+import { Route as DashboardCommunityRouteImport } from './routes/dashboard/community'
 import { Route as DashboardBillingRouteImport } from './routes/dashboard/billing'
 import { Route as DashboardAccountRouteImport } from './routes/dashboard/account'
 import { Route as DashboardBillingIndexRouteImport } from './routes/dashboard/billing/index'
@@ -106,6 +107,11 @@ const DashboardDeskRoute = DashboardDeskRouteImport.update({
   path: '/desk',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardCommunityRoute = DashboardCommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardBillingRoute = DashboardBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
@@ -151,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof WelcomeRoute
   '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard/billing': typeof DashboardBillingRouteWithChildren
+  '/dashboard/community': typeof DashboardCommunityRoute
   '/dashboard/desk': typeof DashboardDeskRoute
   '/dashboard/library': typeof DashboardLibraryRoute
   '/invite/$code': typeof InviteCodeRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/verify-email': typeof VerifyEmailRoute
   '/welcome': typeof WelcomeRoute
   '/dashboard/account': typeof DashboardAccountRoute
+  '/dashboard/community': typeof DashboardCommunityRoute
   '/dashboard/desk': typeof DashboardDeskRoute
   '/dashboard/library': typeof DashboardLibraryRoute
   '/invite/$code': typeof InviteCodeRoute
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/welcome': typeof WelcomeRoute
   '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard/billing': typeof DashboardBillingRouteWithChildren
+  '/dashboard/community': typeof DashboardCommunityRoute
   '/dashboard/desk': typeof DashboardDeskRoute
   '/dashboard/library': typeof DashboardLibraryRoute
   '/invite/$code': typeof InviteCodeRoute
@@ -221,6 +230,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/dashboard/account'
     | '/dashboard/billing'
+    | '/dashboard/community'
     | '/dashboard/desk'
     | '/dashboard/library'
     | '/invite/$code'
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
     | '/verify-email'
     | '/welcome'
     | '/dashboard/account'
+    | '/dashboard/community'
     | '/dashboard/desk'
     | '/dashboard/library'
     | '/invite/$code'
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/dashboard/account'
     | '/dashboard/billing'
+    | '/dashboard/community'
     | '/dashboard/desk'
     | '/dashboard/library'
     | '/invite/$code'
@@ -397,6 +409,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardDeskRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/community': {
+      id: '/dashboard/community'
+      path: '/community'
+      fullPath: '/dashboard/community'
+      preLoaderRoute: typeof DashboardCommunityRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/billing': {
       id: '/dashboard/billing'
       path: '/billing'
@@ -462,6 +481,7 @@ const DashboardBillingRouteWithChildren =
 interface DashboardRouteRouteChildren {
   DashboardAccountRoute: typeof DashboardAccountRoute
   DashboardBillingRoute: typeof DashboardBillingRouteWithChildren
+  DashboardCommunityRoute: typeof DashboardCommunityRoute
   DashboardDeskRoute: typeof DashboardDeskRoute
   DashboardLibraryRoute: typeof DashboardLibraryRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
@@ -470,6 +490,7 @@ interface DashboardRouteRouteChildren {
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardAccountRoute: DashboardAccountRoute,
   DashboardBillingRoute: DashboardBillingRouteWithChildren,
+  DashboardCommunityRoute: DashboardCommunityRoute,
   DashboardDeskRoute: DashboardDeskRoute,
   DashboardLibraryRoute: DashboardLibraryRoute,
   DashboardIndexRoute: DashboardIndexRoute,

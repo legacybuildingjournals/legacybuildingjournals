@@ -111,6 +111,9 @@ export async function recordEntryVideo(): Promise<PickEntryVideoResult> {
 			allowsEditing: false,
 			videoMaxDuration: MAX_VIDEO_SECONDS,
 			quality: 0.85,
+			// Opens on the rear lens; the OS camera UI keeps its own flip control,
+			// so front/back stays available once recording starts.
+			cameraType: ImagePicker.CameraType.back,
 		});
 		return await processResult(result);
 	} catch (err) {

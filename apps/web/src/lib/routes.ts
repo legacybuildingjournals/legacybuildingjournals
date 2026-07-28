@@ -4,6 +4,7 @@ export const ROUTES = {
 	dashboard: "/dashboard",
 	dashboardDesk: "/dashboard/desk",
 	dashboardLibrary: "/dashboard/library",
+	dashboardCommunity: "/dashboard/community",
 	dashboardAccount: "/dashboard/account",
 	dashboardBilling: "/dashboard/billing",
 	dashboardBillingCheckout: "/dashboard/billing/checkout",

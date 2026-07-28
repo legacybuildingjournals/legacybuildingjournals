@@ -13,6 +13,9 @@ export type CommunityUpdate = {
 	title: string;
 	subtitle: string;
 	icon: keyof typeof Ionicons.glyphMap;
+	/** Icon colour, and the soft wash behind it. */
+	color: string;
+	tint: string;
 	/** Optional destination; rows without one render as read-only. */
 	url?: string;
 };
@@ -23,12 +26,16 @@ export const COMMUNITY_UPDATES: CommunityUpdate[] = [
 		title: "Video Recording Feature",
 		subtitle: "Coming soon",
 		icon: "newspaper-outline",
+		color: "#33766f",
+		tint: "#e6f0ef",
 	},
 	{
 		id: "community-story",
 		title: "Community Story",
 		subtitle: "A beautiful memory shared",
 		icon: "book-outline",
+		color: "#e08a2c",
+		tint: "#fdf0e2",
 	},
 ];
 
@@ -37,7 +44,9 @@ export type CommunitySocial = {
 	name: string;
 	caption: string;
 	icon: keyof typeof Ionicons.glyphMap;
+	/** Brand colour for the mark, and the soft wash it sits on. */
 	color: string;
+	tint: string;
 	url: string;
 };
 
@@ -54,6 +63,7 @@ export const COMMUNITY_SOCIALS: CommunitySocial[] = [
 		caption: "Watch videos",
 		icon: "logo-youtube",
 		color: "#ff0000",
+		tint: "#fdecec",
 		url: "https://www.youtube.com/@legacybuildingjournals",
 	},
 	{
@@ -62,6 +72,7 @@ export const COMMUNITY_SOCIALS: CommunitySocial[] = [
 		caption: "Behind the scenes",
 		icon: "logo-instagram",
 		color: "#e1306c",
+		tint: "#fdeef4",
 		url: "https://www.instagram.com/legacybuildingjournals",
 	},
 	{
@@ -70,6 +81,7 @@ export const COMMUNITY_SOCIALS: CommunitySocial[] = [
 		caption: "Join our page",
 		icon: "logo-facebook",
 		color: "#1877f2",
+		tint: "#e9f2fe",
 		url: "https://www.facebook.com/people/Legacy-Building-Journals-Community/61589024611908/",
 	},
 	{
@@ -77,7 +89,8 @@ export const COMMUNITY_SOCIALS: CommunitySocial[] = [
 		name: "Tiktok",
 		caption: "Keep updated",
 		icon: "logo-tiktok",
-		color: "#010101",
+		color: "#0f6b62",
+		tint: "#e8f4f1",
 		url: "https://www.tiktok.com/@legacy_building344",
 	},
 ];

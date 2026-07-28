@@ -1,5 +1,11 @@
 import type { LucideIcon } from "lucide-react";
-import { CreditCard, LayoutDashboard, Library, UserCircle } from "lucide-react";
+import {
+	CreditCard,
+	LayoutDashboard,
+	Library,
+	UserCircle,
+	Users,
+} from "lucide-react";
 
 import { ROUTES } from "@/lib/routes";
 
@@ -15,6 +21,12 @@ export const dashboardNavItems = [
 		label: "Library",
 		to: ROUTES.dashboardLibrary,
 		icon: Library,
+	},
+	{
+		id: "community",
+		label: "Community",
+		to: ROUTES.dashboardCommunity,
+		icon: Users,
 	},
 	{
 		id: "account",

@@ -49,7 +49,6 @@ const styles = StyleSheet.create({
 	label: {
 		fontSize: pdfMetrics.cardLabel.size,
 		fontWeight: 700,
-		color: pdfColors.accent,
 		letterSpacing: pdfMetrics.cardLabel.letterSpacing,
 		marginLeft: pdfMetrics.cardLabel.iconGap,
 	},
@@ -82,6 +81,8 @@ const styles = StyleSheet.create({
  * gradient support on plain views.
  */
 export function MemoryCard({ memory }: { memory: JournalMemory }) {
+	const accent = pdfColors.memoryAccent[memory.kind];
+
 	return (
 		<View style={styles.card}>
 			<Svg
@@ -113,9 +114,11 @@ export function MemoryCard({ memory }: { memory: JournalMemory }) {
 				<MemoryIcon
 					kind={memory.kind}
 					size={pdfMetrics.cardLabel.iconSize}
-					color={pdfColors.accent}
+					color={accent}
 				/>
-				<Text style={styles.label}>{LABELS[memory.kind]}</Text>
+				<Text style={[styles.label, { color: accent }]}>
+					{LABELS[memory.kind]}
+				</Text>
 			</View>
 			<View style={styles.qrPlate}>
 				<Image src={memory.qrDataUrl} style={styles.qrImage} />

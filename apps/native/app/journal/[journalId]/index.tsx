@@ -24,6 +24,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useJournalPaywall } from "@/components/billing/journal-paywall-provider";
+import { JournalActionsMenu } from "@/components/library/journal-actions-menu";
 import { JournalColorSheet } from "@/components/library/journal-color-sheet";
 import { JournalEntryRow } from "@/components/library/journal-entry-row";
 import { formatDateLong } from "@/lib/journal/formatDate";
@@ -443,41 +444,15 @@ export default function JournalDetailScreen() {
 								</Text>
 								{!selectionMode ? (
 									<View className="flex-row items-center gap-2">
-										<Pressable
-											onPress={() =>
+										<JournalActionsMenu
+											onEditJournal={goToEditJournal}
+											onBackgroundImage={handleBackgroundImage}
+											onBackgroundColor={() =>
 												guardJournalAction(() => setColorSheetOpen(true))
 											}
-											disabled={savingAppearance}
-											accessibilityRole="button"
-											accessibilityLabel="Change journal color"
-											className="size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 active:opacity-70 disabled:opacity-40"
-											hitSlop={6}
-										>
-											<Ionicons name="color-palette" size={19} color={accent} />
-										</Pressable>
-										<Pressable
-											onPress={handleBackgroundImage}
-											disabled={savingAppearance}
-											accessibilityRole="button"
-											accessibilityLabel={
-												backgroundImageUrl
-													? "Change background image"
-													: "Add background image"
-											}
-											className="size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 active:opacity-70 disabled:opacity-40"
-											hitSlop={6}
-										>
-											<Ionicons name="images" size={19} color={accent} />
-										</Pressable>
-										<Pressable
-											onPress={goToEditJournal}
-											accessibilityRole="button"
-											accessibilityLabel="Edit journal"
-											className="size-10 items-center justify-center rounded-full bg-primary/10 active:opacity-70"
-											hitSlop={6}
-										>
-											<Ionicons name="pencil" size={18} color={accent} />
-										</Pressable>
+											appearanceBusy={savingAppearance}
+											hasBackgroundImage={backgroundImageUrl !== null}
+										/>
 										<Pressable
 											onPress={startExportSelection}
 											disabled={exportableCount === 0}

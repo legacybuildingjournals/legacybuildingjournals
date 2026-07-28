@@ -27,6 +27,7 @@ import {
 	type EntryMode,
 	EntryModeTabs,
 } from "@/components/library/entry-mode-tabs";
+import { RecordingMediumSelect } from "@/components/library/recording-medium-select";
 import { VideoEntryField } from "@/components/library/video-entry-field";
 import { VideoExportNote } from "@/components/library/video-export-note";
 import { parseMonthDayYear } from "@/lib/journal/parse-date";
@@ -56,14 +57,21 @@ export default function NewEntryScreen() {
 
 	const mutationToast = useMutationToast();
 	const { hasPaidAccess, openPaywall } = useJournalPaywall();
-	const [accent, accentForeground, foreground, placeholderColor, warningColor] =
-		useThemeColor([
-			"accent",
-			"accent-foreground",
-			"foreground",
-			"field-placeholder",
-			"warning",
-		]);
+	const [
+		accent,
+		accentForeground,
+		foreground,
+		placeholderColor,
+		dangerColor,
+		warningColor,
+	] = useThemeColor([
+		"accent",
+		"accent-foreground",
+		"foreground",
+		"field-placeholder",
+		"danger",
+		"warning",
+	]);
 
 	const [mode, setMode] = useState<EntryMode>("writing");
 	const [title, setTitle] = useState("");
@@ -275,8 +283,14 @@ export default function NewEntryScreen() {
 	const isVideoMode = mode === "video";
 	const showRecordingDetails = isRecordingMode && audio !== null;
 
-	// Both recorded kinds sit on the warm surface; writing stays on mint.
+	// Both recorded kinds sit on a tinted surface; writing stays on mint. Voice
+	// keeps the amber wash, video gets the red one.
 	const usesWarmSurface = isRecordingMode || isVideoMode;
+	const recordingSurfaceClass = isVideoMode
+		? "bg-danger-soft"
+		: "bg-warning-soft";
+	/** Accent of whichever recording medium is active — amber voice, red video. */
+	const recordingAccent = isVideoMode ? dangerColor : warningColor;
 
 	// Picking a cover by hand marks it as the user's, so replacing the video
 	// won't overwrite it. Only counts if something was actually chosen.
@@ -325,39 +339,79 @@ export default function NewEntryScreen() {
 		<View className="gap-1.5">
 			<Text className="font-semibold text-base text-foreground">
 				Cover Image{" "}
-				<Text className="font-normal text-sm" style={{ color: warningColor }}>
+				<Text className="font-normal text-sm" style={{ color: dangerColor }}>
 					(optional)
 				</Text>
 			</Text>
-			<View className="overflow-hidden rounded-2xl bg-secondary/40">
-				{image ? (
+			{image ? (
+				<View className="overflow-hidden rounded-2xl bg-secondary/40">
 					<Image
 						source={{ uri: image.uri }}
 						className="h-48 w-full"
 						resizeMode="cover"
 					/>
-				) : (
-					<View className="h-48 w-full items-center justify-center gap-2">
-						<Ionicons name="film-outline" size={34} color={placeholderColor} />
-						<Text className="text-muted-foreground text-sm">
-							Add a video to generate a cover
+					<Pressable
+						onPress={handleEditThumbnail}
+						accessibilityRole="button"
+						accessibilityLabel="Edit thumbnail"
+						className="absolute top-3 right-3 flex-row items-center gap-1.5 rounded-full bg-background px-3 py-2 active:opacity-80"
+					>
+						<Ionicons name="pencil" size={14} color={foreground} />
+						<Text className="font-semibold text-foreground text-sm">
+							Edit Thumbnail
 						</Text>
-					</View>
-				)}
-				<Pressable
-					onPress={handleEditThumbnail}
-					accessibilityRole="button"
-					accessibilityLabel="Edit thumbnail"
-					className="absolute top-3 right-3 flex-row items-center gap-1.5 rounded-full bg-background px-3 py-2 active:opacity-80"
+					</Pressable>
+				</View>
+			) : (
+				<View
+					className="items-center gap-3 rounded-2xl border-2 border-dashed px-4 py-6"
+					style={{ borderColor: dangerColor }}
 				>
-					<Ionicons name="pencil" size={14} color={foreground} />
-					<Text className="font-semibold text-foreground text-sm">
-						Edit Thumbnail
+					<Text className="text-center text-base text-muted-foreground">
+						Attach a video thumbnail of your choice
 					</Text>
-				</Pressable>
-			</View>
+
+					<Pressable
+						onPress={() => void chooseCoverManually(handleTakePhoto)}
+						accessibilityRole="button"
+						accessibilityLabel="Add image"
+						className="w-full flex-row items-center justify-center gap-2 rounded-xl py-3.5 active:opacity-90"
+						style={{ backgroundColor: dangerColor }}
+					>
+						<Ionicons name="camera" size={19} color={accentForeground} />
+						<Text
+							className="font-semibold text-base"
+							style={{ color: accentForeground }}
+						>
+							Add Image
+						</Text>
+					</Pressable>
+
+					<View className="w-full flex-row items-center gap-3">
+						<View className="h-px flex-1 bg-border" />
+						<Text className="text-muted-foreground text-xs">OR</Text>
+						<View className="h-px flex-1 bg-border" />
+					</View>
+
+					<Pressable
+						onPress={() => void chooseCoverManually(handlePickFromLibrary)}
+						accessibilityRole="button"
+						accessibilityLabel="Choose from gallery"
+						className="w-full flex-row items-center justify-center gap-2 rounded-xl border bg-background py-3.5 active:opacity-90"
+						style={{ borderColor: dangerColor }}
+					>
+						<Ionicons name="images-outline" size={19} color={dangerColor} />
+						<Text
+							className="font-semibold text-base"
+							style={{ color: dangerColor }}
+						>
+							Choose From Gallery
+						</Text>
+					</Pressable>
+				</View>
+			)}
 			<Text className="text-muted-foreground text-sm">
-				This image will be used as the cover of your journal entry.
+				The image will be used as the cover of your journal entry.
 			</Text>
 		</View>
 	);
@@ -412,7 +466,7 @@ export default function NewEntryScreen() {
 
 	return (
 		<View
-			className={`flex-1 ${usesWarmSurface ? "bg-warning-soft" : "bg-secondary/30"}`}
+			className={`flex-1 ${usesWarmSurface ? recordingSurfaceClass : "bg-secondary/30"}`}
 		>
 			{/* Teal header */}
 			<View
@@ -469,7 +523,20 @@ export default function NewEntryScreen() {
 					contentContainerClassName="px-4 pt-6 pb-12 gap-5"
 					keyboardShouldPersistTaps="handled"
 				>
-					<EntryModeTabs value={mode} onChange={setMode} />
+					<EntryModeTabs
+						value={mode}
+						onChange={setMode}
+						accent={recordingAccent}
+					/>
+
+					{isRecordingMode || isVideoMode ? (
+						<RecordingMediumSelect
+							value={isVideoMode ? "video" : "recording"}
+							onChange={setMode}
+							accent={recordingAccent}
+							disabled={submitting}
+						/>
+					) : null}
 
 					{isVideoMode ? (
 						<>
