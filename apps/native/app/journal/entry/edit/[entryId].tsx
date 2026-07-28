@@ -24,7 +24,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useJournalPaywall } from "@/components/billing/journal-paywall-provider";
 import { DateField } from "@/components/library/date-field";
 import { EntryAudioPlayer } from "@/components/library/entry-audio-player";
-import { EntryVideoPlayer } from "@/components/library/entry-video-player";
 import { parseMonthDayYear } from "@/lib/journal/parse-date";
 import {
 	type PickedEntryImage,
@@ -75,9 +74,6 @@ export default function EditEntryScreen() {
 	const [saving, setSaving] = useState(false);
 
 	const isRecording = entry?.mode === "recording";
-	const isVideo = entry?.mode === "video";
-	// Only writing entries carry prose; the other two are media-led.
-	const isWriting = entry?.mode === "writing";
 
 	// Pre-fill the form once the entry loads.
 	useEffect(() => {
@@ -93,7 +89,7 @@ export default function EditEntryScreen() {
 	const previewUri = image?.uri ?? existingImageUrl;
 	const titleInvalid = !title.trim();
 	const dateInvalid = dateMs === null;
-	const bodyInvalid = isWriting && !body.trim();
+	const bodyInvalid = !isRecording && !body.trim();
 	const imageInvalid = !previewUri;
 
 	const handlePickFromLibrary = async () => {
@@ -167,7 +163,7 @@ export default function EditEntryScreen() {
 				id: entryId,
 				title: title.trim(),
 				dateMs: dateMs as number,
-				body: isWriting ? body.trim() : undefined,
+				body: isRecording ? undefined : body.trim(),
 				imageId,
 			});
 
@@ -285,7 +281,7 @@ export default function EditEntryScreen() {
 							/>
 						</View>
 
-						{/* Body (writing), or the recorded media read-only */}
+						{/* Body (writing) or audio (recording, read-only) */}
 						{isRecording ? (
 							entry.audioUrl ? (
 								<View className="gap-1.5">
@@ -295,18 +291,6 @@ export default function EditEntryScreen() {
 									<EntryAudioPlayer
 										uri={entry.audioUrl}
 										durationMs={entry.audioDurationMs}
-									/>
-								</View>
-							) : null
-						) : isVideo ? (
-							entry.videoUrl ? (
-								<View className="gap-1.5">
-									<Text className="font-semibold text-base text-foreground">
-										Video
-									</Text>
-									<EntryVideoPlayer
-										uri={entry.videoUrl}
-										posterUri={entry.imageUrl}
 									/>
 								</View>
 							) : null
@@ -332,10 +316,10 @@ export default function EditEntryScreen() {
 							</View>
 						)}
 
-						{/* Photo — the cover frame for a video entry */}
+						{/* Photo (required) */}
 						<View className="gap-1.5">
 							<Text className="font-semibold text-base text-foreground">
-								{isVideo ? "Thumbnail" : "Photo"}
+								Photo
 							</Text>
 							<View
 								className={`gap-3 rounded-2xl border bg-secondary/20 p-3 ${

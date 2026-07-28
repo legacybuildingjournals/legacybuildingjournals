@@ -17,14 +17,8 @@ export const brand = {
 	dateMuted: "#f2f2f2",
 	textSecondary: "#a6a6a6",
 	destructive: "#b0200c",
-	/** Audio entries. `alertSurface` tints the whole add-entry panel. */
-	alert: "#e9a746",
+	alert: "#dca114",
 	alertLight: "#fff4db",
-	alertSurface: "#f0e8d5",
-	/** Video entries — red, so they read apart from audio's amber. */
-	video: "#e05150",
-	videoLight: "#fef2f2",
-	videoSurface: "#fef0f0",
 	overlay: "rgba(82, 82, 82, 0.6)",
 	cancelBg: "#f2f2f2",
 	cancelText: "#525252",

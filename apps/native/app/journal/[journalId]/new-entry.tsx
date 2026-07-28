@@ -27,18 +27,13 @@ import {
 	type EntryMode,
 	EntryModeTabs,
 } from "@/components/library/entry-mode-tabs";
-import { RecordingMediumSelect } from "@/components/library/recording-medium-select";
-import { VideoEntryField } from "@/components/library/video-entry-field";
-import { VideoExportNote } from "@/components/library/video-export-note";
 import { parseMonthDayYear } from "@/lib/journal/parse-date";
 import {
 	type PickedEntryImage,
 	pickEntryImageFromCamera,
 	pickEntryImageFromLibrary,
 } from "@/lib/journal/pick-entry-image";
-import type { PickedEntryVideo } from "@/lib/journal/pick-entry-video";
 import { uploadBinaryToConvex } from "@/lib/journal/upload-binary";
-import { generateVideoThumbnail } from "@/lib/journal/video-thumbnail";
 import { useMutationToast } from "@/lib/mutation-toast";
 import {
 	ensureNotificationPermission,
@@ -57,21 +52,13 @@ export default function NewEntryScreen() {
 
 	const mutationToast = useMutationToast();
 	const { hasPaidAccess, openPaywall } = useJournalPaywall();
-	const [
-		accent,
-		accentForeground,
-		foreground,
-		placeholderColor,
-		dangerColor,
-		warningColor,
-	] = useThemeColor([
-		"accent",
-		"accent-foreground",
-		"foreground",
-		"field-placeholder",
-		"danger",
-		"warning",
-	]);
+	const [accent, accentForeground, foreground, placeholderColor] =
+		useThemeColor([
+			"accent",
+			"accent-foreground",
+			"foreground",
+			"field-placeholder",
+		]);
 
 	const [mode, setMode] = useState<EntryMode>("writing");
 	const [title, setTitle] = useState("");
@@ -83,10 +70,6 @@ export default function NewEntryScreen() {
 		mimeType: string;
 		durationMs: number;
 	} | null>(null);
-	const [video, setVideo] = useState<PickedEntryVideo | null>(null);
-	// True while the cover is the auto-grabbed first frame, so replacing the
-	// video refreshes it — but a cover the user chose themselves is kept.
-	const [coverIsAutoFrame, setCoverIsAutoFrame] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 	const [showErrors, setShowErrors] = useState(false);
 
@@ -97,9 +80,9 @@ export default function NewEntryScreen() {
 		router.back();
 	};
 
-	const handlePickFromLibrary = useCallback(async (): Promise<boolean> => {
+	const handlePickFromLibrary = useCallback(async () => {
 		const picked = await pickEntryImageFromLibrary();
-		if (picked.kind === "canceled") return false;
+		if (picked.kind === "canceled") return;
 		if (picked.kind === "permission-denied") {
 			if (picked.previouslyDenied) {
 				Alert.alert(
@@ -114,19 +97,18 @@ export default function NewEntryScreen() {
 					],
 				);
 			}
-			return false;
+			return;
 		}
 		if (picked.kind === "error") {
 			Alert.alert("Could not add photo", picked.message);
-			return false;
+			return;
 		}
 		setImage(picked.image);
-		return true;
 	}, []);
 
-	const handleTakePhoto = useCallback(async (): Promise<boolean> => {
+	const handleTakePhoto = useCallback(async () => {
 		const picked = await pickEntryImageFromCamera();
-		if (picked.kind === "canceled") return false;
+		if (picked.kind === "canceled") return;
 		if (picked.kind === "permission-denied") {
 			if (picked.previouslyDenied) {
 				Alert.alert(
@@ -141,40 +123,14 @@ export default function NewEntryScreen() {
 					],
 				);
 			}
-			return false;
+			return;
 		}
 		if (picked.kind === "error") {
 			Alert.alert("Could not take photo", picked.message);
-			return false;
+			return;
 		}
 		setImage(picked.image);
-		return true;
 	}, []);
-
-	const handleVideoChange = useCallback(
-		async (next: PickedEntryVideo | null) => {
-			setVideo(next);
-
-			if (!next) {
-				if (coverIsAutoFrame) {
-					setImage(null);
-					setCoverIsAutoFrame(false);
-				}
-				return;
-			}
-
-			// Default cover is the very first frame; only overwrite a cover the
-			// user picked themselves if there isn't one yet.
-			if (image && !coverIsAutoFrame) return;
-
-			const frame = await generateVideoThumbnail(next.uri, 0);
-			if (frame) {
-				setImage(frame);
-				setCoverIsAutoFrame(true);
-			}
-		},
-		[coverIsAutoFrame, image],
-	);
 
 	const submit = useCallback(async () => {
 		if (!journalId) return;
@@ -182,12 +138,6 @@ export default function NewEntryScreen() {
 
 		if (mode === "writing") {
 			if (!title.trim() || dateMs === null || !body.trim()) return;
-		} else if (mode === "video") {
-			if (!video) {
-				Alert.alert("No video yet", "Record or choose a video before saving.");
-				return;
-			}
-			if (!title.trim() || dateMs === null) return;
 		} else if (!audio) {
 			Alert.alert("No audio yet", "Tap the mic to record before saving.");
 			return;
@@ -208,14 +158,6 @@ export default function NewEntryScreen() {
 				imageId = await uploadBinaryToConvex({
 					uri: image.uri,
 					mimeType: image.mimeType,
-					generateUploadUrl: () => generateUploadUrl(),
-				});
-			}
-			let videoId: Id<"_storage"> | undefined;
-			if (mode === "video" && video) {
-				videoId = await uploadBinaryToConvex({
-					uri: video.uri,
-					mimeType: video.mimeType,
 					generateUploadUrl: () => generateUploadUrl(),
 				});
 			}
@@ -241,9 +183,6 @@ export default function NewEntryScreen() {
 				audioId,
 				audioDurationMs:
 					mode === "recording" ? (audio?.durationMs ?? undefined) : undefined,
-				videoId,
-				videoDurationMs:
-					mode === "video" ? (video?.durationMs ?? undefined) : undefined,
 			});
 
 			mutationToast.success("Entry saved!");
@@ -276,145 +215,10 @@ export default function NewEntryScreen() {
 		mutationToast,
 		openPaywall,
 		title,
-		video,
 	]);
 
 	const isRecordingMode = mode === "recording";
-	const isVideoMode = mode === "video";
 	const showRecordingDetails = isRecordingMode && audio !== null;
-
-	// Both recorded kinds sit on a tinted surface; writing stays on mint. Voice
-	// keeps the amber wash, video gets the red one.
-	const usesWarmSurface = isRecordingMode || isVideoMode;
-	const recordingSurfaceClass = isVideoMode
-		? "bg-danger-soft"
-		: "bg-warning-soft";
-	/** Accent of whichever recording medium is active — amber voice, red video. */
-	const recordingAccent = isVideoMode ? dangerColor : warningColor;
-
-	// Picking a cover by hand marks it as the user's, so replacing the video
-	// won't overwrite it. Only counts if something was actually chosen.
-	const chooseCoverManually = useCallback(
-		async (action: () => Promise<boolean>) => {
-			if (await action()) setCoverIsAutoFrame(false);
-		},
-		[],
-	);
-
-	const handleEditThumbnail = useCallback(() => {
-		const options: Array<{
-			text: string;
-			style?: "cancel" | "destructive";
-			onPress?: () => void;
-		}> = [
-			{
-				text: "Choose from Library",
-				onPress: () => void chooseCoverManually(handlePickFromLibrary),
-			},
-			{
-				text: "Take Photo",
-				onPress: () => void chooseCoverManually(handleTakePhoto),
-			},
-		];
-
-		if (video) {
-			options.push({
-				text: "Use first frame",
-				onPress: () => {
-					void generateVideoThumbnail(video.uri, 0).then((frame) => {
-						if (frame) {
-							setImage(frame);
-							setCoverIsAutoFrame(true);
-						}
-					});
-				},
-			});
-		}
-		options.push({ text: "Cancel", style: "cancel" });
-
-		Alert.alert("Edit thumbnail", undefined, options);
-	}, [chooseCoverManually, handlePickFromLibrary, handleTakePhoto, video]);
-
-	const videoCoverSection = (
-		<View className="gap-1.5">
-			<Text className="font-semibold text-base text-foreground">
-				Cover Image{" "}
-				<Text className="font-normal text-sm" style={{ color: dangerColor }}>
-					(optional)
-				</Text>
-			</Text>
-			{image ? (
-				<View className="overflow-hidden rounded-2xl bg-secondary/40">
-					<Image
-						source={{ uri: image.uri }}
-						className="h-48 w-full"
-						resizeMode="cover"
-					/>
-					<Pressable
-						onPress={handleEditThumbnail}
-						accessibilityRole="button"
-						accessibilityLabel="Edit thumbnail"
-						className="absolute top-3 right-3 flex-row items-center gap-1.5 rounded-full bg-background px-3 py-2 active:opacity-80"
-					>
-						<Ionicons name="pencil" size={14} color={foreground} />
-						<Text className="font-semibold text-foreground text-sm">
-							Edit Thumbnail
-						</Text>
-					</Pressable>
-				</View>
-			) : (
-				<View
-					className="items-center gap-3 rounded-2xl border-2 border-dashed px-4 py-6"
-					style={{ borderColor: dangerColor }}
-				>
-					<Text className="text-center text-base text-muted-foreground">
-						Attach a video thumbnail of your choice
-					</Text>
-
-					<Pressable
-						onPress={() => void chooseCoverManually(handleTakePhoto)}
-						accessibilityRole="button"
-						accessibilityLabel="Add image"
-						className="w-full flex-row items-center justify-center gap-2 rounded-xl py-3.5 active:opacity-90"
-						style={{ backgroundColor: dangerColor }}
-					>
-						<Ionicons name="camera" size={19} color={accentForeground} />
-						<Text
-							className="font-semibold text-base"
-							style={{ color: accentForeground }}
-						>
-							Add Image
-						</Text>
-					</Pressable>
-
-					<View className="w-full flex-row items-center gap-3">
-						<View className="h-px flex-1 bg-border" />
-						<Text className="text-muted-foreground text-xs">OR</Text>
-						<View className="h-px flex-1 bg-border" />
-					</View>
-
-					<Pressable
-						onPress={() => void chooseCoverManually(handlePickFromLibrary)}
-						accessibilityRole="button"
-						accessibilityLabel="Choose from gallery"
-						className="w-full flex-row items-center justify-center gap-2 rounded-xl border bg-background py-3.5 active:opacity-90"
-						style={{ borderColor: dangerColor }}
-					>
-						<Ionicons name="images-outline" size={19} color={dangerColor} />
-						<Text
-							className="font-semibold text-base"
-							style={{ color: dangerColor }}
-						>
-							Choose From Gallery
-						</Text>
-					</Pressable>
-				</View>
-			)}
-			<Text className="text-muted-foreground text-sm">
-				The image will be used as the cover of your journal entry.
-			</Text>
-		</View>
-	);
 
 	const imagePickerSection = (
 		<View className="gap-3 rounded-2xl border border-border/60 bg-secondary/20 p-3">
@@ -466,7 +270,7 @@ export default function NewEntryScreen() {
 
 	return (
 		<View
-			className={`flex-1 ${usesWarmSurface ? recordingSurfaceClass : "bg-secondary/30"}`}
+			className={`flex-1 ${isRecordingMode ? "bg-warning-soft" : "bg-secondary/30"}`}
 		>
 			{/* Teal header */}
 			<View
@@ -487,9 +291,9 @@ export default function NewEntryScreen() {
 						</Text>
 					</Pressable>
 
-					{isRecordingMode || isVideoMode ? (
+					{isRecordingMode ? (
 						<Text className="font-semibold text-base text-primary-foreground">
-							{isVideoMode ? "Video Entry" : "Audio Entries"}
+							Audio Entries
 						</Text>
 					) : (
 						<View />
@@ -523,74 +327,9 @@ export default function NewEntryScreen() {
 					contentContainerClassName="px-4 pt-6 pb-12 gap-5"
 					keyboardShouldPersistTaps="handled"
 				>
-					<EntryModeTabs
-						value={mode}
-						onChange={setMode}
-						accent={recordingAccent}
-					/>
+					<EntryModeTabs value={mode} onChange={setMode} />
 
-					{isRecordingMode || isVideoMode ? (
-						<RecordingMediumSelect
-							value={isVideoMode ? "video" : "recording"}
-							onChange={setMode}
-							accent={recordingAccent}
-							disabled={submitting}
-						/>
-					) : null}
-
-					{isVideoMode ? (
-						<>
-							{videoCoverSection}
-
-							<View className="gap-1.5">
-								<Text className="font-semibold text-base text-foreground">
-									Title
-								</Text>
-								<TextInput
-									value={title}
-									onChangeText={setTitle}
-									placeholder="Give your journal a title"
-									placeholderTextColor={placeholderColor}
-									className={`h-14 rounded-2xl border bg-background px-4 text-base text-foreground ${
-										showErrors && !title.trim()
-											? "border-destructive"
-											: "border-border"
-									}`}
-								/>
-							</View>
-
-							<View className="gap-1.5">
-								<Text className="font-semibold text-base text-foreground">
-									Date
-								</Text>
-								<DateField
-									value={dateInput}
-									onChange={setDateInput}
-									placeholder="Select Date"
-									invalid={showErrors && dateMs === null}
-								/>
-							</View>
-
-							<View className="gap-1.5">
-								<Text className="font-semibold text-base text-foreground">
-									Your Video
-								</Text>
-								<VideoEntryField
-									value={video}
-									onChange={(next) => void handleVideoChange(next)}
-									disabled={submitting}
-								/>
-							</View>
-
-							<VideoExportNote />
-
-							{showErrors && video && (!title.trim() || dateMs === null) ? (
-								<Text className="text-center text-destructive text-sm">
-									Please add a title and date for this video.
-								</Text>
-							) : null}
-						</>
-					) : mode === "writing" ? (
+					{mode === "writing" ? (
 						<>
 							<View className="gap-1.5">
 								<Text className="font-semibold text-base text-foreground">

@@ -118,7 +118,6 @@ export function JournalEntryDetailView({
 
 	const accent = entryAccentColor(enriched.mode);
 	const isRecording = enriched.mode === "recording";
-	const isVideo = enriched.mode === "video";
 
 	const handleDownloadAudio = async () => {
 		if (!enriched.audioUrl) return;
@@ -213,16 +212,6 @@ export function JournalEntryDetailView({
 								src={enriched.audioUrl}
 								accentColor={accent}
 								className="py-1"
-							/>
-						) : null}
-
-						{isVideo && enriched.videoUrl ? (
-							// biome-ignore lint/a11y/useMediaCaption: user-supplied journal footage has no caption track
-							<video
-								src={enriched.videoUrl}
-								controls
-								poster={enriched.imageUrl}
-								className="w-full rounded-[12px] bg-black"
 							/>
 						) : null}
 

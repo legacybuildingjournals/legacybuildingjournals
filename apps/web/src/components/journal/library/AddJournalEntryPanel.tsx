@@ -16,7 +16,6 @@ import {
 	type EntryMode,
 	EntryModeTabs,
 } from "@/components/journal/library/EntryModeTabs";
-import { EntryVideoUpload } from "@/components/journal/library/EntryVideoUpload";
 import {
 	accentForMode,
 	bubbleCreateButtonClass,
@@ -30,7 +29,6 @@ import {
 	bubbleSelectItemClass,
 	bubbleSelectTriggerClass,
 	bubbleTextareaClass,
-	surfaceForMode,
 } from "@/components/journal/library/libraryFormStyles";
 import { Button } from "@/components/journal/ui/button";
 import { Input } from "@/components/journal/ui/input";
@@ -44,7 +42,6 @@ import {
 } from "@/components/journal/ui/select";
 import { Textarea } from "@/components/journal/ui/textarea";
 import { compressImageFile } from "@/lib/journal/compressImageFile";
-import { extractVideoFirstFrame } from "@/lib/journal/extractVideoFrame";
 import {
 	messageFromUnknownError,
 	toastMutationError,
@@ -103,9 +100,7 @@ export function AddJournalEntryPanel({
 	const [imageFile, setImageFile] = useState<File | null>(null);
 	const [imagePreview, setImagePreview] = useState<string | null>(null);
 	const [audioFile, setAudioFile] = useState<File | null>(null);
-	const [videoFile, setVideoFile] = useState<File | null>(null);
 	const [submitting, setSubmitting] = useState(false);
-	const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [showErrors, setShowErrors] = useState(false);
 
@@ -115,18 +110,13 @@ export function AddJournalEntryPanel({
 	const dateInvalid = date === undefined;
 	const bodyInvalid = mode === "writing" && !body.trim();
 	const audioInvalid = mode === "recording" && audioFile === null;
-	const videoInvalid = mode === "video" && videoFile === null;
 	const journalInvalid = selectedJournalId === null;
 
 	const isValid =
 		!titleInvalid &&
 		!dateInvalid &&
 		!journalInvalid &&
-		(mode === "writing"
-			? !bodyInvalid
-			: mode === "video"
-				? !videoInvalid
-				: !audioInvalid);
+		(mode === "writing" ? !bodyInvalid : !audioInvalid);
 
 	const resetForm = useCallback(() => {
 		setMode("writing");
@@ -219,37 +209,17 @@ export function AddJournalEntryPanel({
 		if (!isValid || !selectedJournalId || date === undefined) return;
 
 		setSubmitting(true);
-		setUploadProgress(null);
 		setError(null);
 		try {
-			// Video entries without a chosen cover fall back to the video's own
-			// first frame, so the library never shows a blank cover placeholder.
-			const coverFile =
-				imageFile ??
-				(mode === "video" && videoFile
-					? await extractVideoFirstFrame(videoFile)
-					: null);
-
 			let imageId: Id<"_storage"> | undefined;
-			if (coverFile) {
+			if (imageFile) {
 				imageId = await uploadToStorage(
-					coverFile,
+					imageFile,
 					() => generateUploadUrl(),
-					coverFile.type || "image/jpeg",
+					imageFile.type || "image/jpeg",
 				);
 			}
 
-			let videoId: Id<"_storage"> | undefined;
-			if (mode === "video" && videoFile) {
-				setUploadProgress(0);
-				videoId = await uploadToStorage(
-					videoFile,
-					() => generateUploadUrl(),
-					videoFile.type || "video/mp4",
-					(fraction) => setUploadProgress(fraction),
-				);
-				setUploadProgress(null);
-			}
 			let audioId: Id<"_storage"> | undefined;
 			if (mode === "recording" && audioFile) {
 				audioId = await uploadToStorage(
@@ -267,7 +237,6 @@ export function AddJournalEntryPanel({
 				body: mode === "writing" ? body.trim() : undefined,
 				imageId,
 				audioId,
-				videoId,
 			});
 
 			toastMutationSuccess("Entry added.");
@@ -282,16 +251,15 @@ export function AddJournalEntryPanel({
 			toastMutationError(err, message);
 		} finally {
 			setSubmitting(false);
-			setUploadProgress(null);
 		}
 	};
 
 	if (!mounted || !open || !journalId) return null;
 
-	// Outline button follows the medium's accent rather than the teal default.
-	const downloadBtnClass = bubbleDownloadButtonClass;
-	const downloadBtnStyle =
-		mode === "writing" ? undefined : { borderColor: accent, color: accent };
+	const downloadBtnClass =
+		mode === "writing"
+			? bubbleDownloadButtonClass
+			: cn(bubbleDownloadButtonClass, "border-[#dca114] text-[#dca114]");
 
 	const journalSelect = (
 		<div className={bubbleFieldStack}>
@@ -327,59 +295,14 @@ export function AddJournalEntryPanel({
 		</div>
 	);
 
-	/** Video calls it a cover because the clip itself is the entry. */
 	const imageUpload = (
 		<div className={bubbleFieldStack}>
-			<span className={bubbleLabelClass}>
-				{mode === "video"
-					? "Upload cover image (optional)"
-					: "Upload image (optional)"}
-			</span>
+			<span className={bubbleLabelClass}>Upload image (optional)</span>
 			<EntryImageUpload
 				accentColor={accent}
 				imagePreview={imagePreview}
 				onFileChange={handleImageChange}
 			/>
-		</div>
-	);
-
-	const journalTypeSelect = (
-		<div className={bubbleFieldStack}>
-			<span className={bubbleLabelClass}>Journal type</span>
-			<Select
-				value={mode === "video" ? "video" : "recording"}
-				onValueChange={(value) => setMode(value as EntryMode)}
-			>
-				<SelectTrigger
-					aria-label="Journal type"
-					className={bubbleSelectTriggerClass(false)}
-				>
-					<SelectValue />
-				</SelectTrigger>
-				<SelectContent
-					position="popper"
-					align="start"
-					sideOffset={6}
-					className={bubbleSelectContentClass}
-				>
-					<SelectItem value="recording" className={bubbleSelectItemClass}>
-						Audio Journal
-					</SelectItem>
-					<SelectItem value="video" className={bubbleSelectItemClass}>
-						Video Journal
-					</SelectItem>
-				</SelectContent>
-			</Select>
-		</div>
-	);
-
-	/** Journal + type sit side by side once a recording medium is in play. */
-	const recordingSelectRow = (
-		<div
-			className={cn("grid w-full grid-cols-1 sm:grid-cols-2", bubbleRowGap24)}
-		>
-			{journalSelect}
-			{journalTypeSelect}
 		</div>
 	);
 
@@ -396,8 +319,8 @@ export function AddJournalEntryPanel({
 			style={{
 				top: dashboardLayout.headerMinHeight,
 				bottom: 0,
-				backgroundColor: surfaceForMode(mode),
-				borderTopColor: accent,
+				backgroundColor: brand.libraryMint,
+				borderTopColor: mode === "writing" ? brand.primary : brand.alert,
 				rowGap: 12,
 			}}
 		>
@@ -411,7 +334,7 @@ export function AddJournalEntryPanel({
 			>
 				<ChevronDown
 					className="size-8"
-					style={{ color: accent }}
+					style={{ color: mode === "writing" ? brand.primary : brand.alert }}
 					strokeWidth={2}
 				/>
 			</Button>
@@ -423,7 +346,7 @@ export function AddJournalEntryPanel({
 			>
 				<div className="flex flex-col gap-6 px-2 pt-2 pr-2 pb-4">
 					<div className="flex justify-center">
-						<EntryModeTabs value={mode} onChange={setMode} accent={accent} />
+						<EntryModeTabs value={mode} onChange={setMode} />
 					</div>
 
 					<form
@@ -466,31 +389,7 @@ export function AddJournalEntryPanel({
 							</div>
 						</div>
 
-						{mode === "video" ? (
-							<>
-								{recordingSelectRow}
-								<div className={bubbleFieldStack}>
-									<span className={bubbleLabelClass}>Your Video</span>
-									<EntryVideoUpload
-										accentColor={accent}
-										value={videoFile}
-										onChange={setVideoFile}
-										invalid={showErrors && videoInvalid}
-									/>
-								</div>
-								{showErrors && videoInvalid ? (
-									<p className="text-[#b0200c] text-sm" role="alert">
-										Choose a video before creating your entry.
-									</p>
-								) : null}
-								{imageUpload}
-								<p className="text-[#8a8a8a] text-sm">
-									Videos can&apos;t be embedded in the PDF. A QR code is
-									generated so anyone reading the journal can scan it to watch
-									this memory.
-								</p>
-							</>
-						) : mode === "writing" ? (
+						{mode === "writing" ? (
 							<>
 								<div className={bubbleFieldStack}>
 									<label
@@ -512,7 +411,7 @@ export function AddJournalEntryPanel({
 							</>
 						) : (
 							<>
-								{recordingSelectRow}
+								{journalSelect}
 								<div className={bubbleFieldStack}>
 									<AudioRecorderField
 										accentColor={accent}
@@ -547,21 +446,23 @@ export function AddJournalEntryPanel({
 								type="button"
 								onClick={handleDownload}
 								className={downloadBtnClass}
-								style={downloadBtnStyle}
 							>
 								Download
 							</Button>
 							<Button
 								type="submit"
 								disabled={submitting || !isValid}
-								className={bubbleCreateButtonClass}
-								style={{ backgroundColor: accent }}
+								className={cn(
+									bubbleCreateButtonClass,
+									mode === "recording" && "bg-[#dca114]",
+								)}
+								style={
+									mode === "writing"
+										? { backgroundColor: brand.primary }
+										: undefined
+								}
 							>
-								{submitting
-									? uploadProgress !== null
-										? `Uploading… ${Math.round(uploadProgress * 100)}%`
-										: "Creating…"
-									: "Create"}
+								{submitting ? "Creating…" : "Create"}
 							</Button>
 						</div>
 					</form>

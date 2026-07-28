@@ -231,6 +231,10 @@ export default defineSchema({
 		title: v.string(),
 		dateMs: v.number(),
 		body: v.optional(v.string()),
+		/**
+		 * `video` is legacy: the video-entry feature was withdrawn, but rows
+		 * written while it was live must still validate. Nothing creates it.
+		 */
 		mode: v.union(
 			v.literal("writing"),
 			v.literal("recording"),
@@ -244,9 +248,8 @@ export default defineSchema({
 		 * show the duration without waiting on the player to load remote audio. */
 		audioDurationMs: v.optional(v.number()),
 		/**
-		 * Video entries. The poster frame is stored in `imageId` like any other
-		 * entry cover, so lists, the PDF and the detail view all treat it as the
-		 * entry's image without special-casing.
+		 * Left over from the withdrawn video-entry feature. Kept optional so rows
+		 * written while it was live still validate; nothing reads them.
 		 */
 		videoId: v.optional(v.id("_storage")),
 		videoUrl: v.optional(v.string()),

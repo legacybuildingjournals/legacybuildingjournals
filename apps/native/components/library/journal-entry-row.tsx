@@ -8,6 +8,7 @@ import { formatDateLong } from "@/lib/journal/formatDate";
 type JournalEntryRowProps = {
 	title: string;
 	dateMs: number;
+	/** `video` only appears on rows left over from the withdrawn video feature. */
 	mode?: "writing" | "recording" | "video";
 	onPress?: () => void;
 	/** When true, render a selection checkbox instead of the action icon. */
@@ -46,22 +47,11 @@ export function JournalEntryRow({
 	selectable = false,
 	selected = false,
 }: JournalEntryRowProps) {
-	const [
-		accent,
-		accentForeground,
-		foreground,
-		warning,
-		warningForeground,
-		danger,
-		dangerForeground,
-	] = useThemeColor([
+	const [accent, accentForeground, foreground, warning] = useThemeColor([
 		"accent",
 		"accent-foreground",
 		"foreground",
 		"warning",
-		"warning-foreground",
-		"danger",
-		"danger-foreground",
 	]);
 
 	const rightIcon = selectable
@@ -70,28 +60,18 @@ export function JournalEntryRow({
 			: "ellipse-outline"
 		: mode === "recording"
 			? "mic"
-			: mode === "video"
-				? "videocam"
-				: null;
+			: null;
 
-	// Each medium owns an accent: teal writing, amber audio, red video
-	// (matches web's `accentForMode`). Selection mode keeps the teal accent.
+	// Recording entries get the amber tile (matches web); writing entries stay
+	// teal. Selection mode keeps the teal accent.
+	const recordingTile = !selectable && mode === "recording";
 	const tileBg = selectable
 		? selected
 			? accent
 			: `${accent}33`
-		: mode === "recording"
+		: recordingTile
 			? warning
-			: mode === "video"
-				? danger
-				: accent;
-	const tileForeground = selectable
-		? accentForeground
-		: mode === "recording"
-			? warningForeground
-			: mode === "video"
-				? dangerForeground
-				: accentForeground;
+			: accent;
 
 	return (
 		<Pressable
@@ -136,9 +116,9 @@ export function JournalEntryRow({
 					}}
 				>
 					{rightIcon ? (
-						<Ionicons name={rightIcon} size={24} color={tileForeground} />
+						<Ionicons name={rightIcon} size={24} color={accentForeground} />
 					) : (
-						<BookOpenTextIcon color={tileForeground} size={24} />
+						<BookOpenTextIcon color={accentForeground} size={24} />
 					)}
 				</View>
 			</View>

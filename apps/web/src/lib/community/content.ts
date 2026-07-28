@@ -94,7 +94,7 @@ export const COMMUNITY_SOCIALS: CommunitySocial[] = [
 		icon: FacebookIcon,
 		color: "#1877f2",
 		tint: "#eff6ff",
-		url: "https://www.facebook.com/people/Legacy-Building-Journals-Community/61589024611908/",
+		url: "https://www.facebook.com/share/18jDHnyrpM/",
 	},
 	{
 		id: "instagram",
