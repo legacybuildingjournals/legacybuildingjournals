@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import * as Linking from "expo-linking";
 import { useThemeColor } from "heroui-native/hooks";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, Image, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
@@ -9,6 +9,10 @@ import {
 	COMMUNITY_SOCIALS,
 	COMMUNITY_UPDATES,
 } from "@/lib/community/content";
+
+/** Status pill colours — amber, matching the web community cards. */
+const BADGE_BG = "#fff7ed";
+const BADGE_TEXT = "#9a3412";
 
 /**
  * Community tab: what's coming to the app, and where to follow along.
@@ -19,7 +23,11 @@ import {
  */
 export default function CommunityScreen() {
 	const insets = useSafeAreaInsets();
-	const [accent, foreground] = useThemeColor(["accent", "foreground"]);
+	const [accent, foreground, mutedForeground] = useThemeColor([
+		"accent",
+		"foreground",
+		"muted",
+	]);
 
 	return (
 		<View className="flex-1 bg-secondary/30">
@@ -42,7 +50,7 @@ export default function CommunityScreen() {
 			>
 				{/* Upcoming updates */}
 				<View className="gap-3">
-					<Text className="font-bold text-2xl text-foreground">
+					<Text className="font-bold text-foreground text-xl">
 						Upcoming Updates
 					</Text>
 
@@ -54,25 +62,37 @@ export default function CommunityScreen() {
 							}}
 							disabled={!update.url}
 							accessibilityRole={update.url ? "link" : "text"}
-							accessibilityLabel={`${update.title}. ${update.subtitle}`}
-							className="flex-row items-center gap-4 rounded-2xl bg-background p-4 active:opacity-90"
+							accessibilityLabel={`${update.title}. ${update.badge}`}
+							className="flex-row items-center gap-3 rounded-2xl bg-background p-3 active:opacity-90"
 						>
-							<View
-								className="size-14 items-center justify-center rounded-2xl"
-								// Per-update wash, so it can't be a static class.
-								style={{ backgroundColor: update.tint }}
-							>
-								<Ionicons name={update.icon} size={26} color={update.color} />
-							</View>
-							<View className="flex-1">
-								<Text className="font-bold text-foreground text-lg">
+							<Image
+								source={update.image}
+								className="size-16 rounded-xl"
+								resizeMode="cover"
+							/>
+							<View className="flex-1 gap-1.5">
+								<Text className="font-bold text-base text-foreground">
 									{update.title}
 								</Text>
-								<Text className="mt-0.5 text-base text-muted-foreground">
-									{update.subtitle}
-								</Text>
+								<View
+									className="self-start rounded-full px-2.5 py-1"
+									style={{ backgroundColor: BADGE_BG }}
+								>
+									<Text
+										className="font-semibold text-xs"
+										style={{ color: BADGE_TEXT }}
+									>
+										{update.badge}
+									</Text>
+								</View>
 							</View>
-							<Ionicons name="chevron-forward" size={20} color={foreground} />
+							{update.url ? (
+								<Ionicons
+									name="chevron-forward"
+									size={20}
+									color={mutedForeground}
+								/>
+							) : null}
 						</Pressable>
 					))}
 				</View>
@@ -80,7 +100,7 @@ export default function CommunityScreen() {
 				{/* Socials */}
 				<View className="gap-3">
 					<View className="flex-row items-center justify-between">
-						<Text className="font-bold text-2xl text-foreground">
+						<Text className="font-bold text-foreground text-xl">
 							Join Our Community
 						</Text>
 						<Pressable
@@ -96,13 +116,13 @@ export default function CommunityScreen() {
 						>
 							<Ionicons
 								name="information-circle-outline"
-								size={26}
+								size={24}
 								color={accent}
 							/>
 						</Pressable>
 					</View>
 
-					{/* Three to a row, matching the design's grid. */}
+					{/* Two to a row, matching the design's grid. */}
 					<View className="flex-row flex-wrap gap-3">
 						{COMMUNITY_SOCIALS.map((social) => (
 							<Pressable
@@ -110,19 +130,22 @@ export default function CommunityScreen() {
 								onPress={() => void Linking.openURL(social.url)}
 								accessibilityRole="link"
 								accessibilityLabel={`${social.name} — ${social.caption}`}
-								className="w-[31%] items-center gap-1.5 rounded-2xl bg-background px-2 py-5 active:opacity-90"
+								className="w-[48%] items-center gap-1.5 rounded-2xl bg-background px-3 py-5 active:opacity-90"
 							>
 								<View
-									className="size-14 items-center justify-center rounded-full"
+									className="size-12 items-center justify-center rounded-full"
 									style={{ backgroundColor: social.tint }}
 								>
-									<Ionicons name={social.icon} size={28} color={social.color} />
+									<Ionicons name={social.icon} size={26} color={social.color} />
 								</View>
 								<Text className="mt-1 font-bold text-base text-foreground">
 									{social.name}
 								</Text>
-								<Text className="text-center text-muted-foreground text-xs">
-									{social.caption}
+								<Text
+									className="font-semibold text-xs"
+									style={{ color: accent }}
+								>
+									{social.linkLabel}
 								</Text>
 							</Pressable>
 						))}

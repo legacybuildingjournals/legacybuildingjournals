@@ -1,6 +1,6 @@
 import { assets } from "@legacy-building/ui/lib/brand-journal";
 import type { LucideIcon } from "lucide-react";
-import { Calendar, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 
 import {
 	FacebookIcon,
@@ -51,7 +51,7 @@ export const COMMUNITY_UPDATES: CommunityUpdate[] = [
 	{
 		id: "qr-export",
 		badge: "Feature update",
-		title: "Easy export with personal QR code",
+		title: "Easy export with QR code",
 		description:
 			"Access your exported recording entries with personalized QR codes",
 		meta: "Coming Soon",
@@ -61,11 +61,11 @@ export const COMMUNITY_UPDATES: CommunityUpdate[] = [
 	{
 		id: "relive-memories",
 		badge: "Feature update",
-		title: "Relive your beautiful memories",
+		title: "Record videos of your memories",
 		description:
 			"Record videos and save them into your journal to relive them forever",
-		meta: "May 22, 2025",
-		metaIcon: Calendar,
+		meta: "Coming Soon",
+		metaIcon: Clock,
 		imageUrl: assets.communityMemories,
 	},
 ];

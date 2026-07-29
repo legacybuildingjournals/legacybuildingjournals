@@ -1,4 +1,6 @@
 import type { Ionicons } from "@expo/vector-icons";
+import { imageAssets } from "@legacy-building/assets";
+import type { ImageSourcePropType } from "react-native";
 
 /**
  * Community tab copy and links.
@@ -11,31 +13,36 @@ import type { Ionicons } from "@expo/vector-icons";
 export type CommunityUpdate = {
 	id: string;
 	title: string;
-	subtitle: string;
-	icon: keyof typeof Ionicons.glyphMap;
-	/** Icon colour, and the soft wash behind it. */
-	color: string;
-	tint: string;
+	/** Status pill under the title. */
+	badge: string;
+	/** Thumbnail — the same artwork the web community page uses. */
+	image: ImageSourcePropType;
 	/** Optional destination; rows without one render as read-only. */
 	url?: string;
 };
 
+/**
+ * `packages/assets` is typed for the web bundler, where an image import is a
+ * URL string. Metro resolves the same import to a numeric asset module, which
+ * is what `<Image source>` wants — so the cast reflects the native runtime
+ * rather than papering over a mismatch.
+ */
+function nativeImage(asset: unknown): ImageSourcePropType {
+	return asset as ImageSourcePropType;
+}
+
 export const COMMUNITY_UPDATES: CommunityUpdate[] = [
 	{
-		id: "video-recording",
-		title: "Video Recording Feature",
-		subtitle: "Coming soon",
-		icon: "newspaper-outline",
-		color: "#33766f",
-		tint: "#e6f0ef",
+		id: "qr-export",
+		title: "Easy export with QR code",
+		badge: "Coming Soon",
+		image: nativeImage(imageAssets.communityQrExport),
 	},
 	{
-		id: "community-story",
-		title: "Community Story",
-		subtitle: "A beautiful memory shared",
-		icon: "book-outline",
-		color: "#e08a2c",
-		tint: "#fdf0e2",
+		id: "relive-memories",
+		title: "Record videos of your memories",
+		badge: "Coming Soon",
+		image: nativeImage(imageAssets.communityMemories),
 	},
 ];
 
@@ -43,6 +50,8 @@ export type CommunitySocial = {
 	id: string;
 	name: string;
 	caption: string;
+	/** Label on the outbound link — each platform words it differently. */
+	linkLabel: string;
 	icon: keyof typeof Ionicons.glyphMap;
 	/** Brand colour for the mark, and the soft wash it sits on. */
 	color: string;
@@ -61,6 +70,7 @@ export const COMMUNITY_SOCIALS: CommunitySocial[] = [
 		id: "youtube",
 		name: "YouTube",
 		caption: "Watch videos",
+		linkLabel: "Visit Channel",
 		icon: "logo-youtube",
 		color: "#ff0000",
 		tint: "#fdecec",
@@ -70,6 +80,7 @@ export const COMMUNITY_SOCIALS: CommunitySocial[] = [
 		id: "instagram",
 		name: "Instagram",
 		caption: "Behind the scenes",
+		linkLabel: "Visit Profile",
 		icon: "logo-instagram",
 		color: "#e1306c",
 		tint: "#fdeef4",
@@ -79,6 +90,7 @@ export const COMMUNITY_SOCIALS: CommunitySocial[] = [
 		id: "facebook",
 		name: "Facebook",
 		caption: "Join our page",
+		linkLabel: "Visit Page",
 		icon: "logo-facebook",
 		color: "#1877f2",
 		tint: "#e9f2fe",
@@ -88,6 +100,7 @@ export const COMMUNITY_SOCIALS: CommunitySocial[] = [
 		id: "tiktok",
 		name: "Tiktok",
 		caption: "Keep updated",
+		linkLabel: "View Profile",
 		icon: "logo-tiktok",
 		color: "#0f6b62",
 		tint: "#e8f4f1",
