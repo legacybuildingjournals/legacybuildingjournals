@@ -4,6 +4,7 @@ import { useThemeColor } from "heroui-native/hooks";
 import { Alert, Image, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useNativeCurrentUser } from "@/hooks/use-native-current-user";
 import {
 	COMMUNITY_PRIVACY_NOTE,
 	COMMUNITY_SOCIALS,
@@ -28,6 +29,8 @@ export default function CommunityScreen() {
 		"foreground",
 		"muted",
 	]);
+	const { convexUser } = useNativeCurrentUser();
+	const displayName = convexUser?.name?.trim() || null;
 
 	return (
 		<View className="flex-1 bg-secondary/30">
@@ -36,10 +39,17 @@ export default function CommunityScreen() {
 				className="bg-primary px-4 pb-4"
 				style={{ paddingTop: insets.top + 8 }}
 			>
-				<View className="h-10 items-center justify-center">
+				<View className="items-center justify-center gap-0.5 py-1">
 					<Text className="font-semibold text-lg text-primary-foreground">
 						Community
 					</Text>
+					{/* Names whose account this is — the tab is otherwise identical
+					    for everyone, so it's easy to lose track on a shared device. */}
+					{displayName ? (
+						<Text className="text-primary-foreground/80 text-sm">
+							{displayName}
+						</Text>
+					) : null}
 				</View>
 			</View>
 

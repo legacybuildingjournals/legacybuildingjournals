@@ -104,7 +104,7 @@ export const COMMUNITY_SOCIALS: CommunitySocial[] = [
 		icon: "logo-tiktok",
 		color: "#0f6b62",
 		tint: "#e8f4f1",
-		url: "https://www.tiktok.com/@legacy_building344",
+		url: "https://www.tiktok.com/@legacy_building_journals",
 	},
 ];
 

@@ -1,4 +1,5 @@
 import authPanelBackground from "../images/auth-panel-background.jpg";
+import communityHero from "../images/community-hero.png";
 import communityMemories from "../images/community-memories.jpeg";
 import communityQrExport from "../images/community-qr-export.jpeg";
 import defaultAvatar from "../images/default-avatar.jpg";
@@ -32,4 +33,5 @@ export const imageAssets = {
 	libraryEmptyImage,
 	communityQrExport,
 	communityMemories,
+	communityHero,
 } as const;

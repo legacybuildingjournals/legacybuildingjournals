@@ -1,3 +1,4 @@
+import { useCurrentUser } from "@legacy-building/ui/hooks/use-current-user";
 import { community } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
 import type { LucideIcon } from "lucide-react";
@@ -165,12 +166,21 @@ function UpdateCard({ update }: { update: CommunityUpdate }) {
  * and neither list can be empty.
  */
 export function DashboardCommunityPage() {
+	const { convexUser } = useCurrentUser();
+	const fullName = convexUser?.name?.trim() || null;
+	const firstName = fullName ? (fullName.split(/\s+/)[0] ?? null) : null;
+
 	return (
 		<main
 			className="min-h-svh w-full pt-[80px]"
 			style={{ backgroundColor: community.pageBackground }}
 		>
 			<div className="mx-auto flex w-full max-w-[1280px] flex-col gap-8 px-4 py-8 sm:gap-12 sm:py-12 md:px-8">
+				{firstName ? (
+					<h1 className="font-bold text-2xl text-[#0a211e] leading-tight sm:text-3xl">
+						Hi, {firstName}
+					</h1>
+				) : null}
 				<section className="flex flex-col gap-4 sm:gap-8">
 					<SectionHeading
 						icon={Bell}
