@@ -62,33 +62,44 @@ export function DeskRecentJournal() {
 	}
 	const { journal, slideImageUrls, postedAtMs } = recent;
 	const previewImage = slideImageUrls[0] ?? null;
+	const openJournal = () =>
+		router.push({
+			pathname: "/journal/[journalId]",
+			params: { journalId: journal._id },
+		});
+
 	return (
 		<View className="w-full max-w-sm gap-2">
 			<Text className="font-semibold text-base text-foreground">
 				Most Recent...
 			</Text>
-			<Pressable
-				onPress={() =>
-					router.push({
-						pathname: "/journal/[journalId]",
-						params: { journalId: journal._id },
-					})
-				}
-				className="overflow-hidden rounded-xl bg-card active:opacity-95"
-				accessibilityRole="button"
-				accessibilityLabel={`Open journal ${journal.title}`}
-			>
+			{/* The "open journal" and "add entry" taps are siblings, never nested.
+			    A Pressable inside a Pressable renders a <button> inside a <button>
+			    on react-native-web, which React rejects as invalid DOM nesting. */}
+			<View className="overflow-hidden rounded-xl bg-card">
 				{previewImage ? (
-					<Image
-						source={{ uri: previewImage }}
-						className="h-36 w-full"
-						resizeMode="cover"
-						accessibilityLabel=""
-					/>
+					<Pressable
+						onPress={openJournal}
+						className="active:opacity-95"
+						accessibilityElementsHidden
+						importantForAccessibility="no"
+					>
+						<Image
+							source={{ uri: previewImage }}
+							className="h-36 w-full"
+							resizeMode="cover"
+							accessibilityLabel=""
+						/>
+					</Pressable>
 				) : null}
 
 				<View className="flex-row items-center gap-3 bg-primary px-5 py-3">
-					<View className="min-w-0 flex-1">
+					<Pressable
+						onPress={openJournal}
+						className="min-w-0 flex-1 active:opacity-80"
+						accessibilityRole="button"
+						accessibilityLabel={`Open journal ${journal.title}`}
+					>
 						<Text
 							className="font-semibold text-lg text-primary-foreground"
 							numberOfLines={1}
@@ -98,24 +109,23 @@ export function DeskRecentJournal() {
 						<Text className="mt-0.5 text-primary-foreground/85 text-sm">
 							{formatDate(postedAtMs)}
 						</Text>
-					</View>
+					</Pressable>
 
 					<Pressable
 						className="size-10 shrink-0 items-center justify-center rounded-full bg-background active:opacity-80"
 						accessibilityRole="button"
 						accessibilityLabel="Add journal entry"
-						onPress={(e) => {
-							e.stopPropagation();
+						onPress={() =>
 							router.push({
 								pathname: "/journal/[journalId]/new-entry",
 								params: { journalId: journal._id },
-							});
-						}}
+							})
+						}
 					>
 						<Ionicons name="add" size={22} color={primary} />
 					</Pressable>
 				</View>
-			</Pressable>
+			</View>
 		</View>
 	);
 }

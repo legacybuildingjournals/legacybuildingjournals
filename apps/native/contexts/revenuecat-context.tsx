@@ -62,8 +62,10 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
 		//    and show the paywall to paid/comped users.
 		getCustomerInfo()
 			.then((info) => {
+				// null when there is no API key for this platform (web) — no SDK to
+				// ask, so the user is free.
 				setCustomerInfo(info);
-				setIsPro(hasPro(info));
+				setIsPro(info !== null && hasPro(info));
 				setIsReady(true);
 			})
 			.catch(() => {

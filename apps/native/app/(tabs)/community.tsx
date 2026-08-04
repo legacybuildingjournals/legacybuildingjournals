@@ -24,13 +24,12 @@ const BADGE_TEXT = "#9a3412";
  */
 export default function CommunityScreen() {
 	const insets = useSafeAreaInsets();
-	const [accent, foreground, mutedForeground] = useThemeColor([
-		"accent",
-		"foreground",
-		"muted",
-	]);
+	const [accent, mutedForeground] = useThemeColor(["accent", "muted"]);
 	const { convexUser } = useNativeCurrentUser();
-	const displayName = convexUser?.name?.trim() || null;
+	// First name only — the header reads as a possessive ("David's Community"),
+	// and a full name makes it wrap on narrow phones.
+	const firstName = convexUser?.name?.trim().split(/\s+/)[0] || null;
+	const heading = firstName ? `${firstName}'s Community` : "Community";
 
 	return (
 		<View className="flex-1 bg-secondary/30">
@@ -39,17 +38,15 @@ export default function CommunityScreen() {
 				className="bg-primary px-4 pb-4"
 				style={{ paddingTop: insets.top + 8 }}
 			>
-				<View className="items-center justify-center gap-0.5 py-1">
-					<Text className="font-semibold text-lg text-primary-foreground">
-						Community
+				{/* Names whose account this is — the tab is otherwise identical for
+				    everyone, so it's easy to lose track on a shared device. */}
+				<View className="items-center justify-center py-2">
+					<Text
+						className="font-semibold text-primary-foreground text-xl"
+						numberOfLines={1}
+					>
+						{heading}
 					</Text>
-					{/* Names whose account this is — the tab is otherwise identical
-					    for everyone, so it's easy to lose track on a shared device. */}
-					{displayName ? (
-						<Text className="text-primary-foreground/80 text-sm">
-							{displayName}
-						</Text>
-					) : null}
 				</View>
 			</View>
 

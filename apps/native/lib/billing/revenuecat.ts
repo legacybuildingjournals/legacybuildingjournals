@@ -47,6 +47,10 @@ export function initRevenueCat(): void {
 	isConfigured = true;
 }
 
+// Web has no RevenueCat key, so `isConfigured` stays false there and calling the
+// SDK throws `UninitializedPurchasesError`. The read-only helpers below guard on
+// it and answer "no subscription" instead of throwing, so the app renders free.
+
 // ──────────────────────────────────────────────────────────
 // User identity
 // ──────────────────────────────────────────────────────────
@@ -84,15 +88,16 @@ export function hasPro(info: CustomerInfo): boolean {
 	return typeof info.entitlements.active[ENTITLEMENT_ID] !== "undefined";
 }
 
-/** Fetch the latest customer info from RevenueCat. */
-export async function getCustomerInfo(): Promise<CustomerInfo> {
+/** Fetch the latest customer info, or null when the SDK has no key (web). */
+export async function getCustomerInfo(): Promise<CustomerInfo | null> {
+	if (!isConfigured) return null;
 	return Purchases.getCustomerInfo();
 }
 
 /** Check pro status in one call. */
 export async function checkProAccess(): Promise<boolean> {
 	const info = await getCustomerInfo();
-	return hasPro(info);
+	return info !== null && hasPro(info);
 }
 
 // ──────────────────────────────────────────────────────────
@@ -105,18 +110,21 @@ export async function checkProAccess(): Promise<boolean> {
  * (e.g. Paid Apps Agreement still pending).
  */
 export async function getPackages(): Promise<PurchasesPackage[]> {
+	if (!isConfigured) return [];
 	const offerings = await Purchases.getOfferings();
 	return offerings.current?.availablePackages ?? [];
 }
 
 /** Find the monthly package from the default offering. */
 export async function getMonthlyPackage(): Promise<PurchasesPackage | null> {
+	if (!isConfigured) return null;
 	const offerings = await Purchases.getOfferings();
 	return offerings.current?.monthly ?? null;
 }
 
 /** Find the annual package from the default offering. */
 export async function getAnnualPackage(): Promise<PurchasesPackage | null> {
+	if (!isConfigured) return null;
 	const offerings = await Purchases.getOfferings();
 	return offerings.current?.annual ?? null;
 }
@@ -160,7 +168,11 @@ export async function purchasePackage(
 				Purchases.PURCHASES_ERROR_CODE.PRODUCT_ALREADY_PURCHASED_ERROR
 		) {
 			const info = await getCustomerInfo();
-			return { success: hasPro(info), customerInfo: info, cancelled: false };
+			return {
+				success: info !== null && hasPro(info),
+				customerInfo: info,
+				cancelled: false,
+			};
 		}
 		throw e;
 	}
@@ -190,6 +202,7 @@ export async function restorePurchases(): Promise<boolean> {
 export function onCustomerInfoUpdated(
 	listener: (info: CustomerInfo) => void,
 ): () => void {
+	if (!isConfigured) return () => {};
 	Purchases.addCustomerInfoUpdateListener(listener);
 	return () => {
 		Purchases.removeCustomerInfoUpdateListener(listener);
