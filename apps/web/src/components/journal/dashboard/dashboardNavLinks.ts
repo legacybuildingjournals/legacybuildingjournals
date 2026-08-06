@@ -1,11 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import {
-	CreditCard,
-	LayoutDashboard,
-	Library,
-	UserCircle,
-	Users,
-} from "lucide-react";
+import { LayoutDashboard, Library, UserCircle, Users } from "lucide-react";
 
 import { ROUTES } from "@/lib/routes";
 
@@ -33,12 +27,6 @@ export const dashboardNavItems = [
 		label: "Account",
 		to: ROUTES.dashboardAccount,
 		icon: UserCircle,
-	},
-	{
-		id: "billing",
-		label: "Billing",
-		to: ROUTES.dashboardBilling,
-		icon: CreditCard,
 	},
 ] as const satisfies ReadonlyArray<{
 	id: string;

@@ -93,23 +93,28 @@ export const searchUserSuggestions = query({
 		const seen = new Set<string>();
 		const suggestions: ReturnType<typeof toAdminUserSummary>[] = [];
 
-		const pushUser = (user: Parameters<typeof toAdminUserSummary>[0]) => {
-			if (seen.has(user._id)) return;
-			if (!userMatchesSearch(user, q)) return;
-			seen.add(user._id);
-			suggestions.push(toAdminUserSummary(user));
-		};
-
 		const exactEmail = await ctx.db
 			.query("users")
 			.withIndex("by_email", (ix) => ix.eq("email", q))
 			.unique();
-		if (exactEmail) pushUser(exactEmail);
+		if (exactEmail) {
+			seen.add(exactEmail._id);
+			suggestions.push(toAdminUserSummary(exactEmail));
+		}
 
-		const recentBatch = await ctx.db.query("users").order("desc").take(200);
-		for (const user of recentBatch) {
-			if (suggestions.length >= 8) break;
-			pushUser(user);
+		// Exact-email above only covers a full match. Everything else — a
+		// partial name or email — needs a real scan: matching against just the
+		// most-recently-created users silently hid anyone whose account
+		// predates the last couple hundred signups. `paginateUsersFiltered`
+		// scans in bounded batches until it finds enough matches (or exhausts
+		// its cap), so older accounts are actually searchable.
+		if (suggestions.length < 8) {
+			const { page } = await paginateUsersFiltered(
+				ctx,
+				{ numItems: 8 - suggestions.length, cursor: null },
+				(user) => !seen.has(user._id) && userMatchesSearch(user, q),
+			);
+			suggestions.push(...page);
 		}
 
 		return suggestions.slice(0, 8);

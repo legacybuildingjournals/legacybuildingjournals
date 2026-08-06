@@ -181,7 +181,7 @@ export function DashboardAccountPage() {
 
 					<section className="flex flex-col gap-4">
 						<div className="flex flex-col gap-1">
-							<h2 className={accountSectionTitleClass}>Plan Status</h2>
+							<h2 className={accountSectionTitleClass}>Billings & Plan</h2>
 							<p className={accountSectionSubtitleClass}>
 								View your current subscription and billing details.
 							</p>
