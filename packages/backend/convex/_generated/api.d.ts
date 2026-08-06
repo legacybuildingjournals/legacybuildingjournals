@@ -30,6 +30,8 @@ import type * as journal_migrations from "../journal/migrations.js";
 import type * as journal_mutations from "../journal/mutations.js";
 import type * as journal_orderHelpers from "../journal/orderHelpers.js";
 import type * as journal_orderQueries from "../journal/orderQueries.js";
+import type * as journal_orderRules from "../journal/orderRules.js";
+import type * as journal_pdfRenderer from "../journal/pdfRenderer.js";
 import type * as journal_queries from "../journal/queries.js";
 import type * as journal_sort from "../journal/sort.js";
 import type * as journal_storage from "../journal/storage.js";
@@ -92,6 +94,8 @@ declare const fullApi: ApiFromModules<{
   "journal/mutations": typeof journal_mutations;
   "journal/orderHelpers": typeof journal_orderHelpers;
   "journal/orderQueries": typeof journal_orderQueries;
+  "journal/orderRules": typeof journal_orderRules;
+  "journal/pdfRenderer": typeof journal_pdfRenderer;
   "journal/queries": typeof journal_queries;
   "journal/sort": typeof journal_sort;
   "journal/storage": typeof journal_storage;

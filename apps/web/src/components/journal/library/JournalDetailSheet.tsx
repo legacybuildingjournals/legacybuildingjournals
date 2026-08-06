@@ -1,8 +1,12 @@
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
+import {
+	MIN_BOOK_ORDER_ENTRIES,
+	minimumBookOrderMessage,
+} from "@legacy-building/backend/convex/journal/orderRules";
 import { brand } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
-import { useAction, useMutation, useQuery } from "convex/react";
+import { useAction, useQuery } from "convex/react";
 import { Pencil, Share, Trash2, X } from "lucide-react";
 import {
 	type ReactNode,
@@ -27,14 +31,7 @@ import {
 import { useCollapsingSidebarCover } from "@/components/journal/library/useCollapsingSidebarCover";
 import { Button } from "@/components/journal/ui/button";
 import { Checkbox } from "@/components/journal/ui/checkbox";
-import {
-	MIN_BOOK_ORDER_ENTRIES,
-	minimumBookOrderMessage,
-} from "@/lib/journal/bookOrder";
-import {
-	buildJournalPdfBlob,
-	exportJournalEntriesToPdf,
-} from "@/lib/journal/exportJournalPdf";
+import { downloadJournalPdf } from "@/lib/journal/exportJournalPdf";
 import { formatDate } from "@/lib/journal/formatDate";
 import type { EnrichedJournalEntry } from "@/lib/journal/journalEntryTypes";
 import {
@@ -42,7 +39,6 @@ import {
 	toastMutationError,
 	toastMutationSuccess,
 } from "@/lib/journal/toast";
-import { uploadToStorage } from "@/lib/journal/uploadToStorage";
 
 type JournalDetailSheetProps = {
 	journalId: Id<"journals"> | null;
@@ -99,9 +95,7 @@ export function JournalDetailSheet({
 	const createBookOrderCheckout = useAction(
 		api.journal.actions.createBookOrderCheckout,
 	);
-	const generateUploadUrl = useMutation(
-		api.journal.mutations.generateUploadUrl,
-	);
+	const exportJournal = useAction(api.journal.actions.exportJournal);
 	const [mounted, setMounted] = useState(false);
 
 	const journal = useQuery(
@@ -118,12 +112,9 @@ export function JournalDetailSheet({
 		[entries],
 	);
 
-	// Only written entries can be printed — recorded audio has no page in the
-	// PDF, so it never appears in the export/order picker.
-	const exportableEntries = useMemo(
-		() => enrichedEntries.filter((entry) => entry.mode === "writing"),
-		[enrichedEntries],
-	);
+	// Recording entries render as a "scan to listen" QR in the PDF, so every
+	// entry is exportable regardless of mode.
+	const exportableEntries = useMemo(() => enrichedEntries, [enrichedEntries]);
 
 	const allExportableSelected =
 		exportableEntries.length > 0 &&
@@ -221,17 +212,15 @@ export function JournalDetailSheet({
 		setExporting(true);
 		setExportError(null);
 		try {
-			await exportJournalEntriesToPdf({
-				journal: {
-					title: journal.title,
-					dateMs: journal.dateMs,
-					type: journal.type,
-					dedication: journal.dedication,
-					coverImageUrl: journal.coverImageUrl,
-				},
-				includeJournal: allExportableSelected,
-				entries: selectedEntries,
+			const { url } = await exportJournal({
+				journalId: journal._id,
+				// Omitting the ids exports the whole journal, which is what adds the
+				// cover and dedication pages.
+				entryIds: allExportableSelected
+					? undefined
+					: selectedEntries.map((entry) => entry._id),
 			});
+			await downloadJournalPdf({ url, journalTitle: journal.title });
 			toastMutationSuccess("PDF downloaded.");
 			exitExportMode();
 		} catch (err) {
@@ -248,6 +237,7 @@ export function JournalDetailSheet({
 		selectedEntryIds,
 		allExportableSelected,
 		exitExportMode,
+		exportJournal,
 	]);
 
 	const handleOrderBook = useCallback(async () => {
@@ -277,27 +267,10 @@ export function JournalDetailSheet({
 		}
 		checkoutWindow.opener = null;
 		try {
-			const pdfBlob = await buildJournalPdfBlob({
-				journal: {
-					title: journal.title,
-					dateMs: journal.dateMs,
-					type: journal.type,
-					dedication: journal.dedication,
-					coverImageUrl: journal.coverImageUrl,
-				},
-				includeJournal: allExportableSelected,
-				entries: selectedEntries,
-			});
-			const pdfStorageId = await uploadToStorage(
-				pdfBlob,
-				() => generateUploadUrl(),
-				"application/pdf",
-			);
 			const { checkoutUrl } = await createBookOrderCheckout({
 				journalId,
 				entryIds: selectedEntries.map((entry) => entry._id),
 				includeJournal: allExportableSelected,
-				pdfStorageId,
 			});
 			checkoutWindow.location.replace(checkoutUrl);
 			setOrdering(false);
@@ -316,7 +289,6 @@ export function JournalDetailSheet({
 		selectedEntryIds,
 		allExportableSelected,
 		createBookOrderCheckout,
-		generateUploadUrl,
 	]);
 
 	useEffect(() => {

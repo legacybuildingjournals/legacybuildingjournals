@@ -1,6 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
+import {
+	MIN_BOOK_ORDER_ENTRIES,
+	minimumBookOrderMessage,
+} from "@legacy-building/backend/convex/journal/orderRules";
 import { needsLightForeground } from "@legacy-building/ui/lib/color";
 import { useAction, useMutation, useQuery } from "convex/react";
 import * as Linking from "expo-linking";
@@ -30,9 +34,6 @@ import {
 } from "@/lib/journal/upload-cover-image";
 import { useMutationToast } from "@/lib/mutation-toast";
 
-/** Peecho requires at least this many entries to print/order a book. */
-const MIN_ORDER_ENTRIES = 22;
-
 export default function JournalDetailScreen() {
 	const insets = useSafeAreaInsets();
 	const params = useLocalSearchParams<{ journalId?: string }>();
@@ -60,7 +61,9 @@ export default function JournalDetailScreen() {
 		api.journal.mutations.generateUploadUrl,
 	);
 	const exportJournal = useAction(api.journal.actions.exportJournal);
-	const orderBook = useAction(api.journal.actions.orderBook);
+	const createBookOrderCheckout = useAction(
+		api.journal.actions.createBookOrderCheckout,
+	);
 	const [selectionMode, setSelectionMode] = useState(false);
 	const [selectedIds, setSelectedIds] = useState<Set<Id<"journalEntries">>>(
 		new Set(),
@@ -82,12 +85,9 @@ export default function JournalDetailScreen() {
 		backgroundColor && needsLightForeground(backgroundColor),
 	);
 	const headingColor = onDarkBackground ? "#ffffff" : undefined;
-	// Only written entries can be printed — recorded audio has no page in the
-	// PDF, so it never appears in the export/order picker.
-	const exportableEntries = useMemo(
-		() => (entries ?? []).filter((e) => e.mode === "writing"),
-		[entries],
-	);
+	// Recording entries are exportable too — the template gives their audio a
+	// dedicated "scan to hear" QR page.
+	const exportableEntries = useMemo(() => entries ?? [], [entries]);
 	const exportableCount = exportableEntries.length;
 	const resolvedSelectedIds = useMemo(() => {
 		const valid = new Set(exportableEntries.map((e) => e._id));
@@ -97,12 +97,9 @@ export default function JournalDetailScreen() {
 	const allSelected = exportableCount > 0 && selectedCount === exportableCount;
 
 	const showMinimumOrderAlert = (count: number) => {
-		const remaining = MIN_ORDER_ENTRIES - count;
 		Alert.alert(
 			"A few more entries needed",
-			`A printed book needs at least ${MIN_ORDER_ENTRIES} entries. Your journal has ${count}, so add ${remaining} more ${
-				remaining === 1 ? "entry" : "entries"
-			} to place an order.`,
+			minimumBookOrderMessage(count),
 			[{ text: "Got it", style: "default" }],
 			{ cancelable: true },
 		);
@@ -306,7 +303,7 @@ export default function JournalDetailScreen() {
 				return;
 			}
 
-			if (resolvedSelectedIds.length < MIN_ORDER_ENTRIES) {
+			if (resolvedSelectedIds.length < MIN_BOOK_ORDER_ENTRIES) {
 				showMinimumOrderAlert(resolvedSelectedIds.length);
 				return;
 			}
@@ -319,12 +316,14 @@ export default function JournalDetailScreen() {
 		if (!journalId || ordering) return;
 		setOrdering(true);
 		try {
-			const { url } = await orderBook({
+			const { checkoutUrl } = await createBookOrderCheckout({
 				journalId,
 				entryIds: orderEntryIds,
+				// Selecting everything is what earns the cover and dedication pages.
+				includeJournal: orderEntryIds.length === exportableCount,
 			});
 			mutationToast.success("Opening checkout…");
-			await openExportedUrl(url);
+			await openExportedUrl(checkoutUrl);
 			exitSelection();
 		} catch (err) {
 			mutationToast.error(err, "Could not start the order. Please try again.");
