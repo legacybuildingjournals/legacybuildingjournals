@@ -70,8 +70,7 @@
 			"supportsTablet": true,
 			"infoPlist": {
 				"ITSAppUsesNonExemptEncryption": false
-			},
-			"associatedDomains": ["applinks:app.legacybuildingjournals.com"]
+			}
 		},
 		"extra": {
 			"eas": {
