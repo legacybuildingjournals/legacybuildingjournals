@@ -114,63 +114,32 @@ export function buildUserListPredicate(args: {
 }
 
 /**
- * Cap on documents scanned per call. Without this, a sparse predicate (e.g.
- * "has billing history" when most users don't) makes the loop below keep
- * re-paginating the full `users` table within a single query execution,
- * which blows Convex's per-query document-read limit and surfaces as an
- * opaque "Server Error" on the client.
+ * Cursor pagination with in-query filters (Convex-native continueCursor).
+ *
+ * Convex allows exactly one `.paginate()` call per function execution — an
+ * earlier version of this looped, re-paginating within the same call
+ * whenever a sparse predicate under-filled a page, which crashes with "ran
+ * multiple paginated queries" the moment that happens. So this reads exactly
+ * one underlying page and filters it, even if that leaves the returned page
+ * short of `numItems` (or empty). The client already re-invokes this (a
+ * fresh execution, a fresh single `paginate()` call) via `loadMore` while
+ * status is "CanLoadMore", so sparse matches still surface after enough
+ * round trips — just as a plain unfiltered search would take one round trip
+ * per page.
  */
-const MAX_DOCS_SCANNED_PER_CALL = 512;
-
-/** Cursor pagination with in-query filters (Convex-native continueCursor). */
 export async function paginateUsersFiltered(
 	ctx: QueryCtx,
 	paginationOpts: PaginationOptions,
 	matches: (user: Doc<"users">) => boolean,
 ): Promise<PaginationResult<AdminUserSummary>> {
-	const targetCount = paginationOpts.numItems;
-	const matched: Doc<"users">[] = [];
-	let cursor = paginationOpts.cursor ?? null;
-	let underlyingDone = false;
-	let scanned = 0;
-
-	while (
-		matched.length < targetCount &&
-		!underlyingDone &&
-		scanned < MAX_DOCS_SCANNED_PER_CALL
-	) {
-		const batchSize = Math.min(
-			Math.max((targetCount - matched.length) * 4, 25),
-			MAX_DOCS_SCANNED_PER_CALL - scanned,
-		);
-		const batch = await ctx.db.query("users").order("desc").paginate({
-			numItems: batchSize,
-			cursor,
-		});
-		scanned += batch.page.length;
-
-		for (const user of batch.page) {
-			if (matches(user)) {
-				matched.push(user);
-				if (matched.length >= targetCount) break;
-			}
-		}
-
-		underlyingDone = batch.isDone;
-		cursor = batch.continueCursor;
-		if (cursor === null) break;
-	}
-
-	const page = matched.slice(0, targetCount).map(toAdminUserSummary);
-	// More to fetch whenever the underlying table isn't exhausted yet — even
-	// if this call stopped early (scan cap) without filling a full page, so
-	// the client's usePaginatedQuery keeps calling loadMore until it is.
-	const hasMore = !underlyingDone && cursor !== null;
+	const batch = await ctx.db
+		.query("users")
+		.order("desc")
+		.paginate(paginationOpts);
 
 	return {
-		page,
-		isDone: !hasMore,
-		continueCursor: hasMore && cursor !== null ? cursor : "",
+		...batch,
+		page: batch.page.filter(matches).map(toAdminUserSummary),
 	};
 }
 

@@ -105,16 +105,17 @@ export const searchUserSuggestions = query({
 		// Exact-email above only covers a full match. Everything else — a
 		// partial name or email — needs a real scan: matching against just the
 		// most-recently-created users silently hid anyone whose account
-		// predates the last couple hundred signups. `paginateUsersFiltered`
-		// scans in bounded batches until it finds enough matches (or exhausts
-		// its cap), so older accounts are actually searchable.
+		// predates the last couple hundred signups. This is a single-shot
+		// typeahead (no loadMore loop like the Users table has), so request a
+		// wide-enough raw batch to have a real chance of finding matches
+		// beyond the most recent handful in one call.
 		if (suggestions.length < 8) {
 			const { page } = await paginateUsersFiltered(
 				ctx,
-				{ numItems: 8 - suggestions.length, cursor: null },
+				{ numItems: 300, cursor: null },
 				(user) => !seen.has(user._id) && userMatchesSearch(user, q),
 			);
-			suggestions.push(...page);
+			suggestions.push(...page.slice(0, 8 - suggestions.length));
 		}
 
 		return suggestions.slice(0, 8);
