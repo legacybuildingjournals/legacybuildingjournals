@@ -16,7 +16,7 @@ export async function extractVideoFirstFrame(
 
 		const objectUrl =
 			typeof source === "string" ? null : URL.createObjectURL(source);
-		video.src = objectUrl ?? source;
+		video.src = typeof source === "string" ? source : (objectUrl as string);
 
 		const cleanup = () => {
 			if (objectUrl) URL.revokeObjectURL(objectUrl);
