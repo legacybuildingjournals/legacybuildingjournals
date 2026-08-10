@@ -35,13 +35,13 @@ export const COMMUNITY_UPDATES: CommunityUpdate[] = [
 	{
 		id: "qr-export",
 		title: "Easy export with QR code",
-		badge: "Coming Soon",
+		badge: "Shipped",
 		image: nativeImage(imageAssets.communityQrExport),
 	},
 	{
 		id: "relive-memories",
 		title: "Record videos of your memories",
-		badge: "Coming Soon",
+		badge: "Shipped",
 		image: nativeImage(imageAssets.communityMemories),
 	},
 ];

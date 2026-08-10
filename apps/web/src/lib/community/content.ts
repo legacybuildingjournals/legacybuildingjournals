@@ -54,7 +54,7 @@ export const COMMUNITY_UPDATES: CommunityUpdate[] = [
 		title: "Easy export with QR code",
 		description:
 			"Access your exported recording entries with personalized QR codes",
-		meta: "Coming Soon",
+		meta: "Shipped",
 		metaIcon: Clock,
 		imageUrl: assets.communityQrExport,
 	},
@@ -64,7 +64,7 @@ export const COMMUNITY_UPDATES: CommunityUpdate[] = [
 		title: "Record videos of your memories",
 		description:
 			"Record videos and save them into your journal to relive them forever",
-		meta: "Coming Soon",
+		meta: "Shipped",
 		metaIcon: Clock,
 		imageUrl: assets.communityMemories,
 	},
