@@ -94,7 +94,7 @@ export const COMMUNITY_SOCIALS: CommunitySocial[] = [
 		icon: "logo-facebook",
 		color: "#1877f2",
 		tint: "#e9f2fe",
-		url: "https://www.facebook.com/share/18jDHnyrpM/",
+		url: "https://www.facebook.com/people/Legacy-Building-Journals-Community/61589024611908/",
 	},
 	{
 		id: "tiktok",

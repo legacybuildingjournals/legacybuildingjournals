@@ -58,8 +58,18 @@ export const bubbleDownloadButtonClass =
 export const bubbleCreateButtonClass =
 	"h-11 min-w-[60px] max-w-[200px] flex-1 rounded-[12px] bg-[#008080] px-5 font-medium text-sm text-white leading-none shadow-none hover:opacity-95 disabled:opacity-60";
 
-export function accentForMode(mode: "writing" | "recording") {
-	return mode === "writing" ? brand.primary : brand.alert;
+export type EntryFormMode = "writing" | "recording" | "video";
+
+/** Each medium owns an accent: teal writing, amber audio, red video. */
+export function accentForMode(mode: EntryFormMode) {
+	if (mode === "writing") return brand.primary;
+	return mode === "video" ? brand.video : brand.alert;
+}
+
+/** Panel wash behind the form, tinted to match the medium's accent. */
+export function surfaceForMode(mode: EntryFormMode) {
+	if (mode === "writing") return brand.libraryMint;
+	return mode === "video" ? brand.videoSurface : brand.alertSurface;
 }
 
 /** Centered content width matching Bubble floating group. */

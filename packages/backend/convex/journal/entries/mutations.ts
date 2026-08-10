@@ -15,10 +15,16 @@ export const create = mutation({
 		title: v.string(),
 		dateMs: v.number(),
 		body: v.optional(v.string()),
-		mode: v.union(v.literal("writing"), v.literal("recording")),
+		mode: v.union(
+			v.literal("writing"),
+			v.literal("recording"),
+			v.literal("video"),
+		),
 		imageId: v.optional(v.id("_storage")),
 		audioId: v.optional(v.id("_storage")),
 		audioDurationMs: v.optional(v.number()),
+		videoId: v.optional(v.id("_storage")),
+		videoDurationMs: v.optional(v.number()),
 	},
 	handler: async (ctx, args) => {
 		const userId = await requirePaidJournalAccess(ctx);
@@ -42,11 +48,29 @@ export const create = mutation({
 					message: "Entry log is required for writing entries.",
 				});
 			}
+		} else if (args.mode === "video") {
+			if (!args.videoId) {
+				throw new ConvexError({
+					code: "INVALID_ARGUMENT",
+					message: "A video is required for video entries.",
+				});
+			}
 		} else if (!args.audioId) {
 			throw new ConvexError({
 				code: "INVALID_ARGUMENT",
 				message: "Audio is required for recording entries.",
 			});
+		}
+
+		let videoUrl: string | undefined;
+		if (args.videoId) {
+			videoUrl = (await ctx.storage.getUrl(args.videoId)) ?? undefined;
+			if (!videoUrl) {
+				throw new ConvexError({
+					code: "INVALID_ARGUMENT",
+					message: "Entry video was not found in storage.",
+				});
+			}
 		}
 
 		let audioUrl: string | undefined;
@@ -73,6 +97,9 @@ export const create = mutation({
 			audioUrl,
 			audioDurationMs:
 				args.mode === "recording" ? args.audioDurationMs : undefined,
+			videoId: args.videoId,
+			videoUrl,
+			videoDurationMs: args.mode === "video" ? args.videoDurationMs : undefined,
 		});
 
 		await ctx.db.patch(args.journalId, { updatedAtMs: Date.now() });
@@ -96,6 +123,8 @@ export const update = mutation({
 		imageId: v.optional(v.id("_storage")),
 		audioId: v.optional(v.id("_storage")),
 		audioDurationMs: v.optional(v.number()),
+		videoId: v.optional(v.id("_storage")),
+		videoDurationMs: v.optional(v.number()),
 	},
 	handler: async (ctx, args) => {
 		const userId = await requirePaidJournalAccess(ctx);
@@ -161,6 +190,31 @@ export const update = mutation({
 			}
 		}
 
+		let videoId = entry.videoId;
+		let videoUrl = entry.videoUrl;
+		let videoDurationMs = entry.videoDurationMs;
+		if (entry.mode === "video") {
+			if (args.videoId !== undefined && args.videoId !== entry.videoId) {
+				await deleteStorageFile(ctx, entry.videoId);
+				const url = await ctx.storage.getUrl(args.videoId);
+				if (!url) {
+					throw new ConvexError({
+						code: "INVALID_ARGUMENT",
+						message: "Entry video was not found in storage.",
+					});
+				}
+				videoId = args.videoId;
+				videoUrl = url;
+				videoDurationMs = args.videoDurationMs;
+			}
+			if (!videoId) {
+				throw new ConvexError({
+					code: "INVALID_ARGUMENT",
+					message: "A video is required for video entries.",
+				});
+			}
+		}
+
 		await ctx.db.patch(args.id, {
 			title: args.title.trim(),
 			dateMs: args.dateMs,
@@ -171,6 +225,9 @@ export const update = mutation({
 			audioId,
 			audioUrl,
 			audioDurationMs,
+			videoId,
+			videoUrl,
+			videoDurationMs,
 		});
 
 		const now = Date.now();

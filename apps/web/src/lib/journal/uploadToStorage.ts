@@ -13,9 +13,14 @@ export async function uploadToStorage(
 	// `fetch` doesn't expose upload progress in browsers, so XHR is used
 	// here instead purely to drive the progress callback.
 	return new Promise((resolve, reject) => {
+		// Convex's upload endpoint rejects Content-Type values with extra
+		// parameters (e.g. MediaRecorder's `audio/webm;codecs=opus`) as a
+		// malformed header — only the base type/subtype is sent here.
+		const baseContentType = contentType.split(";")[0]?.trim() || contentType;
+
 		const xhr = new XMLHttpRequest();
 		xhr.open("POST", uploadUrl);
-		xhr.setRequestHeader("Content-Type", contentType);
+		xhr.setRequestHeader("Content-Type", baseContentType);
 
 		xhr.upload.onprogress = (event) => {
 			if (event.lengthComputable) {
