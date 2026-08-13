@@ -8,7 +8,7 @@
 		},
 		"name": "Legacy Building",
 		"slug": "legacy-building",
-		"version": "1.0.3",
+		"version": "1.0.5",
 		"icon": "./assets/images/icon.png",
 		"plugins": [
 			"expo-font",
