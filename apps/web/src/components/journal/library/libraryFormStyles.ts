@@ -103,6 +103,9 @@ export const sidebarCoverImageClass = "size-full object-cover";
 export const sidebarCoverFrameClass =
 	"relative sticky top-0 z-[2] w-full shrink-0 overflow-hidden bg-white";
 
+/** Fixed height for the sidebar sticky cover (stays pinned, never collapses). */
+export const SIDEBAR_COVER_HEIGHT_PX = 200;
+
 /** Centered frame for journal entry and cover images. */
 export const journalImageFrameClass =
 	"flex items-center justify-center overflow-hidden";
