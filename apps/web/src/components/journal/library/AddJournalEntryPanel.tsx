@@ -330,11 +330,7 @@ export function AddJournalEntryPanel({
 	/** Video calls it a cover because the clip itself is the entry. */
 	const imageUpload = (
 		<div className={bubbleFieldStack}>
-			<span className={bubbleLabelClass}>
-				{mode === "video"
-					? "Upload cover image (optional)"
-					: "Upload image (optional)"}
-			</span>
+			<span className={bubbleLabelClass}>Upload image (optional)</span>
 			<EntryImageUpload
 				accentColor={accent}
 				imagePreview={imagePreview}
