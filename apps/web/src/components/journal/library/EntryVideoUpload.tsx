@@ -9,6 +9,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 
 import { CameraRecorderDialog } from "@/components/journal/library/CameraRecorderDialog";
+import { CaptureOrDivider } from "@/components/journal/library/CaptureOrDivider";
 import { Button } from "@/components/journal/ui/button";
 
 export const ACCEPTED_VIDEO_TYPES = "video/mp4,video/quicktime,video/x-m4v";
@@ -168,11 +169,7 @@ export function EntryVideoUpload({
 						Record Video
 					</Button>
 
-					<div className="flex w-full items-center gap-3 py-3">
-						<span className="h-px flex-1 bg-[#e9ecef]" />
-						<span className="text-[#6c757d] text-xs">OR</span>
-						<span className="h-px flex-1 bg-[#e9ecef]" />
-					</div>
+					<CaptureOrDivider />
 
 					<Button
 						type="button"
