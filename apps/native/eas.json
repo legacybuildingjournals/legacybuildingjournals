@@ -32,6 +32,7 @@
 			}
 		},
 		"preview": {
+			"autoIncrement": true,
 			"distribution": "internal",
 			"prebuildCommand": "npx expo prebuild --no-install",
 			"android": {
@@ -64,7 +65,7 @@
 		"production": {
 			"ios": {
 				"ascAppId": "6778774585",
-				"ascApiKeyPath": "/Users/umaraurangzeb/AuthKey_ASC.p8",
+				"ascApiKeyPath": "$EAS_SUBMIT_ASC_API_KEY_PATH",
 				"ascApiKeyId": "5R3CNB7NNX",
 				"ascApiKeyIssuerId": "28319d2e-47e6-46a1-984b-dedc8ee47fec"
 			}

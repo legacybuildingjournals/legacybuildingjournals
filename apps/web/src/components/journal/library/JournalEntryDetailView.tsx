@@ -4,16 +4,16 @@ import { brand } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
 import { useQuery } from "convex/react";
 import { ChevronLeft, Pencil, Trash2 } from "lucide-react";
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { DeleteEntryDialog } from "@/components/journal/library/DeleteEntryDialog";
 import { EditJournalEntrySidebarForm } from "@/components/journal/library/EditJournalEntrySidebarForm";
 import { EntryAudioPlayer } from "@/components/journal/library/EntryAudioPlayer";
 import { EntryCoverImage } from "@/components/journal/library/EntryCoverImage";
 import {
+	SIDEBAR_COVER_HEIGHT_PX,
 	sidebarCoverFrameClass,
 	sidebarCoverImageClass,
 } from "@/components/journal/library/libraryFormStyles";
-import { useCollapsingSidebarCover } from "@/components/journal/library/useCollapsingSidebarCover";
 import { Button } from "@/components/journal/ui/button";
 import { convertWebmToMp4 } from "@/lib/journal/convertToMp4";
 import { formatDate } from "@/lib/journal/formatDate";
@@ -63,8 +63,6 @@ export function JournalEntryDetailView({
 }: JournalEntryDetailViewProps) {
 	const [deleteOpen, setDeleteOpen] = useState(false);
 	const [editing, setEditing] = useState(false);
-	const scrollRef = useRef<HTMLDivElement>(null);
-	const coverHeight = useCollapsingSidebarCover(scrollRef, entryId);
 
 	const entry = useQuery(api.journal.entries.queries.getById, { id: entryId });
 
@@ -144,13 +142,12 @@ export function JournalEntryDetailView({
 				style={{ backgroundColor: brand.libraryMint }}
 			>
 				<div
-					ref={scrollRef}
 					className="library-modal-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain"
 					style={{ backgroundColor: brand.libraryMint }}
 				>
 					<div
 						className={sidebarCoverFrameClass}
-						style={{ height: coverHeight }}
+						style={{ height: SIDEBAR_COVER_HEIGHT_PX }}
 					>
 						<EntryCoverImage
 							imageId={enriched.imageId}

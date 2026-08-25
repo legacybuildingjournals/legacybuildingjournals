@@ -25,10 +25,10 @@ import { JournalEntryRow } from "@/components/journal/library/JournalEntryRow";
 import { JournalExportFooter } from "@/components/journal/library/JournalExportFooter";
 import { JournalSidebarWaitOverlay } from "@/components/journal/library/JournalSidebarWaitOverlay";
 import {
+	SIDEBAR_COVER_HEIGHT_PX,
 	sidebarCoverFrameClass,
 	sidebarCoverImageClass,
 } from "@/components/journal/library/libraryFormStyles";
-import { useCollapsingSidebarCover } from "@/components/journal/library/useCollapsingSidebarCover";
 import { Button } from "@/components/journal/ui/button";
 import { Checkbox } from "@/components/journal/ui/checkbox";
 import { downloadJournalPdf } from "@/lib/journal/exportJournalPdf";
@@ -126,10 +126,6 @@ export function JournalDetailSheet({
 	const isExportBusyRef = useRef(isExportBusy);
 	isExportBusyRef.current = isExportBusy;
 	const scrollRef = useRef<HTMLDivElement>(null);
-	const coverHeight = useCollapsingSidebarCover(
-		scrollRef,
-		open && journalId ? journalId : null,
-	);
 
 	const handleClose = useCallback(() => {
 		if (exporting || ordering) return;
@@ -174,6 +170,7 @@ export function JournalDetailSheet({
 		setSelectedEntryId(null);
 		setJournalEditing(false);
 		exitExportMode();
+		scrollRef.current?.scrollTo({ top: 0 });
 	}, [journalId, exitExportMode]);
 
 	useEffect(() => {
@@ -374,7 +371,7 @@ export function JournalDetailSheet({
 										>
 											<div
 												className={sidebarCoverFrameClass}
-												style={{ height: coverHeight }}
+												style={{ height: SIDEBAR_COVER_HEIGHT_PX }}
 											>
 												{isLoading ? (
 													<div className="size-full animate-pulse bg-[#f2f2f2]" />
