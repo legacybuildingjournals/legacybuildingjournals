@@ -343,46 +343,6 @@ export function AddJournalEntryPanel({
 		</div>
 	);
 
-	const journalTypeSelect = (
-		<div className={bubbleFieldStack}>
-			<span className={bubbleLabelClass}>Journal type</span>
-			<Select
-				value={mode === "video" ? "video" : "recording"}
-				onValueChange={(value) => setMode(value as EntryMode)}
-			>
-				<SelectTrigger
-					aria-label="Journal type"
-					className={bubbleSelectTriggerClass(false)}
-				>
-					<SelectValue />
-				</SelectTrigger>
-				<SelectContent
-					position="popper"
-					align="start"
-					sideOffset={6}
-					className={bubbleSelectContentClass}
-				>
-					<SelectItem value="recording" className={bubbleSelectItemClass}>
-						Audio Journal
-					</SelectItem>
-					<SelectItem value="video" className={bubbleSelectItemClass}>
-						Video Journal
-					</SelectItem>
-				</SelectContent>
-			</Select>
-		</div>
-	);
-
-	/** Journal + type sit side by side once a recording medium is in play. */
-	const recordingSelectRow = (
-		<div
-			className={cn("grid w-full grid-cols-1 sm:grid-cols-2", bubbleRowGap24)}
-		>
-			{journalSelect}
-			{journalTypeSelect}
-		</div>
-	);
-
 	return createPortal(
 		<div
 			role="dialog"
@@ -466,9 +426,10 @@ export function AddJournalEntryPanel({
 							</div>
 						</div>
 
+						{journalSelect}
+
 						{mode === "video" ? (
 							<>
-								{recordingSelectRow}
 								<div className={bubbleFieldStack}>
 									<span className={bubbleLabelClass}>Your Video</span>
 									<EntryVideoUpload
@@ -507,12 +468,10 @@ export function AddJournalEntryPanel({
 										aria-invalid={showErrors && bodyInvalid}
 									/>
 								</div>
-								{journalSelect}
 								{imageUpload}
 							</>
 						) : (
 							<>
-								{recordingSelectRow}
 								<div className={bubbleFieldStack}>
 									<AudioRecorderField
 										accentColor={accent}
