@@ -90,3 +90,9 @@ export const infoTitleClass =
 	"font-semibold text-[#212529] text-base leading-6";
 
 export const infoCopyClass = "text-[#6c757d] text-sm leading-5";
+
+/** Square "Upload a file" tile used for the optional entry cover. */
+export const uploadTileClass =
+	"relative flex aspect-square w-full max-w-[370px] cursor-pointer flex-col items-center justify-center gap-3 overflow-hidden rounded-[10px] border bg-white transition-colors";
+
+export const uploadTileLabelClass = "font-medium text-sm leading-5";

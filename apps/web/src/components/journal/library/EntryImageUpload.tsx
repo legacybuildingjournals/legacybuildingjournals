@@ -1,7 +1,8 @@
 import { brand } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
-import { Camera } from "lucide-react";
+import { ImagePlus } from "lucide-react";
 import { useRef } from "react";
+import { uploadTileLabelClass } from "@/components/journal/library/entryFormStyles";
 import {
 	sidebarCoverImageClass,
 	uploadedImageFitClass,
@@ -39,10 +40,12 @@ export function EntryImageUpload({
 				type="button"
 				onClick={() => imageRef.current?.click()}
 				className={cn(
-					"relative flex h-[200px] max-w-full cursor-pointer overflow-hidden rounded-[12px] border bg-white",
-					fullWidth ? "w-full" : "w-[265px]",
-					imagePreview && fullWidth ? "" : "items-center justify-center p-3",
-					invalid ? "border-[#b0200c]" : "border-[#c7c7c7]",
+					"relative flex max-w-full cursor-pointer overflow-hidden rounded-[10px] border bg-white transition-colors",
+					fullWidth
+						? "h-[200px] w-full"
+						: "aspect-square w-full max-w-[370px] flex-col items-center justify-center gap-3",
+					imagePreview && fullWidth ? "" : "p-3",
+					invalid ? "border-[#b0200c]" : "border-[#e9ecef]",
 				)}
 				aria-label="Upload image"
 				aria-invalid={invalid}
@@ -57,12 +60,17 @@ export function EntryImageUpload({
 						}
 					/>
 				) : (
-					<Camera
-						className="size-[30px] shrink-0"
-						style={{ color: iconColor }}
-						strokeWidth={1.75}
-						aria-hidden
-					/>
+					<>
+						<ImagePlus
+							className="size-10 shrink-0"
+							style={{ color: iconColor }}
+							strokeWidth={1.5}
+							aria-hidden
+						/>
+						<span className={uploadTileLabelClass} style={{ color: iconColor }}>
+							Upload a file
+						</span>
+					</>
 				)}
 			</button>
 			<input
