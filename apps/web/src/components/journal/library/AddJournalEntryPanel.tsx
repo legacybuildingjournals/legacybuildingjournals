@@ -423,7 +423,7 @@ export function AddJournalEntryPanel({
 			>
 				<div className="flex flex-col gap-6 px-2 pt-2 pr-2 pb-4">
 					<div className="flex justify-center">
-						<EntryModeTabs value={mode} onChange={setMode} accent={accent} />
+						<EntryModeTabs value={mode} onChange={setMode} />
 					</div>
 
 					<form
