@@ -3,13 +3,13 @@ import type {
 	Doc,
 	Id,
 } from "@legacy-building/backend/convex/_generated/dataModel";
-import { brand, dashboardLayout } from "@legacy-building/ui/lib/brand-journal";
+import { dashboardLayout } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
 import { useMutation, useQuery } from "convex/react";
 import { ChevronDown } from "lucide-react";
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { AudioRecorderField } from "@/components/journal/library/AudioRecorderField";
+import { AudioCaptureCard } from "@/components/journal/library/AudioCaptureCard";
 import { DateField } from "@/components/journal/library/DateField";
 import { EntryImageUpload } from "@/components/journal/library/EntryImageUpload";
 import {
@@ -473,7 +473,8 @@ export function AddJournalEntryPanel({
 						) : (
 							<>
 								<div className={bubbleFieldStack}>
-									<AudioRecorderField
+									<span className={bubbleLabelClass}>Your Recording</span>
+									<AudioCaptureCard
 										accentColor={accent}
 										value={audioFile}
 										onChange={setAudioFile}

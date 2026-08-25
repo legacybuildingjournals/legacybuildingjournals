@@ -45,6 +45,8 @@ type AudioRecorderFieldProps = {
 	/** Called when the user removes the saved recording so they can record again. */
 	onExistingAudioClear?: () => void;
 	invalid?: boolean;
+	/** Begin a recording session as soon as the field mounts. */
+	autoStart?: boolean;
 };
 
 /** Bubble recording row: 40px control, waveform box (max 300px), duration. */
@@ -54,6 +56,7 @@ export function AudioRecorderField({
 	onChange,
 	existingAudioUrl,
 	onExistingAudioClear,
+	autoStart,
 	invalid,
 }: AudioRecorderFieldProps) {
 	const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -286,6 +289,17 @@ export function AudioRecorderField({
 		}, 1000);
 		return () => clearInterval(interval);
 	}, [isRecording]);
+
+	// Mounted by AudioCaptureCard's "Record Audio" button, which has already
+	// taken the user's click. The ref guard keeps a re-render from restarting
+	// a session that is already live.
+	const autoStartedRef = useRef(false);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: startRecording is re-created every render; the ref guard makes a single run the contract
+	useEffect(() => {
+		if (!autoStart || autoStartedRef.current) return;
+		autoStartedRef.current = true;
+		void startRecording();
+	}, [autoStart]);
 
 	// Resolve a local blob URL for saved or newly recorded audio so duration + playback work.
 	useEffect(() => {
