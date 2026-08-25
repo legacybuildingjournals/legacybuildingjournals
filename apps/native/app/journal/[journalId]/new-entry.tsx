@@ -27,9 +27,8 @@ import {
 	type EntryMode,
 	EntryModeTabs,
 } from "@/components/library/entry-mode-tabs";
-import { RecordingMediumSelect } from "@/components/library/recording-medium-select";
+import { MemoryExportNote } from "@/components/library/memory-export-note";
 import { VideoEntryField } from "@/components/library/video-entry-field";
-import { VideoExportNote } from "@/components/library/video-export-note";
 import { parseMonthDayYear } from "@/lib/journal/parse-date";
 import {
 	type PickedEntryImage,
@@ -58,14 +57,12 @@ export default function NewEntryScreen() {
 	const mutationToast = useMutationToast();
 	const { hasPaidAccess, openPaywall } = useJournalPaywall();
 	const [
-		accent,
 		accentForeground,
 		foreground,
 		placeholderColor,
 		dangerColor,
 		warningColor,
 	] = useThemeColor([
-		"accent",
 		"accent-foreground",
 		"foreground",
 		"field-placeholder",
@@ -281,14 +278,13 @@ export default function NewEntryScreen() {
 
 	const isRecordingMode = mode === "recording";
 	const isVideoMode = mode === "video";
-	const showRecordingDetails = isRecordingMode && audio !== null;
 
 	// Both recorded kinds sit on a tinted surface; writing stays on mint. Voice
 	// keeps the amber wash, video gets the red one.
 	const usesWarmSurface = isRecordingMode || isVideoMode;
 	const recordingSurfaceClass = isVideoMode
-		? "bg-danger-soft"
-		: "bg-warning-soft";
+		? "bg-danger-soft/40"
+		: "bg-warning-soft/40";
 	/** Accent of whichever recording medium is active — amber voice, red video. */
 	const recordingAccent = isVideoMode ? dangerColor : warningColor;
 
@@ -335,11 +331,11 @@ export default function NewEntryScreen() {
 		Alert.alert("Edit thumbnail", undefined, options);
 	}, [chooseCoverManually, handlePickFromLibrary, handleTakePhoto, video]);
 
-	const videoCoverSection = (
+	const renderCoverImageSection = (color: string, promptText: string) => (
 		<View className="gap-1.5">
 			<Text className="font-semibold text-base text-foreground">
 				Cover Image{" "}
-				<Text className="font-normal text-sm" style={{ color: dangerColor }}>
+				<Text className="font-normal text-sm" style={{ color }}>
 					(optional)
 				</Text>
 			</Text>
@@ -365,10 +361,10 @@ export default function NewEntryScreen() {
 			) : (
 				<View
 					className="items-center gap-3 rounded-2xl border-2 border-dashed px-4 py-6"
-					style={{ borderColor: dangerColor }}
+					style={{ borderColor: color }}
 				>
 					<Text className="text-center text-base text-muted-foreground">
-						Attach a video thumbnail of your choice
+						{promptText}
 					</Text>
 
 					<Pressable
@@ -376,7 +372,7 @@ export default function NewEntryScreen() {
 						accessibilityRole="button"
 						accessibilityLabel="Add image"
 						className="w-full flex-row items-center justify-center gap-2 rounded-xl py-3.5 active:opacity-90"
-						style={{ backgroundColor: dangerColor }}
+						style={{ backgroundColor: color }}
 					>
 						<Ionicons name="camera" size={19} color={accentForeground} />
 						<Text
@@ -398,13 +394,10 @@ export default function NewEntryScreen() {
 						accessibilityRole="button"
 						accessibilityLabel="Choose from gallery"
 						className="w-full flex-row items-center justify-center gap-2 rounded-xl border bg-background py-3.5 active:opacity-90"
-						style={{ borderColor: dangerColor }}
+						style={{ borderColor: color }}
 					>
-						<Ionicons name="images-outline" size={19} color={dangerColor} />
-						<Text
-							className="font-semibold text-base"
-							style={{ color: dangerColor }}
-						>
+						<Ionicons name="images-outline" size={19} color={color} />
+						<Text className="font-semibold text-base" style={{ color }}>
 							Choose From Gallery
 						</Text>
 					</Pressable>
@@ -487,13 +480,13 @@ export default function NewEntryScreen() {
 						</Text>
 					</Pressable>
 
-					{isRecordingMode || isVideoMode ? (
-						<Text className="font-semibold text-base text-primary-foreground">
-							{isVideoMode ? "Video Entry" : "Audio Entries"}
-						</Text>
-					) : (
-						<View />
-					)}
+					<Text className="font-semibold text-base text-primary-foreground">
+						{isVideoMode
+							? "Video Entry"
+							: isRecordingMode
+								? "Recording Entry"
+								: "Writing Entry"}
+					</Text>
 
 					<Pressable
 						onPress={() => void submit()}
@@ -523,24 +516,14 @@ export default function NewEntryScreen() {
 					contentContainerClassName="px-4 pt-6 pb-12 gap-5"
 					keyboardShouldPersistTaps="handled"
 				>
-					<EntryModeTabs
-						value={mode}
-						onChange={setMode}
-						accent={recordingAccent}
-					/>
-
-					{isRecordingMode || isVideoMode ? (
-						<RecordingMediumSelect
-							value={isVideoMode ? "video" : "recording"}
-							onChange={setMode}
-							accent={recordingAccent}
-							disabled={submitting}
-						/>
-					) : null}
+					<EntryModeTabs value={mode} onChange={setMode} />
 
 					{isVideoMode ? (
 						<>
-							{videoCoverSection}
+							{renderCoverImageSection(
+								dangerColor,
+								"Attach a video thumbnail of your choice",
+							)}
 
 							<View className="gap-1.5">
 								<Text className="font-semibold text-base text-foreground">
@@ -582,7 +565,7 @@ export default function NewEntryScreen() {
 								/>
 							</View>
 
-							<VideoExportNote />
+							<MemoryExportNote kind="video" />
 
 							{showErrors && video && (!title.trim() || dateMs === null) ? (
 								<Text className="text-center text-destructive text-sm">
@@ -653,64 +636,68 @@ export default function NewEntryScreen() {
 							</View>
 						</>
 					) : (
-						<View className="gap-5">
-							<AudioRecorderField
-								value={audio}
-								onChange={setAudio}
-								disabled={submitting}
-							/>
-
-							{showRecordingDetails ? (
-								<>
-									<View className="gap-1.5">
-										<Text className="font-semibold text-base text-foreground">
-											Title
-										</Text>
-										<TextInput
-											value={title}
-											onChangeText={setTitle}
-											placeholder=""
-											placeholderTextColor={placeholderColor}
-											className={`h-14 rounded-2xl border bg-background px-4 text-base text-foreground ${
-												showErrors && !title.trim()
-													? "border-destructive"
-													: "border-border"
-											}`}
-										/>
-									</View>
-
-									<View className="gap-1.5">
-										<Text className="font-semibold text-base text-foreground">
-											Start Date
-										</Text>
-										<DateField
-											value={dateInput}
-											onChange={setDateInput}
-											placeholder="Select date"
-											invalid={showErrors && dateMs === null}
-										/>
-									</View>
-
-									<View className="gap-1.5">
-										<Text className="font-semibold text-base text-foreground">
-											Photo{" "}
-											<Text className="font-normal text-muted-foreground text-sm">
-												(optional)
-											</Text>
-										</Text>
-										{imagePickerSection}
-									</View>
-
-									<Text className="text-center text-muted-foreground text-sm">
-										Tap Create above when you&apos;re ready to save.
-									</Text>
-								</>
-							) : (
-								<Text className="text-center text-sm" style={{ color: accent }}>
-									Tap the microphone to start. Tap again to stop.
-								</Text>
+						<>
+							{renderCoverImageSection(
+								recordingAccent,
+								"Attach a photo of your choice",
 							)}
-						</View>
+
+							<View className="gap-1.5">
+								<Text className="font-semibold text-base text-foreground">
+									Title
+								</Text>
+								<TextInput
+									value={title}
+									onChangeText={setTitle}
+									placeholder="Give your journal a title"
+									placeholderTextColor={placeholderColor}
+									className={`h-14 rounded-2xl border bg-background px-4 text-base text-foreground ${
+										showErrors && !title.trim()
+											? "border-destructive"
+											: "border-border"
+									}`}
+								/>
+							</View>
+
+							<View className="gap-1.5">
+								<Text className="font-semibold text-base text-foreground">
+									Date
+								</Text>
+								<DateField
+									value={dateInput}
+									onChange={setDateInput}
+									placeholder="Select Date"
+									invalid={showErrors && dateMs === null}
+								/>
+							</View>
+
+							<View className="gap-1.5">
+								<Text className="font-semibold text-base text-foreground">
+									Your Recording
+								</Text>
+								<AudioRecorderField
+									value={audio}
+									onChange={setAudio}
+									disabled={submitting}
+								/>
+								{!audio ? (
+									<Text
+										className="text-center text-sm"
+										style={{ color: recordingAccent }}
+									>
+										Tap the microphone to start. Tap again to stop.
+									</Text>
+								) : null}
+							</View>
+
+							<MemoryExportNote kind="recording" />
+
+							{showErrors && audio && (!title.trim() || dateMs === null) ? (
+								<Text className="text-center text-destructive text-sm">
+									Please add a title and date for this recording.
+								</Text>
+							) : null}
+						</>
 					)}
 
 					{showErrors &&
@@ -718,15 +705,6 @@ export default function NewEntryScreen() {
 					(!title.trim() || dateMs === null || !body.trim()) ? (
 						<Text className="text-center text-destructive text-sm">
 							Please fill in the title, start date, and entry log.
-						</Text>
-					) : null}
-
-					{showErrors &&
-					mode === "recording" &&
-					audio &&
-					(!title.trim() || dateMs === null) ? (
-						<Text className="text-center text-destructive text-sm">
-							Please add a title and start date for this recording.
 						</Text>
 					) : null}
 				</ScrollView>

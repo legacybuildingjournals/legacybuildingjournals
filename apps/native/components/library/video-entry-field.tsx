@@ -100,7 +100,7 @@ export function VideoEntryField({
 
 	if (value) {
 		return (
-			<View className="gap-3 rounded-2xl border border-danger bg-danger-soft p-4">
+			<View className="gap-3 rounded-2xl border border-danger bg-danger-soft/40 p-4">
 				<View className="flex-row items-center gap-3">
 					<View className="size-11 items-center justify-center rounded-full bg-danger/20">
 						<Ionicons name="videocam" size={22} color={danger} />
@@ -158,7 +158,7 @@ export function VideoEntryField({
 	}
 
 	return (
-		<View className="items-center gap-3 rounded-2xl border border-danger bg-danger-soft px-4 py-6">
+		<View className="items-center gap-3 rounded-2xl border border-danger bg-danger-soft/40 px-4 py-6">
 			<View className="size-12 items-center justify-center rounded-full bg-danger/20">
 				<Ionicons name="videocam" size={24} color={danger} />
 			</View>
