@@ -8,6 +8,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 
 import { JournalListItem } from "@/components/library/journal-list-item";
 import { LibraryEmptyState } from "@/components/library/library-empty-state";
+import { ShelfLedge } from "@/components/library/shelf-ledge";
 import { StoryTabs } from "@/components/library/story-tabs";
 import { DashboardScreenHeader } from "@/components/navigation/dashboard-screen-header";
 import { useNativeCurrentUser } from "@/hooks/use-native-current-user";
@@ -40,9 +41,11 @@ export default function LibraryScreen() {
 	const hasJournals = journals !== undefined && journals.length > 0;
 
 	return (
-		<View className="flex-1 bg-secondary/30">
+		<View className="flex-1 bg-library-canvas">
 			<DashboardScreenHeader title={`${displayName}'s Library`} />
 
+			{/* Plain warm-cream ground: shelves now render per-card (ShelfLedge)
+			    rather than being baked into a background photo, matching web. */}
 			<ScrollView
 				className="flex-1"
 				contentContainerClassName="grow px-4 py-6 gap-4"
@@ -50,7 +53,7 @@ export default function LibraryScreen() {
 			>
 				<StoryTabs value={storyType} onChange={setStoryType} />
 
-				<View className="mt-2 flex-1 gap-4">
+				<View className="mt-2 flex-1 gap-6">
 					{journals === undefined ? (
 						<View className="items-center justify-center py-12">
 							<Spinner size="lg" />
@@ -62,24 +65,26 @@ export default function LibraryScreen() {
 						/>
 					) : (
 						journals.map((journal) => (
-							<JournalListItem
-								key={journal._id}
-								title={journal.title}
-								dateMs={journal.dateMs}
-								coverImageUrl={journal.coverImageUrl}
-								onPress={() =>
-									router.push({
-										pathname: "/journal/[journalId]",
-										params: { journalId: journal._id },
-									})
-								}
-								onAddEntry={() =>
-									router.push({
-										pathname: "/journal/[journalId]/new-entry",
-										params: { journalId: journal._id },
-									})
-								}
-							/>
+							<View key={journal._id}>
+								<JournalListItem
+									title={journal.title}
+									dateMs={journal.dateMs}
+									coverImageUrl={journal.coverImageUrl}
+									onPress={() =>
+										router.push({
+											pathname: "/journal/[journalId]",
+											params: { journalId: journal._id },
+										})
+									}
+									onAddEntry={() =>
+										router.push({
+											pathname: "/journal/[journalId]/new-entry",
+											params: { journalId: journal._id },
+										})
+									}
+								/>
+								<ShelfLedge />
+							</View>
 						))
 					)}
 				</View>

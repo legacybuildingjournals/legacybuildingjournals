@@ -31,6 +31,10 @@
 			   left unset here until recording-mode icons started using it —
 			   near-black on amber read as broken. Match accent-foreground. */
 			--color-warning-foreground: oklch(0.984 0.014 180.72);
+			/* Warm cream backdrop for the journal library screen — stands in for
+			   the photographed library wall (web uses JournalWallDesktop) until a
+			   portrait wall-only image ships. Native-only for now. */
+			--color-library-canvas: oklch(0.955 0.012 78);
 		}
 
 		@variant dark {
@@ -55,6 +59,8 @@
 			--focus: oklch(0.437 0.078 188.216);
 			--success: oklch(0.437 0.078 188.216);
 			--color-warning-foreground: oklch(0.984 0.014 180.72);
+			/* Warm-tinted dark ground for the library screen (see light variant). */
+			--color-library-canvas: oklch(0.17 0.008 78);
 		}
 	}
 }

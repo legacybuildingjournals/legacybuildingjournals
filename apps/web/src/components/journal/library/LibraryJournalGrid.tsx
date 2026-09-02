@@ -30,6 +30,28 @@ import { toastMutationError } from "@/lib/journal/toast";
 
 type EnrichedJournal = Doc<"journals"> & { coverImageUrl?: string };
 
+/**
+ * Bookshelf rhythm. Every card is locked to CARD_HEIGHT and every grid row to
+ * CARD_HEIGHT + ROW_GAP, so a shelf ledge — drawn to match the painted-cream
+ * shelves in the library background photo — can be repeated as the grid
+ * background exactly under each row of cards, at any width or scroll position.
+ */
+const CARD_HEIGHT = 224;
+const ROW_GAP = 92;
+const SHELF_PITCH = CARD_HEIGHT + ROW_GAP;
+const SHELF_LEDGE = `linear-gradient(to bottom,
+	rgba(0,0,0,0) 0,
+	rgba(0,0,0,0) ${CARD_HEIGHT - 1}px,
+	rgba(255,255,255,0.75) ${CARD_HEIGHT}px,
+	#f4ede4 ${CARD_HEIGHT + 2}px,
+	#ede2d4 ${CARD_HEIGHT + 9}px,
+	#dfccb8 ${CARD_HEIGHT + 12}px,
+	#cdb79f ${CARD_HEIGHT + 20}px,
+	rgba(120,96,68,0.28) ${CARD_HEIGHT + 23}px,
+	rgba(120,96,68,0.12) ${CARD_HEIGHT + 34}px,
+	rgba(120,96,68,0) ${CARD_HEIGHT + 52}px,
+	rgba(0,0,0,0) ${SHELF_PITCH}px)`;
+
 type LibraryJournalGridProps = {
 	storyTab: StoryTab;
 	journals: EnrichedJournal[];
@@ -147,7 +169,16 @@ export function LibraryJournalGrid({
 				onDragEnd={handleDragEnd}
 			>
 				<SortableContext items={orderedIds} strategy={rectSortingStrategy}>
-					<div className="grid w-full grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+					<div
+						className="grid w-full grid-cols-1 gap-x-5 pb-16 sm:grid-cols-2 lg:grid-cols-3"
+						style={{
+							gridAutoRows: `${CARD_HEIGHT}px`,
+							rowGap: `${ROW_GAP}px`,
+							backgroundImage: SHELF_LEDGE,
+							backgroundSize: `100% ${SHELF_PITCH}px`,
+							backgroundRepeat: "repeat-y",
+						}}
+					>
 						{sortedJournals.map((journal) => (
 							<SortableJournalCard
 								key={journal._id}

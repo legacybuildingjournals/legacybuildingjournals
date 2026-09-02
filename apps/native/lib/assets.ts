@@ -2,6 +2,8 @@
 export const nativeImages = {
 	/** Vertical stacked wordmark (book icon above "LEGACY BUILDING"), matches the splash screen. */
 	verticalLogo: require("../assets/images/logo-stacked.png"),
+	/** Warm textured backdrop for the journal library screen. */
+	libraryBackground: require("../assets/images/LibraryBackground.png"),
 } as const;
 
 /** Remote image URLs for native screens (not design tokens — use global.css for colors). */

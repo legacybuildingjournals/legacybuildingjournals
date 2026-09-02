@@ -130,7 +130,16 @@ export function DashboardLibraryPage() {
 
 	return (
 		<>
-			<main className="mx-auto mt-20 flex w-full max-w-[1200px] flex-1 flex-col gap-5 px-4 py-4 sm:px-6 md:px-10 md:py-5">
+			<div
+				aria-hidden
+				className="pointer-events-none fixed inset-0 z-0 bg-center bg-cover"
+				style={{
+					backgroundImage:
+						'url("/static/icon_libraries/JournalWallDesktop.webp")',
+				}}
+			/>
+
+			<main className="relative z-10 mx-auto mt-20 flex w-full max-w-[1200px] flex-1 flex-col gap-5 px-4 py-4 sm:px-6 md:px-10 md:py-5">
 				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 					<LibraryStoryTabs value={storyTab} onChange={handleStoryTabChange} />
 					<Button
@@ -162,7 +171,9 @@ export function DashboardLibraryPage() {
 				)}
 			</main>
 
-			<DashboardFooter />
+			<div className="relative z-10">
+				<DashboardFooter />
+			</div>
 
 			<CreateJournalDialog
 				open={createOpen}

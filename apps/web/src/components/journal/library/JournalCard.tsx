@@ -20,16 +20,16 @@ export function JournalCard({ journal, onOpen, onAddEntry }: JournalCardProps) {
 	return (
 		<article
 			className={cn(
-				"flex w-full max-w-[500px] flex-col",
+				"flex h-[224px] w-full max-w-[500px] flex-col",
 				journalCardShellClass,
 			)}
 		>
 			<button
 				type="button"
 				onClick={onOpen}
-				className="flex cursor-pointer flex-col text-left"
+				className="flex min-h-0 flex-1 cursor-pointer flex-col text-left"
 			>
-				<div className={cn(journalCardMediaWellClass, "h-[150px]")}>
+				<div className={cn(journalCardMediaWellClass, "min-h-0 flex-1")}>
 					<JournalCoverImage
 						coverImageId={journal.coverImageId}
 						coverImageUrl={journal.coverImageUrl}
