@@ -3,13 +3,13 @@ import type {
 	Doc,
 	Id,
 } from "@legacy-building/backend/convex/_generated/dataModel";
-import { brand, dashboardLayout } from "@legacy-building/ui/lib/brand-journal";
+import { dashboardLayout } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
 import { useMutation, useQuery } from "convex/react";
 import { ChevronDown } from "lucide-react";
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { AudioRecorderField } from "@/components/journal/library/AudioRecorderField";
+import { AudioCaptureCard } from "@/components/journal/library/AudioCaptureCard";
 import { DateField } from "@/components/journal/library/DateField";
 import { EntryImageUpload } from "@/components/journal/library/EntryImageUpload";
 import {
@@ -330,56 +330,12 @@ export function AddJournalEntryPanel({
 	/** Video calls it a cover because the clip itself is the entry. */
 	const imageUpload = (
 		<div className={bubbleFieldStack}>
-			<span className={bubbleLabelClass}>
-				{mode === "video"
-					? "Upload cover image (optional)"
-					: "Upload image (optional)"}
-			</span>
+			<span className={bubbleLabelClass}>Upload image (optional)</span>
 			<EntryImageUpload
 				accentColor={accent}
 				imagePreview={imagePreview}
 				onFileChange={handleImageChange}
 			/>
-		</div>
-	);
-
-	const journalTypeSelect = (
-		<div className={bubbleFieldStack}>
-			<span className={bubbleLabelClass}>Journal type</span>
-			<Select
-				value={mode === "video" ? "video" : "recording"}
-				onValueChange={(value) => setMode(value as EntryMode)}
-			>
-				<SelectTrigger
-					aria-label="Journal type"
-					className={bubbleSelectTriggerClass(false)}
-				>
-					<SelectValue />
-				</SelectTrigger>
-				<SelectContent
-					position="popper"
-					align="start"
-					sideOffset={6}
-					className={bubbleSelectContentClass}
-				>
-					<SelectItem value="recording" className={bubbleSelectItemClass}>
-						Audio Journal
-					</SelectItem>
-					<SelectItem value="video" className={bubbleSelectItemClass}>
-						Video Journal
-					</SelectItem>
-				</SelectContent>
-			</Select>
-		</div>
-	);
-
-	/** Journal + type sit side by side once a recording medium is in play. */
-	const recordingSelectRow = (
-		<div
-			className={cn("grid w-full grid-cols-1 sm:grid-cols-2", bubbleRowGap24)}
-		>
-			{journalSelect}
-			{journalTypeSelect}
 		</div>
 	);
 
@@ -423,7 +379,7 @@ export function AddJournalEntryPanel({
 			>
 				<div className="flex flex-col gap-6 px-2 pt-2 pr-2 pb-4">
 					<div className="flex justify-center">
-						<EntryModeTabs value={mode} onChange={setMode} accent={accent} />
+						<EntryModeTabs value={mode} onChange={setMode} />
 					</div>
 
 					<form
@@ -466,9 +422,10 @@ export function AddJournalEntryPanel({
 							</div>
 						</div>
 
+						{journalSelect}
+
 						{mode === "video" ? (
 							<>
-								{recordingSelectRow}
 								<div className={bubbleFieldStack}>
 									<span className={bubbleLabelClass}>Your Video</span>
 									<EntryVideoUpload
@@ -507,14 +464,13 @@ export function AddJournalEntryPanel({
 										aria-invalid={showErrors && bodyInvalid}
 									/>
 								</div>
-								{journalSelect}
 								{imageUpload}
 							</>
 						) : (
 							<>
-								{recordingSelectRow}
 								<div className={bubbleFieldStack}>
-									<AudioRecorderField
+									<span className={bubbleLabelClass}>Your Recording</span>
+									<AudioCaptureCard
 										accentColor={accent}
 										value={audioFile}
 										onChange={setAudioFile}

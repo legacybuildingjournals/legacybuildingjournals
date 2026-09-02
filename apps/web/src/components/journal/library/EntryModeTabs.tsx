@@ -1,63 +1,80 @@
 import { brand } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
+import { type LucideIcon, Mic, Video } from "lucide-react";
+import { WritingJournalIcon } from "@/components/journal/library/WritingJournalIcon";
 
 export type EntryMode = "writing" | "recording" | "video";
 
 type EntryModeTabsProps = {
 	value: EntryMode;
 	onChange: (mode: EntryMode) => void;
-	/**
-	 * Fill for the active Recording tab. Audio and video are both "recording"
-	 * here — which one is chosen shows in the Journal type select, not the tab —
-	 * so the tab takes whichever accent the current medium owns.
-	 */
+};
+
+type ModeTab = {
+	value: EntryMode;
+	label: string;
+	Icon: LucideIcon | null;
 	accent: string;
 };
 
-const tabClass =
-	"min-w-[150px] cursor-pointer rounded-[8px] px-6 py-2.5 text-center font-bold text-sm leading-5 transition-colors";
+/** Each medium owns an accent: teal writing, amber audio, red video. */
+const MODE_TABS: readonly ModeTab[] = [
+	{
+		value: "writing",
+		label: "Writing Journal",
+		// Writing uses the supplied quill mark rather than a lucide icon.
+		Icon: null,
+		accent: brand.primary,
+	},
+	{
+		value: "recording",
+		label: "Recording Journal",
+		Icon: Mic,
+		accent: brand.alert,
+	},
+	{ value: "video", label: "Video Journal", Icon: Video, accent: brand.video },
+];
 
 /**
- * Writing | Recording switcher.
+ * Writing | Recording | Video switcher.
  *
- * Two tabs rather than three: video is a kind of recording, picked from the
- * Journal type select once Recording is active.
+ * Three tabs rather than two: video used to hide behind a "Journal type"
+ * select once Recording was active, which buried a top-level choice.
  */
-export function EntryModeTabs({ value, onChange, accent }: EntryModeTabsProps) {
-	const isWriting = value === "writing";
-
+export function EntryModeTabs({ value, onChange }: EntryModeTabsProps) {
 	return (
 		<div
-			className="inline-flex rounded-[12px] border border-[#e9ecef] bg-white p-1 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+			className="inline-flex w-full max-w-[760px] rounded-[12px] border border-[#e9ecef] bg-white p-1 shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
 			role="tablist"
 			aria-label="Entry mode"
 		>
-			<button
-				type="button"
-				role="tab"
-				aria-selected={isWriting}
-				onClick={() => onChange("writing")}
-				className={cn(tabClass, isWriting && "text-white")}
-				style={
-					isWriting
-						? { backgroundColor: brand.primary }
-						: { color: brand.primary }
-				}
-			>
-				Writing Journal
-			</button>
-
-			<button
-				type="button"
-				role="tab"
-				aria-selected={!isWriting}
-				// Coming from Writing there is no medium yet, so default to audio.
-				onClick={() => onChange(value === "video" ? "video" : "recording")}
-				className={cn(tabClass, !isWriting ? "text-white" : "text-[#6c757d]")}
-				style={!isWriting ? { backgroundColor: accent } : undefined}
-			>
-				Recording Journal
-			</button>
+			{MODE_TABS.map(({ value: mode, label, Icon, accent }) => {
+				const active = value === mode;
+				return (
+					<button
+						key={mode}
+						type="button"
+						role="tab"
+						aria-selected={active}
+						onClick={() => onChange(mode)}
+						className={cn(
+							"flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[8px] px-2 py-2.5 text-center font-bold text-xs leading-5 transition-colors sm:gap-2 sm:px-5 sm:text-sm",
+							active && "text-white",
+						)}
+						style={active ? { backgroundColor: accent } : { color: accent }}
+					>
+						{Icon ? (
+							<Icon className="size-4 shrink-0" strokeWidth={2} aria-hidden />
+						) : (
+							<WritingJournalIcon
+								className="size-3.5 shrink-0"
+								color={active ? "#ffffff" : brand.primary}
+							/>
+						)}
+						{label}
+					</button>
+				);
+			})}
 		</div>
 	);
 }
