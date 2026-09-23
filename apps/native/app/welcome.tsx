@@ -1,7 +1,18 @@
 import { useUser } from "@clerk/expo";
 import { api } from "@legacy-building/backend/convex/_generated/api";
+import {
+	type AnswerState,
+	applyAnswer,
+	EMPTY_ANSWER_STATE,
+	isRecipient,
+	journalTypeForRecipient,
+	questionsFor,
+	RECIPIENT_QUESTION,
+	type Recipient,
+} from "@legacy-building/backend/convex/onboarding/questions";
+import { resultFor } from "@legacy-building/backend/convex/onboarding/results";
 import { isValidInviteCodeFormat } from "@legacy-building/backend/convex/referrals/codes";
-import { useConvexAuth, useMutation } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
@@ -9,6 +20,8 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { AuthField } from "@/components/auth/auth-field";
 import { AuthPrimaryButton } from "@/components/auth/auth-primary-button";
 import { OnboardingBackground } from "@/components/welcome/onboarding-background";
+import { OnboardingQuestionStep } from "@/components/welcome/onboarding-question-step";
+import { OnboardingResultStep } from "@/components/welcome/onboarding-result-step";
 import { WelcomeVideo } from "@/components/welcome/welcome-video";
 import { useNativeCurrentUser } from "@/hooks/use-native-current-user";
 import { useMutationToast } from "@/lib/mutation-toast";
@@ -17,7 +30,7 @@ import {
 	readPendingInviteCode,
 } from "@/lib/referrals/pending-invite";
 
-type Step = "username" | "video";
+type Step = "username" | "video" | "questions" | "result";
 
 /** Prefer the stored Convex name; fall back to the Clerk display name. */
 function defaultUsername(
@@ -45,9 +58,20 @@ export default function WelcomeScreen() {
 	const claimInvite = useMutation(api.referrals.mutations.claimInvite);
 	const updateProfile = useMutation(api.user.mutations.updateProfile);
 	const completeWelcome = useMutation(api.user.mutations.completeWelcome);
+	const claimOnboarding = useMutation(api.onboarding.mutations.claimOnboarding);
+	const submitOnboarding = useMutation(api.onboarding.mutations.submitInApp);
+	// Non-null when this person already answered the questionnaire through the
+	// external form; their answers are linked by email during sign-up.
+	const existingResponse = useQuery(
+		api.onboarding.queries.myResponse,
+		isAuthenticated ? {} : "skip",
+	);
 	const toast = useMutationToast();
 
 	const [step, setStep] = useState<Step>("username");
+	const [answerState, setAnswerState] =
+		useState<AnswerState>(EMPTY_ANSWER_STATE);
+	const [questionIndex, setQuestionIndex] = useState(0);
 	const [username, setUsername] = useState("");
 	const [usernameTouched, setUsernameTouched] = useState(false);
 	const [videoCompleted, setVideoCompleted] = useState(false);
@@ -120,6 +144,15 @@ export default function WelcomeScreen() {
 				}
 			}
 
+			try {
+				// Links answers from the external form, matched on this account's
+				// email. Like the invite claim above, a miss is normal and must
+				// never block sign-up — it just means they answer the questions here.
+				await claimOnboarding({});
+			} catch {
+				// Ignored for the same reason.
+			}
+
 			setStep("video");
 		} catch (err) {
 			toast.error(err, "Could not save your username. Please try again.");
@@ -128,16 +161,89 @@ export default function WelcomeScreen() {
 		}
 	};
 
-	const handleFinish = async () => {
+	/**
+	 * Marks onboarding done and leaves the flow, landing on the library shelf
+	 * that matches who they said the journal is for — My Story for "myself",
+	 * Their Story for everyone else.
+	 */
+	const finishWelcome = async (recipient?: Recipient) => {
 		setSaving(true);
 		try {
 			await completeWelcome({});
+			if (recipient) {
+				router.replace({
+					pathname: "/(tabs)/library",
+					params: { type: journalTypeForRecipient(recipient) },
+				});
+				return;
+			}
 			router.replace("/(tabs)");
 		} catch (err) {
 			toast.error(err, "Could not continue. Please try again.");
 		} finally {
 			setSaving(false);
 		}
+	};
+
+	/** After the video: skip the questions if they already answered externally. */
+	const handleVideoContinue = () => {
+		if (existingResponse) {
+			// Their recipient came from the external form, so honour it here too.
+			void finishWelcome(
+				isRecipient(existingResponse.recipient)
+					? existingResponse.recipient
+					: undefined,
+			);
+			return;
+		}
+		setStep("questions");
+	};
+
+	const questions = answerState.recipient
+		? questionsFor(answerState.recipient)
+		: [RECIPIENT_QUESTION];
+	const currentQuestion = questions[questionIndex] ?? RECIPIENT_QUESTION;
+
+	const handleSelectOption = async (optionId: string) => {
+		const next = applyAnswer(answerState, currentQuestion.id, optionId);
+		setAnswerState(next);
+
+		// Changing Q1 rebuilds the question set, so re-read it here rather than
+		// trusting the list rendered for the previous recipient.
+		const nextQuestions = next.recipient
+			? questionsFor(next.recipient)
+			: [RECIPIENT_QUESTION];
+
+		if (questionIndex < nextQuestions.length - 1) {
+			setQuestionIndex(questionIndex + 1);
+			return;
+		}
+
+		if (!next.recipient) return;
+		setSaving(true);
+		try {
+			await submitOnboarding({
+				recipient: next.recipient,
+				answers: Object.entries(next.answers).map(([questionId, id]) => ({
+					questionId,
+					optionId: id,
+				})),
+				source: "ios",
+			});
+			setStep("result");
+		} catch (err) {
+			toast.error(err, "Could not save your answers. Please try again.");
+		} finally {
+			setSaving(false);
+		}
+	};
+
+	const handleBack = () => {
+		if (questionIndex === 0) {
+			setStep("video");
+			return;
+		}
+		setQuestionIndex(questionIndex - 1);
 	};
 
 	// Wait for both the Convex user query and the Convex auth token. Showing the
@@ -214,6 +320,29 @@ export default function WelcomeScreen() {
 		);
 	}
 
+	if (step === "questions") {
+		return (
+			<OnboardingQuestionStep
+				question={currentQuestion}
+				index={questionIndex + 1}
+				selectedOptionId={answerState.answers[currentQuestion.id]}
+				busy={saving}
+				onSelect={(optionId) => void handleSelectOption(optionId)}
+				onBack={handleBack}
+			/>
+		);
+	}
+
+	if (step === "result" && answerState.recipient) {
+		return (
+			<OnboardingResultStep
+				result={resultFor(answerState.recipient, answerState.answers)}
+				saving={saving}
+				onContinue={() => void finishWelcome(answerState.recipient)}
+			/>
+		);
+	}
+
 	return (
 		<OnboardingBackground>
 			<View className="flex-1 justify-center gap-8">
@@ -225,7 +354,7 @@ export default function WelcomeScreen() {
 
 				<AuthPrimaryButton
 					label={videoCompleted ? "Let's Go!" : "Watch video to continue"}
-					onPress={() => void handleFinish()}
+					onPress={handleVideoContinue}
 					disabled={!videoCompleted}
 					loading={saving}
 				/>

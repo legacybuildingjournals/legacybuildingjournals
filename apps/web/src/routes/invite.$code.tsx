@@ -2,6 +2,7 @@ import { useAuth } from "@clerk/react";
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import { normalizeInviteCode } from "@legacy-building/backend/convex/referrals/codes";
 import { brand } from "@legacy-building/ui/lib/brand-journal";
+import { detectVisitorPlatform } from "@legacy-building/ui/lib/store-links";
 import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { useEffect, useMemo } from "react";
@@ -9,7 +10,6 @@ import { Button } from "@/components/journal/ui/button";
 import Loader from "@/components/loader";
 import { InviteLandingPage } from "@/features/referrals/InviteLandingPage";
 import { storePendingInviteCode } from "@/lib/referrals/inviteCodeStorage";
-import { detectVisitorPlatform } from "@/lib/referrals/storeLinks";
 import { ROUTES } from "@/lib/routes";
 
 export const Route = createFileRoute("/invite/$code")({

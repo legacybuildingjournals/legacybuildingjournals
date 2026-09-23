@@ -116,12 +116,6 @@ export function inviteShareMessage(link: string): string {
 	return `Join me on Legacy Building — preserve your family's stories before they're lost.\n\n${link}`;
 }
 
-/** Store listings, used by the share sheet. */
-export const APP_STORE_URL = "https://apps.apple.com/app/id6778774585";
-
-/**
- * Android is in closed testing, so a new invitee must join the test before the
- * normal listing resolves for them. Swap to the plain listing once public.
- */
-export const PLAY_STORE_URL =
-	"https://play.google.com/apps/testing/com.legacybuildingjournals.app";
+// Store URLs used to be duplicated here and drifted out of sync with the web
+// copies. They now live in `@legacy-building/ui/lib/store-links`; import from
+// there when the share sheet needs them.

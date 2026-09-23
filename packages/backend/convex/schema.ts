@@ -254,4 +254,40 @@ export default defineSchema({
 	})
 		.index("by_journalId", ["journalId"])
 		.index("by_userId", ["userId"]),
+
+	/**
+	 * Answers to the onboarding questionnaire, written by either entry point —
+	 * in-app after sign-up, or the external form filled in before the person has
+	 * an account. Kept in its own table rather than on `users` precisely because
+	 * an external response exists before any user row does.
+	 *
+	 * A row is "linked" once `clerkId` is set. Until then it is claimable: by
+	 * `token` (carried through the web continuation link, and authoritative even
+	 * when the emails differ) or by `email` (the only thing that survives the
+	 * App Store round trip). Unclaimed rows are harmless if never matched.
+	 */
+	onboardingResponses: defineTable({
+		/** High-entropy claim token handed back to the external form. */
+		token: v.string(),
+		/** Lowercased. Absent only in the unlikely event an in-app user has none. */
+		email: v.optional(v.string()),
+		/** Clerk id of the owner once claimed; absent while unlinked. */
+		clerkId: v.optional(v.string()),
+		source: v.union(
+			v.literal("external"),
+			v.literal("web"),
+			v.literal("ios"),
+			v.literal("android"),
+		),
+		/** Q1's answer — selects which wording variant the user saw. */
+		recipient: v.string(),
+		answers: v.array(
+			v.object({ questionId: v.string(), optionId: v.string() }),
+		),
+		completedAt: v.number(),
+		linkedAt: v.optional(v.number()),
+	})
+		.index("by_token", ["token"])
+		.index("by_email", ["email"])
+		.index("by_clerk_id", ["clerkId"]),
 });

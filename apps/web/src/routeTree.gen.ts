@@ -15,6 +15,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SsoCallbackRouteImport } from './routes/sso-callback'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PreapponboardingRouteImport } from './routes/preapponboarding'
 import { Route as MyStoryPdfRouteImport } from './routes/my-story-pdf'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
@@ -60,6 +61,11 @@ const SignupRoute = SignupRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PreapponboardingRoute = PreapponboardingRouteImport.update({
+  id: '/preapponboarding',
+  path: '/preapponboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MyStoryPdfRoute = MyStoryPdfRouteImport.update({
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/login': typeof LoginRouteWithChildren
   '/my-story-pdf': typeof MyStoryPdfRoute
+  '/preapponboarding': typeof PreapponboardingRoute
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/sso-callback': typeof SsoCallbackRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRouteWithChildren
   '/my-story-pdf': typeof MyStoryPdfRoute
+  '/preapponboarding': typeof PreapponboardingRoute
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/sso-callback': typeof SsoCallbackRoute
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteRouteWithChildren
   '/login': typeof LoginRouteWithChildren
   '/my-story-pdf': typeof MyStoryPdfRoute
+  '/preapponboarding': typeof PreapponboardingRoute
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/sso-callback': typeof SsoCallbackRoute
@@ -222,6 +231,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/my-story-pdf'
+    | '/preapponboarding'
     | '/privacy'
     | '/signup'
     | '/sso-callback'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/my-story-pdf'
+    | '/preapponboarding'
     | '/privacy'
     | '/signup'
     | '/sso-callback'
@@ -268,6 +279,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/my-story-pdf'
+    | '/preapponboarding'
     | '/privacy'
     | '/signup'
     | '/sso-callback'
@@ -293,6 +305,7 @@ export interface RootRouteChildren {
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   LoginRoute: typeof LoginRouteWithChildren
   MyStoryPdfRoute: typeof MyStoryPdfRoute
+  PreapponboardingRoute: typeof PreapponboardingRoute
   PrivacyRoute: typeof PrivacyRoute
   SignupRoute: typeof SignupRoute
   SsoCallbackRoute: typeof SsoCallbackRoute
@@ -344,6 +357,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preapponboarding': {
+      id: '/preapponboarding'
+      path: '/preapponboarding'
+      fullPath: '/preapponboarding'
+      preLoaderRoute: typeof PreapponboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/my-story-pdf': {
@@ -515,6 +535,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
   LoginRoute: LoginRouteWithChildren,
   MyStoryPdfRoute: MyStoryPdfRoute,
+  PreapponboardingRoute: PreapponboardingRoute,
   PrivacyRoute: PrivacyRoute,
   SignupRoute: SignupRoute,
   SsoCallbackRoute: SsoCallbackRoute,
