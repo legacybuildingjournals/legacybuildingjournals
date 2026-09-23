@@ -22,5 +22,8 @@
 		"noEmit": true
 	},
 	"include": ["./**/*"],
-	"exclude": ["./_generated"]
+	/* Tests are colocated with the functions they cover but are not Convex
+	 * modules: they use Vitest globals and `import.meta.glob`, neither of which
+	 * exists in the Convex runtime. Vitest type-checks them instead. */
+	"exclude": ["./_generated", "./**/*.test.ts"]
 }

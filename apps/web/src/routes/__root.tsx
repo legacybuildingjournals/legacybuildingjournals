@@ -11,7 +11,8 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import Header from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
-import { isAuthPath, ROUTES } from "@/lib/routes";
+import { PreAppOnboarding } from "@/features/onboarding/pre-app-onboarding";
+import { isAuthPath, isOnboardingHost, ROUTES } from "@/lib/routes";
 
 import "../index.css";
 
@@ -46,8 +47,29 @@ function RootComponent() {
 	const isLegalPage = pathname === "/terms" || pathname === "/privacy";
 	const isAuthRoute = isAuthPath(pathname);
 	const isWelcome = pathname === ROUTES.welcome;
+	const isOnboarding = pathname === ROUTES.preappOnboarding;
 	const showMarketingHeader =
-		!isDashboard && !isLegalPage && !isAuthRoute && !isWelcome;
+		!isDashboard && !isLegalPage && !isAuthRoute && !isWelcome && !isOnboarding;
+
+	// On the dedicated onboarding hostname the app is the form and nothing
+	// else, whatever path was requested — see `isOnboardingHost`.
+	if (isOnboardingHost()) {
+		return (
+			<>
+				<HeadContent />
+				<ThemeProvider
+					attribute="class"
+					defaultTheme="light"
+					forcedTheme="light"
+					disableTransitionOnChange
+					storageKey="vite-ui-theme"
+				>
+					<PreAppOnboarding />
+					<Toaster />
+				</ThemeProvider>
+			</>
+		);
+	}
 
 	return (
 		<>
@@ -55,13 +77,15 @@ function RootComponent() {
 			<ThemeProvider
 				attribute="class"
 				defaultTheme="dark"
-				forcedTheme={isAuthRoute || isDashboard ? "light" : undefined}
+				forcedTheme={
+					isAuthRoute || isDashboard || isOnboarding ? "light" : undefined
+				}
 				disableTransitionOnChange
 				storageKey="vite-ui-theme"
 			>
 				<div
 					className={
-						isDashboard || isLegalPage
+						isDashboard || isLegalPage || isOnboarding
 							? "min-h-svh"
 							: "grid h-svh grid-rows-[auto_1fr]"
 					}

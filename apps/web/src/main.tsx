@@ -7,7 +7,12 @@ import { ConvexProviderWithClerk } from "convex/react-clerk";
 import ReactDOM from "react-dom/client";
 
 import Loader from "./components/loader";
+import { captureOnboardingToken } from "./lib/onboarding/pending-token";
 import { routeTree } from "./routeTree.gen";
+
+// Read before the router mounts: the external onboarding form hands the token
+// over as a URL parameter, and Clerk's redirects would otherwise drop it.
+captureOnboardingToken();
 
 const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
 

@@ -42,6 +42,19 @@
 	--sidebar-border: oklch(0.925 0.005 214.3);
 	--sidebar-ring: oklch(0.723 0.014 214.4);
 	--billing-subscribe: #008080;
+	/* Decorative chips behind onboarding option icons. A rotating palette like
+	   --chart-N: the hue carries no meaning, it just keeps a long list of
+	   options scannable. Shared with native (apps/native/global.css). */
+	--chip-1: oklch(0.941 0.031 186);
+	--chip-1-foreground: oklch(0.455 0.082 186);
+	--chip-2: oklch(0.944 0.032 85);
+	--chip-2-foreground: oklch(0.478 0.069 75);
+	--chip-3: oklch(0.943 0.029 20);
+	--chip-3-foreground: oklch(0.518 0.118 20);
+	--chip-4: oklch(0.942 0.03 300);
+	--chip-4-foreground: oklch(0.478 0.099 300);
+	--chip-5: oklch(0.942 0.03 245);
+	--chip-5-foreground: oklch(0.479 0.093 250);
 }
 
 .dark {
@@ -76,6 +89,16 @@
 	--sidebar-accent-foreground: oklch(0.987 0.002 197.1);
 	--sidebar-border: oklch(1 0 0 / 10%);
 	--sidebar-ring: oklch(0.56 0.021 213.5);
+	--chip-1: oklch(0.302 0.042 186);
+	--chip-1-foreground: oklch(0.812 0.079 186);
+	--chip-2: oklch(0.305 0.04 85);
+	--chip-2-foreground: oklch(0.822 0.072 85);
+	--chip-3: oklch(0.304 0.045 20);
+	--chip-3-foreground: oklch(0.818 0.083 20);
+	--chip-4: oklch(0.303 0.043 300);
+	--chip-4-foreground: oklch(0.815 0.076 300);
+	--chip-5: oklch(0.303 0.042 245);
+	--chip-5-foreground: oklch(0.816 0.075 245);
 }
 
 @theme inline {
@@ -88,6 +111,16 @@
 	--color-sidebar-primary: var(--sidebar-primary);
 	--color-sidebar-foreground: var(--sidebar-foreground);
 	--color-sidebar: var(--sidebar);
+	--color-chip-1: var(--chip-1);
+	--color-chip-1-foreground: var(--chip-1-foreground);
+	--color-chip-2: var(--chip-2);
+	--color-chip-2-foreground: var(--chip-2-foreground);
+	--color-chip-3: var(--chip-3);
+	--color-chip-3-foreground: var(--chip-3-foreground);
+	--color-chip-4: var(--chip-4);
+	--color-chip-4-foreground: var(--chip-4-foreground);
+	--color-chip-5: var(--chip-5);
+	--color-chip-5-foreground: var(--chip-5-foreground);
 	--color-chart-5: var(--chart-5);
 	--color-chart-4: var(--chart-4);
 	--color-chart-3: var(--chart-3);

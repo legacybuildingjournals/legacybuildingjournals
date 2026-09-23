@@ -1,14 +1,13 @@
 import { brand } from "@legacy-building/ui/lib/brand-journal";
+import {
+	ANDROID_IS_PUBLIC,
+	storeTargetFor,
+	type VisitorPlatform,
+} from "@legacy-building/ui/lib/store-links";
 import { Check, Copy, Smartphone } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/journal/ui/button";
-import {
-	ANDROID_IS_PUBLIC,
-	APP_STORE_URL,
-	PLAY_STORE_URL,
-	type VisitorPlatform,
-} from "@/lib/referrals/storeLinks";
 
 type InviteLandingPageProps = {
 	code: string;
@@ -43,13 +42,7 @@ export function InviteLandingPage({
 		}
 	}
 
-	const storeUrl = platform === "android" ? PLAY_STORE_URL : APP_STORE_URL;
-	const storeLabel =
-		platform === "android"
-			? ANDROID_IS_PUBLIC
-				? "Get it on Google Play"
-				: "Join the Android test"
-			: "Download on the App Store";
+	const { url: storeUrl, label: storeLabel } = storeTargetFor(platform);
 
 	return (
 		<main

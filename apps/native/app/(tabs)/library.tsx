@@ -1,7 +1,7 @@
 import { useUser } from "@clerk/expo";
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Spinner } from "heroui-native";
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
@@ -19,7 +19,12 @@ export default function LibraryScreen() {
 	const { user } = useUser();
 	const { convexUser } = useNativeCurrentUser();
 
-	const [storyType, setStoryType] = useState<StoryTab>(DEFAULT_STORY_TAB);
+	// `type` lets a caller land on a specific shelf — onboarding uses it to open
+	// the shelf matching who the user said the journal is for.
+	const { type } = useLocalSearchParams<{ type?: string }>();
+	const [storyType, setStoryType] = useState<StoryTab>(
+		type === "my_story" || type === "their_story" ? type : DEFAULT_STORY_TAB,
+	);
 	const journals = useQuery(api.journal.queries.listByType, {
 		type: storyType,
 	});
