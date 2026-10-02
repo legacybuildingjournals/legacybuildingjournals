@@ -1,121 +1,76 @@
 /**
- * Personalized result screen shown once the questionnaire is finished.
+ * Completion-screen copy.
  *
- * The body reflects the user's own answers back at them, so each variant is a
- * function of the answer record rather than fixed prose. Kept separate from
- * `questions.ts` because this is prose assembly, not question data.
+ * The Figma completion screen is a fixed template: a heading, one narrative
+ * sentence, and a block of static reassurance copy. Only two things vary — the
+ * recipient, and how the person said they'd capture memories (Q6), which is the
+ * phrase the design's own example ("in your own voice") is built around.
  */
 
-import { type AnswerRecord, answerPhrase, type Recipient } from "./questions";
+import type { AnswerRecord, Recipient } from "./questions";
 
 export type OnboardingResult = {
 	heading: string;
-	body: string[];
+	/** The single personalised sentence under the sub-heading. */
+	narrative: string;
 };
 
-/**
- * "A little of everything" is a valid answer to every question, but its label
- * doesn't survive being dropped into a sentence. Each slot gets a phrasing that
- * reads correctly in the templates below.
- */
-const EVERYTHING_BY_SLOT: Record<string, string> = {
-	why: "capture all of it",
-	what: "a little of everything",
-	meaning: "everything that matters",
-	value: "all of it",
-};
-
-/** Capture answers need a preposition the option label doesn't carry. */
+/** Q6 answer -> how it reads inside the narrative sentence. */
 const CAPTURE_PROSE: Record<string, string> = {
 	writing: "in writing",
 	voice: "in your own voice",
 	video: "on video",
-	combination: "in a mix of ways",
+	combination: "in your own way",
 };
 
-/** Same answers as the subject of a sentence: "Writing feels most natural…". */
-const CAPTURE_SUBJECT: Record<string, string> = {
-	writing: "Writing",
-	voice: "Your own voice",
-	video: "Video",
-	combination: "A mix of ways",
-};
-
-function phrase(
-	recipient: Recipient,
-	questionId: string,
-	answers: AnswerRecord,
-): string {
-	if (answers[questionId] === "everything") {
-		return EVERYTHING_BY_SLOT[questionId] ?? "a little of everything";
-	}
-	return answerPhrase(recipient, questionId, answers);
-}
-
-function capturePhrase(answers: AnswerRecord): string {
+function captureProse(answers: AnswerRecord): string {
 	return CAPTURE_PROSE[answers.capture ?? ""] ?? "in your own way";
 }
 
 /**
- * Shared closing line. `subject` is what the journal is built for, phrased from
- * the reader's side ("your children", "your story").
+ * Child is verbatim from Figma. The other four headings are not designed — that
+ * frame still carries the placeholder "…record for later generation" — so they
+ * are written to the same pattern.
  */
-function closing(answers: AnswerRecord, subject: string): string {
-	return `Since you'd naturally capture them ${capturePhrase(answers)}, Legacy Building gives you a private place to record those stories as they happen and build something ${subject} can experience in the future.`;
-}
+const HEADINGS: Record<Recipient, string> = {
+	child: "You’re creating more than a\nrecord of childhood",
+	grandchild: "Some stories only you can tell",
+	partner: "The story of you two, in your own words",
+	other: "Some people deserve more than a passing mention",
+	myself: "Your story is happening right now",
+};
 
-export const RESULT_COPY: Record<
-	Recipient,
-	(answers: AnswerRecord) => OnboardingResult
-> = {
-	child: (answers) => ({
-		heading: "You're creating more than a record of childhood.",
-		body: [
-			`You told us you want to ${phrase("child", "why", answers)}, especially ${phrase("child", "what", answers)} that can be easy to forget.`,
-			`You want them to know ${phrase("child", "meaning", answers)}, and ${phrase("child", "value", answers)} feels meaningful to you.`,
-			closing(answers, "your children"),
-		],
-	}),
-
-	grandchild: (answers) => ({
-		heading: "Some stories only you can tell.",
-		body: [
-			`You told us you want to ${phrase("grandchild", "why", answers)}, especially ${phrase("grandchild", "what", answers)} that can be easy to lose.`,
-			`You want them to know ${phrase("grandchild", "meaning", answers)}, and ${phrase("grandchild", "value", answers)} feels meaningful to you.`,
-			closing(answers, "your grandchildren"),
-		],
-	}),
-
-	partner: (answers) => ({
-		heading: "The story of you two, in your own words.",
-		body: [
-			`You told us you want to ${phrase("partner", "why", answers)}, especially ${phrase("partner", "what", answers)} that are easy to let pass by.`,
-			`You want them to know ${phrase("partner", "meaning", answers)}, and ${phrase("partner", "value", answers)} feels meaningful to you.`,
-			closing(answers, "the two of you"),
-		],
-	}),
-
-	other: (answers) => ({
-		heading: "Some people deserve more than a passing mention.",
-		body: [
-			`You told us you want to ${phrase("other", "why", answers)}, especially ${phrase("other", "what", answers)} that can be easy to forget.`,
-			`You want them to know ${phrase("other", "meaning", answers)}, and ${phrase("other", "value", answers)} feels meaningful to you.`,
-			closing(answers, "they"),
-		],
-	}),
-
-	myself: (answers) => ({
-		heading: "Your story is happening right now.",
-		body: [
-			`You told us you want to capture ${phrase("myself", "what", answers)}, remember ${phrase("myself", "meaning", answers)}, and have something you can look back on years from now.`,
-			`${CAPTURE_SUBJECT[answers.capture ?? ""] ?? "Your own way"} feels most natural to you, so Legacy Building gives you a private place to record those experiences as they happen and build your story over time.`,
-		],
-	}),
+const NARRATIVES: Record<Recipient, (capture: string) => string> = {
+	child: (capture) =>
+		`Capturing them ${capture} creates something personal your children can carry with them into the future.`,
+	grandchild: (capture) =>
+		`Capturing them ${capture} creates something personal your grandchildren can carry with them into the future.`,
+	partner: (capture) =>
+		`Capturing your story together ${capture} creates something personal the two of you can look back on for years to come.`,
+	other: (capture) =>
+		`Capturing them ${capture} creates something personal they can carry with them into the future.`,
+	myself: (capture) =>
+		`Capturing your story ${capture} creates something personal you can look back on for years to come.`,
 };
 
 export function resultFor(
 	recipient: Recipient,
 	answers: AnswerRecord,
 ): OnboardingResult {
-	return RESULT_COPY[recipient](answers);
+	return {
+		heading: HEADINGS[recipient],
+		narrative: NARRATIVES[recipient](captureProse(answers)),
+	};
 }
+
+/** The part of the completion screen that never changes. */
+export const COMPLETION_STATIC = {
+	subheading: "The everyday moments matter.",
+	pills: ["Write", "Voice", "Video"],
+	paragraph:
+		"Legacy Building gives you a private place to preserve those stories as they happen through writing, voice, or video.",
+	emphasis: "Start with one memory",
+	emphasisTail: "and build from there.",
+	lockNotice:
+		"You'll create or open your Legacy Building account next. You won't have to take the questionnaire again.",
+} as const;

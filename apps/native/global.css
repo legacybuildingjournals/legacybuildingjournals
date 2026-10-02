@@ -4,6 +4,17 @@
 
 @source "./node_modules/heroui-native/lib";
 
+@theme {
+	/* Onboarding type, loaded in app/welcome.tsx via @expo-google-fonts. React
+	   Native needs one family per weight, hence one token each. */
+	--font-onb-regular: Nunito_400Regular;
+	--font-onb-medium: Nunito_500Medium;
+	--font-onb-bold: Nunito_700Bold;
+	--font-onb-extrabold: Nunito_800ExtraBold;
+	--font-onb-cta: PlusJakartaSans_700Bold;
+	--font-onb-cta-semibold: PlusJakartaSans_600SemiBold;
+}
+
 @layer theme {
 	:root {
 		@variant light {
@@ -35,20 +46,58 @@
 			   the photographed library wall (web uses JournalWallDesktop) until a
 			   portrait wall-only image ships. Native-only for now. */
 			--color-library-canvas: oklch(0.955 0.012 78);
-			/* Onboarding option-icon chips; mirrors packages/ui/src/styles/globals.css. */
-			--color-chip-1: oklch(0.941 0.031 186);
-			--color-chip-1-foreground: oklch(0.455 0.082 186);
-			--color-chip-2: oklch(0.944 0.032 85);
-			--color-chip-2-foreground: oklch(0.478 0.069 75);
-			--color-chip-3: oklch(0.943 0.029 20);
-			--color-chip-3-foreground: oklch(0.518 0.118 20);
-			--color-chip-4: oklch(0.942 0.03 300);
-			--color-chip-4-foreground: oklch(0.478 0.099 300);
-			--color-chip-5: oklch(0.942 0.03 245);
-			--color-chip-5-foreground: oklch(0.479 0.093 250);
-			/* Near-white ground for the onboarding questionnaire, which sits between
-			   the teal hero steps and needs the option rows to read as cards. */
-			--color-onboarding-canvas: oklch(0.985 0.004 180);
+			/* Onboarding questionnaire, from the Figma file. Identical in light and
+			   dark: the screens are a fixed-palette design, not themed. Mirrors
+			   packages/ui/src/styles/globals.css, plus the native-only canvas/header. */
+			--color-onb-canvas: #f5efe7;
+			--color-onb-header: #33766f;
+			--color-onb-teal: #00786f;
+			--color-onb-teal-deep: #005b51;
+			--color-onb-progress: #0c5c56;
+			--color-onb-progress-pending: #d2deda;
+			--color-onb-selected: #01685c;
+			--color-onb-ink: #0f172a;
+			--color-onb-ink-strong: #152432;
+			--color-onb-ink-native: #112423;
+			--color-onb-text: #1e293b;
+			--color-onb-muted: #64748b;
+			--color-onb-muted-warm: #6b7280;
+			--color-onb-eyebrow: #54736f;
+			--color-onb-back: #334155;
+			--color-onb-chevron: #94a3b8;
+			--color-onb-rule: #bfe0d6;
+			--color-onb-pill-label: #1f2937;
+			--color-onb-lock: #6e6e6e;
+			--color-onb-chip-1: #d7f3ee;
+			--color-onb-chip-2: #faedd9;
+			--color-onb-chip-3: #fde5e3;
+			--color-onb-chip-4: #f0e7f9;
+			--color-onb-chip-5: #e3effa;
+			--color-onb-chip-6: #e1f3f7;
+			--color-onb-chip-fg-1: #188575;
+			--color-onb-chip-fg-2: #b87c2b;
+			--color-onb-chip-fg-3: #dc5959;
+			--color-onb-chip-fg-4: #7e57c2;
+			--color-onb-chip-fg-5: #378ad4;
+			--color-onb-chip-fg-6: #2b90a6;
+			--color-onb-pill-write: #d6efea;
+			--color-onb-pill-voice: #fcecd8;
+			--color-onb-pill-video: #e5e0f8;
+			--color-onb-pill-write-fg: #006e61;
+			--color-onb-pill-voice-fg: #9a621c;
+			--color-onb-pill-video-fg: #55409e;
+			--color-onb-footer-bg: #d3e8e8;
+			--color-onb-footer-text: #0e807f;
+			--color-onb-confetti-1: #1ea7e8;
+			--color-onb-confetti-2: #e4106e;
+			--color-onb-confetti-3: #f5d800;
+			--color-onb-confetti-4: #8bc400;
+			--color-onb-confetti-5: #8a4fbd;
+			--color-onb-confetti-6: #e5242b;
+			--color-onb-confetti-7: #ff8a1f;
+			--color-onb-card-border: rgba(236, 253, 245, 0.6);
+			--color-onb-white: #ffffff;
+			--color-onb-lock-icon: #9ca3af;
 		}
 
 		@variant dark {
@@ -75,17 +124,58 @@
 			--color-warning-foreground: oklch(0.984 0.014 180.72);
 			/* Warm-tinted dark ground for the library screen (see light variant). */
 			--color-library-canvas: oklch(0.17 0.008 78);
-			--color-chip-1: oklch(0.302 0.042 186);
-			--color-chip-1-foreground: oklch(0.812 0.079 186);
-			--color-chip-2: oklch(0.305 0.04 85);
-			--color-chip-2-foreground: oklch(0.822 0.072 85);
-			--color-chip-3: oklch(0.304 0.045 20);
-			--color-chip-3-foreground: oklch(0.818 0.083 20);
-			--color-chip-4: oklch(0.303 0.043 300);
-			--color-chip-4-foreground: oklch(0.815 0.076 300);
-			--color-chip-5: oklch(0.303 0.042 245);
-			--color-chip-5-foreground: oklch(0.816 0.075 245);
-			--color-onboarding-canvas: oklch(0.168 0.006 200);
+			/* Onboarding questionnaire, from the Figma file. Identical in light and
+			   dark: the screens are a fixed-palette design, not themed. Mirrors
+			   packages/ui/src/styles/globals.css, plus the native-only canvas/header. */
+			--color-onb-canvas: #f5efe7;
+			--color-onb-header: #33766f;
+			--color-onb-teal: #00786f;
+			--color-onb-teal-deep: #005b51;
+			--color-onb-progress: #0c5c56;
+			--color-onb-progress-pending: #d2deda;
+			--color-onb-selected: #01685c;
+			--color-onb-ink: #0f172a;
+			--color-onb-ink-strong: #152432;
+			--color-onb-ink-native: #112423;
+			--color-onb-text: #1e293b;
+			--color-onb-muted: #64748b;
+			--color-onb-muted-warm: #6b7280;
+			--color-onb-eyebrow: #54736f;
+			--color-onb-back: #334155;
+			--color-onb-chevron: #94a3b8;
+			--color-onb-rule: #bfe0d6;
+			--color-onb-pill-label: #1f2937;
+			--color-onb-lock: #6e6e6e;
+			--color-onb-chip-1: #d7f3ee;
+			--color-onb-chip-2: #faedd9;
+			--color-onb-chip-3: #fde5e3;
+			--color-onb-chip-4: #f0e7f9;
+			--color-onb-chip-5: #e3effa;
+			--color-onb-chip-6: #e1f3f7;
+			--color-onb-chip-fg-1: #188575;
+			--color-onb-chip-fg-2: #b87c2b;
+			--color-onb-chip-fg-3: #dc5959;
+			--color-onb-chip-fg-4: #7e57c2;
+			--color-onb-chip-fg-5: #378ad4;
+			--color-onb-chip-fg-6: #2b90a6;
+			--color-onb-pill-write: #d6efea;
+			--color-onb-pill-voice: #fcecd8;
+			--color-onb-pill-video: #e5e0f8;
+			--color-onb-pill-write-fg: #006e61;
+			--color-onb-pill-voice-fg: #9a621c;
+			--color-onb-pill-video-fg: #55409e;
+			--color-onb-footer-bg: #d3e8e8;
+			--color-onb-footer-text: #0e807f;
+			--color-onb-confetti-1: #1ea7e8;
+			--color-onb-confetti-2: #e4106e;
+			--color-onb-confetti-3: #f5d800;
+			--color-onb-confetti-4: #8bc400;
+			--color-onb-confetti-5: #8a4fbd;
+			--color-onb-confetti-6: #e5242b;
+			--color-onb-confetti-7: #ff8a1f;
+			--color-onb-card-border: rgba(236, 253, 245, 0.6);
+			--color-onb-white: #ffffff;
+			--color-onb-lock-icon: #9ca3af;
 		}
 	}
 }

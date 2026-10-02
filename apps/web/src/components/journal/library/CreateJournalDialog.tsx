@@ -64,15 +64,12 @@ export function CreateJournalDialog({
 	const titleInvalid = !title.trim();
 	const dateInvalid = date === undefined;
 	const dedicationInvalid = !dedication.trim();
-	const imageInvalid = coverFile === null;
 
-	const isValid =
-		!titleInvalid && !dateInvalid && !dedicationInvalid && !imageInvalid;
+	const isValid = !titleInvalid && !dateInvalid && !dedicationInvalid;
 
 	const titleShowError = showErrors && titleInvalid;
 	const dateShowError = showErrors && dateInvalid;
 	const dedicationShowError = showErrors && dedicationInvalid;
-	const imageShowError = showErrors && imageInvalid;
 
 	useEffect(() => {
 		if (open) {
@@ -122,14 +119,15 @@ export function CreateJournalDialog({
 
 	const handleCreate = async () => {
 		setShowErrors(true);
-		if (!isValid || date === undefined || coverFile === null) return;
+		if (!isValid || date === undefined) return;
 
 		setSubmitting(true);
 		setError(null);
 		try {
-			const coverImageId = await uploadCoverImage(coverFile, () =>
-				generateUploadUrl(),
-			);
+			// Cover image is optional.
+			const coverImageId = coverFile
+				? await uploadCoverImage(coverFile, () => generateUploadUrl())
+				: undefined;
 
 			await createJournal({
 				title: title.trim(),
@@ -257,7 +255,6 @@ export function CreateJournalDialog({
 						<span className={fieldLabelClass}>Upload image</span>
 						<JournalCoverImageUpload
 							imagePreview={coverPreview}
-							invalid={imageShowError}
 							onFileChange={handleCoverChange}
 							inputRef={fileRef}
 						/>

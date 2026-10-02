@@ -20,17 +20,19 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { AuthField } from "@/components/auth/auth-field";
 import { AuthPrimaryButton } from "@/components/auth/auth-primary-button";
 import { OnboardingBackground } from "@/components/welcome/onboarding-background";
+import { OnboardingIntroStep } from "@/components/welcome/onboarding-intro-step";
 import { OnboardingQuestionStep } from "@/components/welcome/onboarding-question-step";
 import { OnboardingResultStep } from "@/components/welcome/onboarding-result-step";
 import { WelcomeVideo } from "@/components/welcome/welcome-video";
 import { useNativeCurrentUser } from "@/hooks/use-native-current-user";
 import { useMutationToast } from "@/lib/mutation-toast";
+import { useOnboardingFonts } from "@/lib/onboarding/use-onboarding-fonts";
 import {
 	clearPendingInviteCode,
 	readPendingInviteCode,
 } from "@/lib/referrals/pending-invite";
 
-type Step = "username" | "video" | "questions" | "result";
+type Step = "username" | "video" | "intro" | "questions" | "result";
 
 /** Prefer the stored Convex name; fall back to the Clerk display name. */
 function defaultUsername(
@@ -45,7 +47,7 @@ function defaultUsername(
 /**
  * First-run onboarding shown right after sign-up (email or Google), gated by
  * `users.welcomeCompletedAt` — the same flag the web app uses. Step 1 captures a
- * username; step 2 requires watching the explainer video before continuing.
+ * username; step 2 shows the explainer video, which is optional to watch.
  */
 export default function WelcomeScreen() {
 	const { user: clerkUser } = useUser();
@@ -67,6 +69,7 @@ export default function WelcomeScreen() {
 		isAuthenticated ? {} : "skip",
 	);
 	const toast = useMutationToast();
+	const fontsReady = useOnboardingFonts();
 
 	const [step, setStep] = useState<Step>("username");
 	const [answerState, setAnswerState] =
@@ -74,7 +77,6 @@ export default function WelcomeScreen() {
 	const [questionIndex, setQuestionIndex] = useState(0);
 	const [username, setUsername] = useState("");
 	const [usernameTouched, setUsernameTouched] = useState(false);
-	const [videoCompleted, setVideoCompleted] = useState(false);
 	const [saving, setSaving] = useState(false);
 	// Prefilled when the user arrived through a universal link; otherwise they
 	// type the code they saw on the invite page.
@@ -196,7 +198,7 @@ export default function WelcomeScreen() {
 			);
 			return;
 		}
-		setStep("questions");
+		setStep("intro");
 	};
 
 	const questions = answerState.recipient
@@ -249,7 +251,7 @@ export default function WelcomeScreen() {
 	// Wait for both the Convex user query and the Convex auth token. Showing the
 	// form before auth is ready lets the user tap "Let's Go!" before the token
 	// propagates, which fails the mutation with UNAUTHENTICATED.
-	if (isLoading || !isAuthenticated) {
+	if (isLoading || !isAuthenticated || !fontsReady) {
 		return (
 			<OnboardingBackground>
 				<View className="flex-1 items-center justify-center">
@@ -320,6 +322,10 @@ export default function WelcomeScreen() {
 		);
 	}
 
+	if (step === "intro") {
+		return <OnboardingIntroStep onStart={() => setStep("questions")} />;
+	}
+
 	if (step === "questions") {
 		return (
 			<OnboardingQuestionStep
@@ -328,7 +334,7 @@ export default function WelcomeScreen() {
 				selectedOptionId={answerState.answers[currentQuestion.id]}
 				busy={saving}
 				onSelect={(optionId) => void handleSelectOption(optionId)}
-				onBack={handleBack}
+				onBack={questionIndex > 0 ? handleBack : undefined}
 			/>
 		);
 	}
@@ -350,12 +356,11 @@ export default function WelcomeScreen() {
 					Welcome {username.trim()}
 				</Text>
 
-				<WelcomeVideo onEnded={() => setVideoCompleted(true)} />
+				<WelcomeVideo />
 
 				<AuthPrimaryButton
-					label={videoCompleted ? "Let's Go!" : "Watch video to continue"}
+					label="Let's Go!"
 					onPress={handleVideoContinue}
-					disabled={!videoCompleted}
 					loading={saving}
 				/>
 			</View>

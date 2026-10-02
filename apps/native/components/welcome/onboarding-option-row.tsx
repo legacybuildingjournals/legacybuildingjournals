@@ -1,25 +1,36 @@
-import { Ionicons } from "@expo/vector-icons";
 import type { QuestionOption } from "@legacy-building/backend/convex/onboarding/questions";
-import { useThemeColor } from "heroui-native";
+import { ChevronRight } from "lucide-react-native";
 import { Pressable, Text, View } from "react-native";
+import { useCSSVariable } from "uniwind";
 
 import { ONBOARDING_ICONS } from "@/lib/onboarding/icons";
 
 /**
- * Tint id -> chip background class. Written out rather than interpolated
- * because Uniwind extracts class names statically, so a template string would
- * produce no style.
+ * Chip colours follow the row's position, not its meaning — that is how the Figma
+ * designs assign them. Spelled out so Uniwind can see every class.
  */
-const CHIP_CLASS: Record<string, string> = {
-	"chip-1": "bg-chip-1",
-	"chip-2": "bg-chip-2",
-	"chip-3": "bg-chip-3",
-	"chip-4": "bg-chip-4",
-	"chip-5": "bg-chip-5",
-};
+const CHIP_BG = [
+	"bg-onb-chip-1",
+	"bg-onb-chip-2",
+	"bg-onb-chip-3",
+	"bg-onb-chip-4",
+	"bg-onb-chip-5",
+	"bg-onb-chip-6",
+] as const;
+
+const CHIP_FG_VARS = [
+	"--color-onb-chip-fg-1",
+	"--color-onb-chip-fg-2",
+	"--color-onb-chip-fg-3",
+	"--color-onb-chip-fg-4",
+	"--color-onb-chip-fg-5",
+	"--color-onb-chip-fg-6",
+] as const;
 
 type OnboardingOptionRowProps = {
 	option: QuestionOption;
+	/** Zero-based position in the list. */
+	index: number;
 	selected: boolean;
 	disabled: boolean;
 	onPress: () => void;
@@ -27,18 +38,19 @@ type OnboardingOptionRowProps = {
 
 export function OnboardingOptionRow({
 	option,
+	index,
 	selected,
 	disabled,
 	onPress,
 }: OnboardingOptionRowProps) {
-	// Ionicons takes `color`, not `className` — the documented exception in the
-	// native styling rule. One semantic colour reads correctly on all five chip
-	// tints in both themes, so the glyph doesn't need a per-tint colour.
-	const [foreground, accentForeground, muted] = useThemeColor([
-		"foreground",
-		"accent-foreground",
-		"muted",
-	]);
+	const Icon = ONBOARDING_ICONS[option.icon];
+	const slot = index % CHIP_BG.length;
+
+	// Lucide takes a colour prop rather than className, so resolve the theme
+	// token to a value instead of hardcoding one.
+	const chipFg = useCSSVariable(CHIP_FG_VARS[slot] ?? CHIP_FG_VARS[0]);
+	const white = useCSSVariable("--color-onb-white");
+	const chevron = useCSSVariable("--color-onb-chevron");
 
 	return (
 		<Pressable
@@ -46,38 +58,35 @@ export function OnboardingOptionRow({
 			disabled={disabled}
 			accessibilityRole="button"
 			accessibilityState={{ selected, disabled }}
-			className={`flex-row items-center gap-3 rounded-2xl border p-3 active:opacity-80 disabled:opacity-60 ${
-				selected
-					? "border-primary bg-primary"
-					: "border-border bg-card active:bg-muted"
-			}`}
+			className={`flex-row items-center justify-between rounded-[14px] px-4 py-[11px] shadow-sm active:opacity-80 ${
+				selected ? "bg-onb-selected" : "bg-onb-white"
+			} ${disabled ? "opacity-60" : ""}`}
 		>
-			<View
-				className={`h-11 w-11 items-center justify-center rounded-full ${
-					selected
-						? "bg-primary-foreground/20"
-						: (CHIP_CLASS[option.tint] ?? "bg-muted")
-				}`}
-			>
-				<Ionicons
-					name={ONBOARDING_ICONS[option.icon]}
-					size={20}
-					color={selected ? accentForeground : foreground}
-				/>
+			<View className="min-w-0 flex-1 flex-row items-center gap-3.5">
+				<View
+					className={`size-11 items-center justify-center rounded-full ${
+						selected ? "bg-onb-white/20" : CHIP_BG[slot]
+					}`}
+				>
+					<Icon
+						size={20}
+						color={String(selected ? white : chipFg)}
+						strokeWidth={2}
+					/>
+				</View>
+				<Text
+					className={`flex-1 font-onb-regular text-[15px] leading-5 ${
+						selected ? "text-onb-white" : "text-onb-text"
+					}`}
+				>
+					{option.label}
+				</Text>
 			</View>
 
-			<Text
-				className={`flex-1 text-[16px] leading-[22px] ${
-					selected ? "font-semibold text-primary-foreground" : "text-foreground"
-				}`}
-			>
-				{option.label}
-			</Text>
-
-			<Ionicons
-				name="chevron-forward"
-				size={18}
-				color={selected ? accentForeground : muted}
+			<ChevronRight
+				size={16}
+				color={String(selected ? white : chevron)}
+				strokeWidth={2.5}
 			/>
 		</Pressable>
 	);

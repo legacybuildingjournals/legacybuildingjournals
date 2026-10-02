@@ -7,19 +7,23 @@ import {
 	RECIPIENT_QUESTION,
 	type Recipient,
 } from "@legacy-building/backend/convex/onboarding/questions";
-import { resultFor } from "@legacy-building/backend/convex/onboarding/results";
-import { Button } from "@legacy-building/ui/components/button";
 import { useMutation } from "convex/react";
-import { motion } from "motion/react";
 import { useState } from "react";
-
-import { ConfettiBurst } from "@/components/onboarding/confetti-burst";
+import { PILL_PRIMARY } from "@/components/onboarding/onboarding-card";
+import { OnboardingCompletion } from "@/components/onboarding/onboarding-completion";
+import { OnboardingIntro } from "@/components/onboarding/onboarding-intro";
 import { OnboardingQuestionStep } from "@/components/onboarding/onboarding-question-step";
-import { OnboardingShell } from "@/components/onboarding/onboarding-shell";
+import {
+	OnboardingColumn,
+	OnboardingShell,
+	OnboardingTopBar,
+} from "@/components/onboarding/onboarding-shell";
 import {
 	messageFromUnknownError,
 	toastMutationError,
 } from "@/lib/journal/toast";
+
+type Phase = "intro" | "questions" | "result";
 
 type WelcomeOnboardingProps = {
 	/**
@@ -37,11 +41,11 @@ export function WelcomeOnboarding({
 }: WelcomeOnboardingProps) {
 	const submitInApp = useMutation(api.onboarding.mutations.submitInApp);
 
+	const [phase, setPhase] = useState<Phase>("intro");
 	const [answerState, setAnswerState] =
 		useState<AnswerState>(EMPTY_ANSWER_STATE);
 	const [questionIndex, setQuestionIndex] = useState(0);
 	const [saving, setSaving] = useState(false);
-	const [showResult, setShowResult] = useState(false);
 
 	const questions = answerState.recipient
 		? questionsFor(answerState.recipient)
@@ -74,7 +78,7 @@ export function WelcomeOnboarding({
 				})),
 				source: "web",
 			});
-			setShowResult(true);
+			setPhase("result");
 		} catch (err) {
 			toastMutationError(
 				err,
@@ -88,59 +92,47 @@ export function WelcomeOnboarding({
 		}
 	};
 
-	if (showResult && answerState.recipient) {
+	if (phase === "intro") {
+		return <OnboardingIntro onStart={() => setPhase("questions")} />;
+	}
+
+	if (phase === "result" && answerState.recipient) {
 		const recipient = answerState.recipient;
-		const result = resultFor(recipient, answerState.answers);
 		return (
-			<OnboardingShell>
-				<ConfettiBurst />
-				<motion.div
-					initial={{ opacity: 0, y: 12 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.25, ease: "easeOut" }}
-					// Short, celebratory screen — unlike the question list it reads
-					// better centred, and the prose needs a sane measure rather than
-					// the full 3/4-width column.
-					className="mx-auto flex w-full max-w-[60ch] flex-col gap-4 lg:my-auto"
-				>
-					<h1 className="font-semibold text-2xl text-foreground leading-tight sm:text-3xl lg:text-4xl">
-						{result.heading}
-					</h1>
-					{result.body.map((paragraph) => (
-						<p
-							key={paragraph.slice(0, 40)}
-							className="text-muted-foreground leading-relaxed lg:text-lg"
-						>
-							{paragraph}
-						</p>
-					))}
-					<Button
-						size="lg"
+			<OnboardingCompletion
+				recipient={recipient}
+				answers={answerState.answers}
+				actions={
+					<button
+						type="button"
 						onClick={() => onFinish(recipient)}
 						disabled={finishing}
-						className="mt-4 w-full transition-all active:scale-[0.98] sm:w-fit sm:px-10"
+						className={PILL_PRIMARY}
 					>
-						{finishing ? "Just a moment..." : "Create your first journal"}
-					</Button>
-				</motion.div>
-			</OnboardingShell>
+						{finishing ? "Just a moment..." : "Start Building Your Legacy"}
+					</button>
+				}
+			/>
 		);
 	}
 
 	return (
 		<OnboardingShell>
-			<OnboardingQuestionStep
-				question={currentQuestion}
-				index={questionIndex + 1}
-				selectedOptionId={answerState.answers[currentQuestion.id]}
-				busy={saving}
-				onSelect={(optionId) => void handleSelect(optionId)}
-				onBack={
-					questionIndex > 0
-						? () => setQuestionIndex(questionIndex - 1)
-						: undefined
-				}
-			/>
+			<OnboardingTopBar />
+			<OnboardingColumn>
+				<OnboardingQuestionStep
+					question={currentQuestion}
+					index={questionIndex + 1}
+					selectedOptionId={answerState.answers[currentQuestion.id]}
+					busy={saving}
+					onSelect={(optionId) => void handleSelect(optionId)}
+					onBack={
+						questionIndex > 0
+							? () => setQuestionIndex(questionIndex - 1)
+							: undefined
+					}
+				/>
+			</OnboardingColumn>
 		</OnboardingShell>
 	);
 }

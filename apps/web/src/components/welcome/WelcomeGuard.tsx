@@ -11,7 +11,7 @@ type WelcomeGuardProps = {
 	children: React.ReactNode;
 };
 
-/** First-time users must watch the welcome video before accessing the dashboard. */
+/** First-time users complete the welcome step (the video is optional) before accessing the dashboard. */
 export function WelcomeGuard({ children }: WelcomeGuardProps) {
 	const { convexUser } = useCurrentUser();
 	const pathname = useRouterState({

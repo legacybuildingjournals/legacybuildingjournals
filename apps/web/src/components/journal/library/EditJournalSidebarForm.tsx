@@ -4,7 +4,6 @@ import type {
 	Id,
 } from "@legacy-building/backend/convex/_generated/dataModel";
 import { brand } from "@legacy-building/ui/lib/brand-journal";
-import { cn } from "@legacy-building/ui/lib/utils";
 import { useMutation } from "convex/react";
 import { Camera, ChevronLeft } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
@@ -74,13 +73,10 @@ export function EditJournalSidebarForm({
 		journal.coverImageUrl,
 	]);
 
-	const hasCover = coverFile !== null || Boolean(coverPreview);
 	const titleInvalid = !title.trim();
 	const dateInvalid = date === undefined;
 	const dedicationInvalid = !dedication.trim();
-	const imageInvalid = !hasCover;
-	const isValid =
-		!titleInvalid && !dateInvalid && !dedicationInvalid && !imageInvalid;
+	const isValid = !titleInvalid && !dateInvalid && !dedicationInvalid;
 
 	const handleCancel = useCallback(() => {
 		if (coverPreview?.startsWith("blob:")) {
@@ -157,12 +153,7 @@ export function EditJournalSidebarForm({
 				<button
 					type="button"
 					onClick={() => fileRef.current?.click()}
-					className={cn(
-						"relative flex min-h-[140px] w-full cursor-pointer overflow-hidden bg-white",
-						showErrors && imageInvalid
-							? "ring-2 ring-[#b0200c] ring-inset"
-							: "",
-					)}
+					className="relative flex min-h-[140px] w-full cursor-pointer overflow-hidden bg-white"
 				>
 					{coverPreview ? (
 						<img

@@ -12,7 +12,7 @@ import {
 	Globe,
 	GraduationCap,
 	Heart,
-	HeartHandshake,
+	HeartPulse,
 	Hourglass,
 	House,
 	Images,
@@ -21,7 +21,7 @@ import {
 	Leaf,
 	Lightbulb,
 	type LucideIcon,
-	MessageCircle,
+	MessageSquare,
 	MessagesSquare,
 	Mic,
 	PenLine,
@@ -38,14 +38,18 @@ import {
 } from "lucide-react";
 
 /**
- * Shared icon keys mapped to Lucide components. Typed as a full Record, so
- * adding a key to `OPTION_ICONS` fails the build here until it has an icon.
+ * Shared icon keys mapped to the Lucide glyphs used in the Figma designs.
+ * Typed as a full Record, so adding a key to `OPTION_ICONS` fails the build here
+ * until it has an icon.
+ *
+ * Render these at 20px with Lucide's default stroke: the design's 1.667px stroke
+ * is exactly Lucide's stroke-2 scaled from its 24px box down to 20px.
  */
 export const ONBOARDING_ICONS: Record<OptionIcon, LucideIcon> = {
 	album: Images,
 	book: BookOpen,
 	camera: Camera,
-	chat: MessageCircle,
+	chat: MessageSquare,
 	chats: MessagesSquare,
 	clock: Clock,
 	compass: Compass,
@@ -57,7 +61,7 @@ export const ONBOARDING_ICONS: Record<OptionIcon, LucideIcon> = {
 	globe: Globe,
 	growth: TrendingUp,
 	heart: Heart,
-	heartCircle: HeartHandshake,
+	heartPulse: HeartPulse,
 	home: House,
 	hourglass: Hourglass,
 	idea: Lightbulb,

@@ -100,14 +100,9 @@ export default function CreateJournalScreen() {
 	const startDateInvalid = startMs === null;
 	const endDateInvalid = endDate.length > 0 && endMs === null;
 	const endBeforeStart = startMs !== null && endMs !== null && endMs < startMs;
-	const coverInvalid = !coverUri;
 
 	const formInvalid =
-		titleInvalid ||
-		startDateInvalid ||
-		endDateInvalid ||
-		endBeforeStart ||
-		coverInvalid;
+		titleInvalid || startDateInvalid || endDateInvalid || endBeforeStart;
 
 	useEffect(() => {
 		if (
@@ -450,20 +445,16 @@ export default function CreateJournalScreen() {
 						) : null}
 					</View>
 
-					{/* Cover image (required) */}
+					{/* Cover image (optional) */}
 					<View className="gap-1.5">
 						<Text className="font-semibold text-foreground text-sm">
-							Cover Image
+							Cover Image (optional)
 						</Text>
 						<Pressable
 							onPress={() => void handlePickCover()}
 							accessibilityRole="button"
 							accessibilityLabel="Pick cover image"
-							className={`h-36 items-center justify-center overflow-hidden rounded-2xl border bg-background active:opacity-90 ${
-								showErrors && coverInvalid
-									? "border-destructive"
-									: "border-border"
-							}`}
+							className="h-36 items-center justify-center overflow-hidden rounded-2xl border border-border bg-background active:opacity-90"
 						>
 							{coverUri ? (
 								<Image
@@ -480,11 +471,6 @@ export default function CreateJournalScreen() {
 								</View>
 							)}
 						</Pressable>
-						{showErrors && coverInvalid ? (
-							<Text className="text-destructive text-xs">
-								A cover image is required.
-							</Text>
-						) : null}
 					</View>
 
 					{showErrors && formInvalid && !endBeforeStart ? (

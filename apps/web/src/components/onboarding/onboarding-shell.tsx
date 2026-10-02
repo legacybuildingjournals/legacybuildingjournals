@@ -1,57 +1,53 @@
-import { assets, brand } from "@legacy-building/ui/lib/brand-journal";
+import "@fontsource-variable/nunito";
+import "@fontsource/plus-jakarta-sans/600.css";
+import "@fontsource/plus-jakarta-sans/700.css";
+
+import { onboardingAssets } from "@legacy-building/assets";
+import { cn } from "@legacy-building/ui/lib/utils";
 import type { ReactNode } from "react";
 
-type OnboardingShellProps = {
-	children: ReactNode;
-};
-
 /**
- * Page frame for the onboarding surfaces.
- *
- * Plain white read as dull and left the content stranded at the top of a
- * desktop viewport, so this puts the questionnaire on the same mint ground the
- * auth screens use, with the brand panel image as faint texture, and centres
- * the column vertically so it fills the height instead of hugging the top.
+ * Page frame for every onboarding surface: the flat mint canvas and the Nunito
+ * type from the Figma file. Fonts are imported here so they only load with the
+ * onboarding chunk.
  */
-export function OnboardingShell({ children }: OnboardingShellProps) {
+export function OnboardingShell({
+	children,
+	className,
+}: {
+	children: ReactNode;
+	className?: string;
+}) {
 	return (
 		<div
-			className="relative flex min-h-svh w-full flex-col"
-			style={{ backgroundColor: brand.pageBackground }}
+			className={cn(
+				"min-h-svh w-full bg-onb-canvas font-onb text-onb-ink",
+				className,
+			)}
 		>
-			<div
-				className="pointer-events-none absolute inset-0 bg-center bg-cover opacity-[0.07]"
-				style={{ backgroundImage: `url("${assets.authPanelBackground}")` }}
-				aria-hidden
-			/>
-			{/* Softens the texture towards the bottom so long option lists stay legible. */}
-			<div
-				className="pointer-events-none absolute inset-0"
-				style={{
-					background: `linear-gradient(180deg, transparent 0%, ${brand.pageBackground}cc 70%, ${brand.pageBackground} 100%)`,
-				}}
-				aria-hidden
-			/>
-
-			{/* A centred column with a generous max-width, the same shape as
-			    `AuthLayout`. Pinning the content to the left edge left the right
-			    half of a desktop window dead and read as broken rather than roomy. */}
-			<div className="relative mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8 lg:[@media(min-height:900px)]:py-10">
-				{children}
-
-				{/* Anchors the bottom of a tall window with the brand line from the
-				    designs, so the leftover height reads as deliberate space rather
-				    than the content having run out. Height-gated, not width-gated:
-				    on a short laptop the six-option questions need every pixel, and
-				    pushing an option below the fold is a real bug when tapping one
-				    advances the step. */}
-				<p
-					className="mt-auto hidden pt-10 text-center font-serif text-lg italic lg:[@media(min-height:900px)]:block"
-					style={{ color: `${brand.primary}99` }}
-				>
-					Stories live on.
-				</p>
-			</div>
+			{children}
 		</div>
+	);
+}
+
+/** The centred column the question screens sit in: 768px of content, as in the design. */
+export function OnboardingColumn({ children }: { children: ReactNode }) {
+	return (
+		<div className="mx-auto flex w-full max-w-[832px] flex-col px-4 py-6 sm:px-8">
+			{children}
+		</div>
+	);
+}
+
+/** Full-width teal bar with the white logo, the header of every onboarding screen. */
+export function OnboardingTopBar() {
+	return (
+		<header className="flex h-[72px] w-full items-center bg-onb-teal px-5 sm:h-[88px] sm:px-[45px]">
+			<img
+				src={onboardingAssets.logoWhite}
+				alt="Legacy Building"
+				className="h-[40px] w-auto sm:h-[51px]"
+			/>
+		</header>
 	);
 }

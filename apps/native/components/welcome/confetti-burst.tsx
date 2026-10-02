@@ -10,17 +10,18 @@ import Animated, {
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 
-const PIECE_COUNT = 24;
-const FALL_MS = 2200;
+const PIECE_COUNT = 56;
+const FALL_MS = 2600;
 
-/** Chip tints double as the confetti palette so the burst stays on-theme. */
+/** Bright multicolour palette from the Figma confetti artwork. */
 const PIECE_CLASSES = [
-	"bg-chip-1",
-	"bg-chip-2",
-	"bg-chip-3",
-	"bg-chip-4",
-	"bg-chip-5",
-	"bg-primary",
+	"bg-onb-confetti-1",
+	"bg-onb-confetti-2",
+	"bg-onb-confetti-3",
+	"bg-onb-confetti-4",
+	"bg-onb-confetti-5",
+	"bg-onb-confetti-6",
+	"bg-onb-confetti-7",
 ];
 
 type Piece = {
@@ -29,9 +30,9 @@ type Piece = {
 	startX: number;
 	drift: number;
 	delay: number;
-	size: number;
+	width: number;
+	height: number;
 	spin: number;
-	rounded: boolean;
 };
 
 function Confetti({ piece, height }: { piece: Piece; height: number }) {
@@ -40,7 +41,7 @@ function Confetti({ piece, height }: { piece: Piece; height: number }) {
 	useEffect(() => {
 		progress.value = withDelay(
 			piece.delay,
-			withTiming(1, { duration: FALL_MS, easing: Easing.out(Easing.quad) }),
+			withTiming(1, { duration: FALL_MS, easing: Easing.in(Easing.quad) }),
 		);
 	}, [progress, piece.delay]);
 
@@ -51,14 +52,19 @@ function Confetti({ piece, height }: { piece: Piece; height: number }) {
 			{ rotate: `${progress.value * piece.spin}deg` },
 		],
 		// Hold full opacity most of the way, then fade out near the floor.
-		opacity: progress.value > 0.75 ? (1 - progress.value) * 4 : 1,
+		opacity: progress.value > 0.8 ? (1 - progress.value) * 5 : 1,
 	}));
 
 	return (
 		<AnimatedView
-			className={`absolute ${piece.className} ${piece.rounded ? "rounded-full" : "rounded-[2px]"}`}
+			className={`absolute rounded-[1px] ${piece.className}`}
 			style={[
-				{ left: piece.startX, top: -24, width: piece.size, height: piece.size },
+				{
+					left: piece.startX,
+					top: -24,
+					width: piece.width,
+					height: piece.height,
+				},
 				style,
 			]}
 		/>
@@ -66,26 +72,29 @@ function Confetti({ piece, height }: { piece: Piece; height: number }) {
 }
 
 /**
- * Short celebratory burst for the end of onboarding.
- *
- * Hand-rolled on Reanimated, which is already installed and Metro-configured,
- * rather than pulling in a confetti package for one screen.
+ * Short celebratory burst for the end of onboarding: small bright rectangles and
+ * a few thin slivers, as in the design. Hand-rolled on Reanimated, which is
+ * already installed, rather than pulling in a confetti package for one screen.
  */
 export function ConfettiBurst() {
 	const { width, height } = useWindowDimensions();
 
 	const pieces = useMemo<Piece[]>(
 		() =>
-			Array.from({ length: PIECE_COUNT }, (_, index) => ({
-				key: `piece-${index}`,
-				className: PIECE_CLASSES[index % PIECE_CLASSES.length] ?? "bg-primary",
-				startX: Math.random() * width,
-				drift: (Math.random() - 0.5) * 120,
-				delay: Math.random() * 600,
-				size: 7 + Math.random() * 7,
-				spin: (Math.random() - 0.5) * 720,
-				rounded: index % 3 === 0,
-			})),
+			Array.from({ length: PIECE_COUNT }, (_, index) => {
+				const sliver = index % 5 === 0;
+				return {
+					key: `piece-${index}`,
+					className:
+						PIECE_CLASSES[index % PIECE_CLASSES.length] ?? "bg-onb-confetti-1",
+					startX: Math.random() * width,
+					drift: (Math.random() - 0.5) * 120,
+					delay: Math.random() * 700,
+					width: sliver ? 2 : 4 + Math.random() * 4,
+					height: sliver ? 10 + Math.random() * 6 : 8 + Math.random() * 8,
+					spin: (Math.random() - 0.5) * 720,
+				};
+			}),
 		[width],
 	);
 

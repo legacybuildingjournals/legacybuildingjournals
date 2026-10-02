@@ -7,9 +7,9 @@ import {
 	isCompleteAnswerSet,
 	journalTypeForRecipient,
 	OPTION_ICONS,
-	OPTION_TINTS,
 	QUESTION_SETS,
 	QUESTION_SLOTS,
+	type QuestionSlot,
 	questionsFor,
 	RECIPIENT_QUESTION,
 	RECIPIENTS,
@@ -54,7 +54,7 @@ describe.each(RECIPIENTS)("%s variant", (recipient) => {
 		expect(new Set(ids).size).toBe(ids.length);
 	});
 
-	test("every option has a unique id, a label, an icon and a valid tint", () => {
+	test("every option has a unique id, a label and a known icon", () => {
 		for (const question of questions) {
 			const ids = question.options.map((o) => o.id);
 			expect(new Set(ids).size, `duplicate option id in ${question.id}`).toBe(
@@ -66,8 +66,21 @@ describe.each(RECIPIENTS)("%s variant", (recipient) => {
 				// Both clients key their own icon maps off these, so an unknown one
 				// renders nothing rather than failing loudly at runtime.
 				expect(OPTION_ICONS).toContain(option.icon);
-				expect(OPTION_TINTS).toContain(option.tint);
 			}
+		}
+	});
+
+	test("assigns icons by position, matching the Figma sequence", () => {
+		for (const question of questions) {
+			expect(
+				question.options.map((o) => o.icon),
+				`icons for ${question.id}`,
+			).toEqual(
+				FIGMA_ICON_SEQUENCE[question.slot as QuestionSlot].slice(
+					0,
+					question.options.length,
+				),
+			);
 		}
 	});
 
@@ -91,17 +104,95 @@ describe.each(RECIPIENTS)("%s variant", (recipient) => {
 		}
 	});
 
-	test("produces a result with no unresolved interpolation", () => {
+	test("produces a completion result with no unresolved interpolation", () => {
 		const result = resultFor(recipient, completeAnswers(recipient));
 		expect(result.heading.trim()).not.toBe("");
-		expect(result.body.length).toBeGreaterThan(0);
-		for (const paragraph of result.body) {
-			// An unmatched option id yields an empty phrase, which shows up as a
-			// doubled space or a dangling comma rather than throwing.
-			expect(paragraph).not.toMatch(/\s{2,}/);
-			expect(paragraph).not.toMatch(/\s,|,\s*\./);
-			expect(paragraph).not.toContain("undefined");
+		expect(result.narrative.trim()).not.toBe("");
+		for (const text of [result.heading, result.narrative]) {
+			expect(text).not.toMatch(/\s{2,}/);
+			expect(text).not.toMatch(/\s,|,\s*\./);
+			expect(text).not.toContain("undefined");
 		}
+	});
+});
+
+/** Icon per row, per slot, read off the Figma frames. */
+const FIGMA_ICON_SEQUENCE: Record<QuestionSlot, string[]> = {
+	why: ["smile", "chat", "idea", "home", "gift", "everything"],
+	what: ["trophy", "smile", "camera", "growth", "leaf", "everything"],
+	meaning: ["heart", "eye", "clock", "chats", "school", "everything"],
+	value: ["hourglass", "album", "chats", "gift", "growth", "everything"],
+	how: ["write", "mic", "video", "mix"],
+	confirmation: ["heartPulse", "sparkle", "compass", "question"],
+};
+
+function labelsFor(recipient: Recipient, questionId: string): string[] {
+	const question = questionsFor(recipient).find((q) => q.id === questionId);
+	return question?.options.map((o) => o.label) ?? [];
+}
+
+describe("Figma copy", () => {
+	test("prompts match the designs", () => {
+		const prompts = Object.fromEntries(
+			questionsFor("child").map((q) => [q.id, q.prompt]),
+		);
+		expect(prompts).toMatchObject({
+			recipient: "Who would you want to create a journal for?",
+			why: "What would be the biggest reason for keeping this journal?",
+			what: "What kinds of moments should this journal capture?",
+			meaning: "Years from now, what should these journals communicate?",
+			value: "What would make these journals feel meaningful?",
+			capture:
+				"What would feel natural for capturing these stories and memories?",
+			confirmation:
+				"How would it feel knowing these stories and memories were being preserved for the future?",
+		});
+	});
+
+	test("eyebrows match the designs", () => {
+		const eyebrow = (r: Recipient) => QUESTION_SETS[r][0]?.eyebrow;
+		expect(eyebrow("child")).toBe("CREATING FOR YOUR CHILDREN");
+		expect(eyebrow("partner")).toBe("CREATING FOR MY PARTNER");
+		expect(eyebrow("other")).toBe("CREATING FOR SOMEONE SPECIAL");
+		expect(eyebrow("myself")).toBe("CREATING FOR MYSELF");
+	});
+
+	test("Q2 options match the designed variants", () => {
+		expect(labelsFor("child", "why")).toEqual([
+			"Preserving their childhood",
+			"Sharing my thoughts and feelings with them",
+			"Passing along lessons and advice",
+			"Helping them understand our family's story",
+			"Giving them something personal from me",
+			"A little of everything",
+		]);
+		expect(labelsFor("partner", "why")).toEqual([
+			"Preserving our shared memories",
+			"Sharing my thoughts and feelings with them",
+			"Passing along lessons and advice",
+			"Capturing our story together",
+			"Leaving something personal behind",
+			"A little of everything",
+		]);
+		expect(labelsFor("myself", "why").slice(0, 4)).toEqual([
+			"Preserving my memories",
+			"Expressing my thoughts and feelings",
+			"Recording lessons and advice",
+			"Understanding my own story",
+		]);
+	});
+
+	test("completion heading for child is verbatim, and narrative follows Q6", () => {
+		const voice = { ...completeAnswers("child"), capture: "voice" };
+		expect(resultFor("child", voice)).toEqual({
+			heading: "You\u2019re creating more than a\nrecord of childhood",
+			narrative:
+				"Capturing them in your own voice creates something personal your children can carry with them into the future.",
+		});
+		const writing = { ...completeAnswers("child"), capture: "writing" };
+		expect(resultFor("child", writing).narrative).toContain("in writing");
+		const video = { ...completeAnswers("child"), capture: "video" };
+		expect(resultFor("child", video).narrative).toContain("on video");
 	});
 });
 

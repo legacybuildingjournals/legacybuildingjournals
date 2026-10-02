@@ -4,17 +4,32 @@ import { ChevronRight } from "lucide-react";
 
 import { ONBOARDING_ICONS } from "@/lib/onboarding/icons";
 
-/** Tint id -> chip classes, written out so Tailwind can extract them. */
-const CHIP_CLASS: Record<string, string> = {
-	"chip-1": "bg-chip-1 text-chip-1-foreground",
-	"chip-2": "bg-chip-2 text-chip-2-foreground",
-	"chip-3": "bg-chip-3 text-chip-3-foreground",
-	"chip-4": "bg-chip-4 text-chip-4-foreground",
-	"chip-5": "bg-chip-5 text-chip-5-foreground",
-};
+/**
+ * Chip colours follow the row's position, not its meaning — that is how the
+ * Figma designs assign them. Spelled out so Tailwind can see every class.
+ */
+const CHIP_BG = [
+	"bg-onb-chip-1",
+	"bg-onb-chip-2",
+	"bg-onb-chip-3",
+	"bg-onb-chip-4",
+	"bg-onb-chip-5",
+	"bg-onb-chip-6",
+] as const;
+
+const CHIP_FG = [
+	"text-onb-chip-fg-1",
+	"text-onb-chip-fg-2",
+	"text-onb-chip-fg-3",
+	"text-onb-chip-fg-4",
+	"text-onb-chip-fg-5",
+	"text-onb-chip-fg-6",
+] as const;
 
 type OnboardingOptionRowProps = {
 	option: QuestionOption;
+	/** Zero-based position in the list. */
+	index: number;
 	selected: boolean;
 	disabled: boolean;
 	onSelect: () => void;
@@ -22,11 +37,13 @@ type OnboardingOptionRowProps = {
 
 export function OnboardingOptionRow({
 	option,
+	index,
 	selected,
 	disabled,
 	onSelect,
 }: OnboardingOptionRowProps) {
 	const Icon = ONBOARDING_ICONS[option.icon];
+	const slot = index % CHIP_BG.length;
 
 	return (
 		<button
@@ -35,39 +52,36 @@ export function OnboardingOptionRow({
 			disabled={disabled}
 			aria-pressed={selected}
 			className={cn(
-				"flex w-full items-center gap-3 rounded-2xl border p-3 text-left transition-all lg:gap-4",
-				// Roomier only when the window is tall enough to afford it — the
-				// six-option questions must keep every option above the fold.
-				"lg:[@media(min-height:900px)]:p-4",
-				"hover:shadow-sm active:scale-[0.99]",
-				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+				"flex w-full items-center justify-between rounded-[12px] border border-transparent px-[17px] py-[15px] text-left",
+				"shadow-[0_1px_1.5px_rgba(0,0,0,0.04)] transition-all",
+				"hover:-translate-y-px hover:shadow-[0_6px_16px_-6px_rgba(11,48,42,0.18)] active:translate-y-0 active:scale-[0.99]",
+				"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-onb-teal focus-visible:ring-offset-2",
 				"disabled:pointer-events-none disabled:opacity-60",
-				selected
-					? "border-primary bg-primary text-primary-foreground"
-					: "border-border bg-card hover:bg-accent/40",
+				selected ? "bg-onb-selected text-white" : "bg-white text-onb-text",
 			)}
 		>
-			<span
-				className={cn(
-					"flex size-11 shrink-0 items-center justify-center rounded-full transition-colors",
-					selected
-						? "bg-primary-foreground/20 text-primary-foreground"
-						: (CHIP_CLASS[option.tint] ?? "bg-muted text-muted-foreground"),
-				)}
-			>
-				<Icon className="size-5" aria-hidden="true" />
-			</span>
-
-			<span className="flex-1 text-[15px] leading-snug sm:text-base">
-				{option.label}
+			<span className="flex min-w-0 items-center gap-4">
+				<span
+					className={cn(
+						"flex size-10 shrink-0 items-center justify-center rounded-full transition-colors",
+						selected
+							? "bg-white/20 text-white"
+							: cn(CHIP_BG[slot], CHIP_FG[slot]),
+					)}
+				>
+					<Icon size={20} aria-hidden="true" />
+				</span>
+				<span className="text-[15px] leading-5">{option.label}</span>
 			</span>
 
 			<ChevronRight
-				className={cn(
-					"size-4 shrink-0 transition-transform",
-					selected ? "text-primary-foreground" : "text-muted-foreground",
-				)}
+				size={16}
+				strokeWidth={2.5}
 				aria-hidden="true"
+				className={cn(
+					"ml-2 shrink-0",
+					selected ? "text-white" : "text-onb-chevron",
+				)}
 			/>
 		</button>
 	);

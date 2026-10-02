@@ -36,21 +36,14 @@ export const QUESTION_SLOTS = [
 
 export type QuestionSlot = (typeof QUESTION_SLOTS)[number];
 
-/** Decorative chip colors for option icons, mirroring the `--chart-N` idiom. */
-export const OPTION_TINTS = [
-	"chip-1",
-	"chip-2",
-	"chip-3",
-	"chip-4",
-	"chip-5",
-] as const;
-
-export type OptionTint = (typeof OPTION_TINTS)[number];
-
 /**
- * Platform-neutral icon keys. Web and native use different icon libraries, so
- * each maps these to its own glyphs; typing the maps as `Record<OptionIcon, _>`
- * means adding a key here fails the build until both clients handle it.
+ * Platform-neutral icon keys. Each client maps them to its own Lucide
+ * component (`lucide-react` / `lucide-react-native`); typing those maps as
+ * `Record<OptionIcon, _>` means adding a key here fails the build until both
+ * clients handle it.
+ *
+ * Which key an option gets is decided by its position, not its meaning — see
+ * `ICONS_BY_SLOT` — because that is how the Figma designs assign them.
  */
 export const OPTION_ICONS = [
 	"album",
@@ -68,7 +61,7 @@ export const OPTION_ICONS = [
 	"globe",
 	"growth",
 	"heart",
-	"heartCircle",
+	"heartPulse",
 	"home",
 	"hourglass",
 	"idea",
@@ -95,7 +88,6 @@ export type QuestionOption = {
 	id: string;
 	label: string;
 	icon: OptionIcon;
-	tint: OptionTint;
 	/**
 	 * Prose form used when the result screen reflects this answer back in a
 	 * sentence. Falls back to a lowercased `label`, which reads correctly for
@@ -127,7 +119,6 @@ const EVERYTHING: QuestionOption = {
 	id: "everything",
 	label: "A little of everything",
 	icon: "everything",
-	tint: "chip-5",
 	phrase: "a little of everything",
 };
 
@@ -136,7 +127,7 @@ const EVERYTHING: QuestionOption = {
 export const RECIPIENT_QUESTION: Question = {
 	id: "recipient",
 	slot: "who",
-	prompt: "Who would you most want to create a journal for?",
+	prompt: "Who would you want to create a journal for?",
 	helper:
 		"Your answer helps us personalize your experience and the questions that follow.",
 	options: [
@@ -144,31 +135,26 @@ export const RECIPIENT_QUESTION: Question = {
 			id: "child",
 			label: "My child or children",
 			icon: "people",
-			tint: "chip-1",
 		},
 		{
 			id: "grandchild",
 			label: "My grandchild or grandchildren",
 			icon: "family",
-			tint: "chip-2",
 		},
 		{
 			id: "partner",
 			label: "My partner",
 			icon: "heart",
-			tint: "chip-3",
 		},
 		{
 			id: "other",
 			label: "Another family member or someone important to me",
 			icon: "personAdd",
-			tint: "chip-4",
 		},
 		{
 			id: "myself",
 			label: "Myself",
 			icon: "person",
-			tint: "chip-5",
 		},
 	],
 };
@@ -181,28 +167,24 @@ const CAPTURE_OPTIONS: QuestionOption[] = [
 		id: "writing",
 		label: "Writing",
 		icon: "write",
-		tint: "chip-1",
 		phrase: "writing",
 	},
 	{
 		id: "voice",
 		label: "My voice",
 		icon: "mic",
-		tint: "chip-2",
 		phrase: "your own voice",
 	},
 	{
 		id: "video",
 		label: "Video",
 		icon: "video",
-		tint: "chip-3",
 		phrase: "video",
 	},
 	{
 		id: "combination",
 		label: "A combination of them",
 		icon: "mix",
-		tint: "chip-4",
 		phrase: "a mix of ways",
 	},
 ];
@@ -216,26 +198,22 @@ const CONFIRMATION_QUESTION: Question = {
 		{
 			id: "very_meaningful",
 			label: "Very meaningful to me",
-			icon: "heartCircle",
-			tint: "chip-1",
+			icon: "heartPulse",
 		},
 		{
 			id: "would_value",
 			label: "I think I'd value that",
 			icon: "sparkle",
-			tint: "chip-2",
 		},
 		{
 			id: "curious",
 			label: "I'm curious to try it",
 			icon: "compass",
-			tint: "chip-3",
 		},
 		{
 			id: "unsure",
 			label: "I'm not sure yet",
 			icon: "question",
-			tint: "chip-4",
 		},
 	],
 };
@@ -256,43 +234,38 @@ const CHILD_QUESTIONS: Question[] = [
 	{
 		id: "why",
 		slot: "why",
-		prompt: "What would be your biggest reason for keeping this journal?",
+		prompt: "What would be the biggest reason for keeping this journal?",
 		helper:
-			"There are no wrong answers. This helps us understand what matters most to you.",
+			"There are no wrong answers. This helps us understand what matters to you.",
 		options: [
 			{
 				id: "preserve_childhood",
 				label: "Preserving their childhood",
 				icon: "smile",
-				tint: "chip-1",
 				phrase: "preserve their childhood",
 			},
 			{
 				id: "share_feelings",
 				label: "Sharing my thoughts and feelings with them",
 				icon: "chat",
-				tint: "chip-2",
 				phrase: "share your thoughts and feelings with them",
 			},
 			{
 				id: "pass_lessons",
 				label: "Passing along lessons and advice",
 				icon: "idea",
-				tint: "chip-3",
 				phrase: "pass along lessons and advice",
 			},
 			{
 				id: "family_story",
 				label: "Helping them understand our family's story",
 				icon: "home",
-				tint: "chip-4",
 				phrase: "help them understand your family's story",
 			},
 			{
 				id: "something_personal",
 				label: "Giving them something personal from me",
 				icon: "gift",
-				tint: "chip-5",
 				phrase: "give them something personal from you",
 			},
 			EVERYTHING,
@@ -301,42 +274,37 @@ const CHILD_QUESTIONS: Question[] = [
 	{
 		id: "what",
 		slot: "what",
-		prompt: "What kinds of moments would you most want to capture?",
+		prompt: "What kinds of moments should this journal capture?",
 		footer: "The moments you capture today can mean everything tomorrow.",
 		options: [
 			{
 				id: "milestones",
 				label: "Milestones and accomplishments",
 				icon: "trophy",
-				tint: "chip-1",
 				phrase: "milestones and accomplishments",
 			},
 			{
 				id: "funny",
 				label: "Funny or unexpected moments",
 				icon: "smile",
-				tint: "chip-2",
 				phrase: "the funny and unexpected moments",
 			},
 			{
 				id: "everyday",
 				label: "Ordinary everyday memories",
 				icon: "camera",
-				tint: "chip-3",
 				phrase: "the ordinary everyday memories",
 			},
 			{
 				id: "challenges",
 				label: "Challenges and what we learned from them",
 				icon: "growth",
-				tint: "chip-4",
 				phrase: "challenges and what you learned from them",
 			},
 			{
 				id: "traditions",
 				label: "Family traditions and experiences",
 				icon: "leaf",
-				tint: "chip-5",
 				phrase: "family traditions and experiences",
 			},
 			EVERYTHING,
@@ -345,42 +313,36 @@ const CHILD_QUESTIONS: Question[] = [
 	{
 		id: "meaning",
 		slot: "meaning",
-		prompt:
-			"Years from now, what would you most want these journals to communicate?",
+		prompt: "Years from now, what should these journals communicate?",
 		options: [
 			{
 				id: "mean_to_me",
 				label: "How much they mean to me",
 				icon: "heart",
-				tint: "chip-1",
 				phrase: "how much they mean to you",
 			},
 			{
 				id: "noticed",
 				label: "What I noticed and appreciated about them",
 				icon: "eye",
-				tint: "chip-2",
 				phrase: "what you noticed and appreciated about them",
 			},
 			{
 				id: "time_together",
 				label: "What our time together was really like",
 				icon: "clock",
-				tint: "chip-3",
 				phrase: "what your time together was really like",
 			},
 			{
 				id: "unsaid",
 				label: "Things I may not always say out loud",
 				icon: "chats",
-				tint: "chip-4",
 				phrase: "the things you may not always say out loud",
 			},
 			{
 				id: "learned",
 				label: "What I've learned along the way",
 				icon: "school",
-				tint: "chip-5",
 				phrase: "what you've learned along the way",
 			},
 			EVERYTHING,
@@ -389,48 +351,43 @@ const CHILD_QUESTIONS: Question[] = [
 	{
 		id: "value",
 		slot: "value",
-		prompt: "What would make these journals feel most meaningful to you?",
+		prompt: "What would make these journals feel meaningful?",
 		options: [
 			{
 				id: "otherwise_forgotten",
 				label: "Preserving moments that could otherwise be forgotten",
 				icon: "hourglass",
-				tint: "chip-1",
 				phrase: "preserving moments that could otherwise be forgotten",
 			},
 			{
 				id: "remember_differently",
 				label: "Capturing stories we may remember differently later",
 				icon: "album",
-				tint: "chip-2",
 				phrase: "capturing stories you may remember differently later",
 			},
 			{
 				id: "unsaid",
 				label: "Sharing thoughts I may not always say out loud",
 				icon: "chats",
-				tint: "chip-3",
 				phrase: "sharing thoughts you may not always say out loud",
 			},
 			{
 				id: "personal",
 				label: "Creating something personal for them",
 				icon: "gift",
-				tint: "chip-4",
 				phrase: "creating something personal for them",
 			},
 			{
 				id: "over_time",
 				label: "Showing how life changed over time",
 				icon: "growth",
-				tint: "chip-5",
 				phrase: "showing how life changed over time",
 			},
 			EVERYTHING,
 		],
 	},
 	captureQuestion(
-		"How would you most naturally want to capture these stories and memories?",
+		"What would feel natural for capturing these stories and memories?",
 	),
 	CONFIRMATION_QUESTION,
 ];
@@ -439,43 +396,38 @@ const GRANDCHILD_QUESTIONS: Question[] = [
 	{
 		id: "why",
 		slot: "why",
-		prompt: "What would be your biggest reason for keeping this journal?",
+		prompt: "What would be the biggest reason for keeping this journal?",
 		helper:
-			"There are no wrong answers. This helps us understand what matters most to you.",
+			"There are no wrong answers. This helps us understand what matters to you.",
 		options: [
 			{
 				id: "family_history",
 				label: "Preserving our family's history",
 				icon: "home",
-				tint: "chip-1",
 				phrase: "preserve your family's history",
 			},
 			{
 				id: "share_feelings",
 				label: "Sharing my thoughts and feelings with them",
 				icon: "chat",
-				tint: "chip-2",
 				phrase: "share your thoughts and feelings with them",
 			},
 			{
 				id: "pass_lessons",
 				label: "Passing along lessons and advice",
 				icon: "idea",
-				tint: "chip-3",
 				phrase: "pass along lessons and advice",
 			},
 			{
 				id: "where_from",
 				label: "Helping them know where they come from",
 				icon: "lineage",
-				tint: "chip-4",
 				phrase: "help them know where they come from",
 			},
 			{
 				id: "something_personal",
 				label: "Giving them something personal from me",
 				icon: "gift",
-				tint: "chip-5",
 				phrase: "give them something personal from you",
 			},
 			EVERYTHING,
@@ -484,42 +436,37 @@ const GRANDCHILD_QUESTIONS: Question[] = [
 	{
 		id: "what",
 		slot: "what",
-		prompt: "What kinds of moments would you most want to capture?",
+		prompt: "What kinds of moments should this journal capture?",
 		footer: "Some stories only you can pass down.",
 		options: [
 			{
 				id: "milestones",
 				label: "Milestones and accomplishments",
 				icon: "trophy",
-				tint: "chip-1",
 				phrase: "milestones and accomplishments",
 			},
 			{
 				id: "funny",
 				label: "Funny or unexpected moments",
 				icon: "smile",
-				tint: "chip-2",
 				phrase: "the funny and unexpected moments",
 			},
 			{
 				id: "everyday",
 				label: "Ordinary everyday memories",
 				icon: "camera",
-				tint: "chip-3",
 				phrase: "the ordinary everyday memories",
 			},
 			{
 				id: "own_life",
 				label: "Stories from my own life",
 				icon: "book",
-				tint: "chip-4",
 				phrase: "stories from your own life",
 			},
 			{
 				id: "traditions",
 				label: "Family traditions and experiences",
 				icon: "leaf",
-				tint: "chip-5",
 				phrase: "family traditions and experiences",
 			},
 			EVERYTHING,
@@ -528,42 +475,36 @@ const GRANDCHILD_QUESTIONS: Question[] = [
 	{
 		id: "meaning",
 		slot: "meaning",
-		prompt:
-			"Years from now, what would you most want these journals to communicate?",
+		prompt: "Years from now, what should these journals communicate?",
 		options: [
 			{
 				id: "mean_to_me",
 				label: "How much they mean to me",
 				icon: "heart",
-				tint: "chip-1",
 				phrase: "how much they mean to you",
 			},
 			{
 				id: "noticed",
 				label: "What I noticed and appreciated about them",
 				icon: "eye",
-				tint: "chip-2",
 				phrase: "what you noticed and appreciated about them",
 			},
 			{
 				id: "where_family_came_from",
 				label: "Where our family came from",
 				icon: "globe",
-				tint: "chip-3",
 				phrase: "where your family came from",
 			},
 			{
 				id: "unsaid",
 				label: "Things I may not always say out loud",
 				icon: "chats",
-				tint: "chip-4",
 				phrase: "the things you may not always say out loud",
 			},
 			{
 				id: "learned",
 				label: "What I've learned along the way",
 				icon: "school",
-				tint: "chip-5",
 				phrase: "what you've learned along the way",
 			},
 			EVERYTHING,
@@ -572,48 +513,43 @@ const GRANDCHILD_QUESTIONS: Question[] = [
 	{
 		id: "value",
 		slot: "value",
-		prompt: "What would make these journals feel most meaningful to you?",
+		prompt: "What would make these journals feel meaningful?",
 		options: [
 			{
 				id: "otherwise_forgotten",
 				label: "Preserving moments that could otherwise be forgotten",
 				icon: "hourglass",
-				tint: "chip-1",
 				phrase: "preserving moments that could otherwise be forgotten",
 			},
 			{
 				id: "outlast",
 				label: "Knowing my stories will outlast me",
 				icon: "everything",
-				tint: "chip-2",
 				phrase: "knowing your stories will outlast you",
 			},
 			{
 				id: "unsaid",
 				label: "Sharing thoughts I may not always say out loud",
 				icon: "chats",
-				tint: "chip-3",
 				phrase: "sharing thoughts you may not always say out loud",
 			},
 			{
 				id: "personal",
 				label: "Creating something personal for them",
 				icon: "gift",
-				tint: "chip-4",
 				phrase: "creating something personal for them",
 			},
 			{
 				id: "over_time",
 				label: "Showing how life changed over time",
 				icon: "growth",
-				tint: "chip-5",
 				phrase: "showing how life changed over time",
 			},
 			EVERYTHING,
 		],
 	},
 	captureQuestion(
-		"How would you most naturally want to capture these stories and memories?",
+		"What would feel natural for capturing these stories and memories?",
 	),
 	CONFIRMATION_QUESTION,
 ];
@@ -622,44 +558,39 @@ const PARTNER_QUESTIONS: Question[] = [
 	{
 		id: "why",
 		slot: "why",
-		prompt: "What would be your biggest reason for keeping this journal?",
+		prompt: "What would be the biggest reason for keeping this journal?",
 		helper:
-			"There are no wrong answers. This helps us understand what matters most to you.",
+			"There are no wrong answers. This helps us understand what matters to you.",
 		options: [
 			{
-				id: "life_together",
-				label: "Preserving the life we've built together",
-				icon: "home",
-				tint: "chip-1",
-				phrase: "preserve the life you've built together",
+				id: "shared_memories",
+				label: "Preserving our shared memories",
+				icon: "smile",
+				phrase: "preserve your shared memories",
 			},
 			{
 				id: "share_feelings",
 				label: "Sharing my thoughts and feelings with them",
-				icon: "chat",
-				tint: "chip-2",
+				icon: "smile",
 				phrase: "share your thoughts and feelings with them",
 			},
 			{
-				id: "how_we_got_here",
-				label: "Remembering how we got here",
-				icon: "footsteps",
-				tint: "chip-3",
-				phrase: "remember how you got here",
+				id: "pass_lessons",
+				label: "Passing along lessons and advice",
+				icon: "smile",
+				phrase: "pass along lessons and advice",
 			},
 			{
-				id: "unsaid",
-				label: "Saying things I don't always say out loud",
-				icon: "chats",
-				tint: "chip-4",
-				phrase: "say the things you don't always say out loud",
+				id: "our_story",
+				label: "Capturing our story together",
+				icon: "smile",
+				phrase: "capture your story together",
 			},
 			{
-				id: "something_personal",
-				label: "Giving them something personal from me",
-				icon: "gift",
-				tint: "chip-5",
-				phrase: "give them something personal from you",
+				id: "leave_something",
+				label: "Leaving something personal behind",
+				icon: "smile",
+				phrase: "leave something personal behind",
 			},
 			EVERYTHING,
 		],
@@ -667,42 +598,37 @@ const PARTNER_QUESTIONS: Question[] = [
 	{
 		id: "what",
 		slot: "what",
-		prompt: "What kinds of moments would you most want to capture?",
+		prompt: "What kinds of moments should this journal capture?",
 		footer: "The ordinary days are the ones you'll want back.",
 		options: [
 			{
 				id: "milestones",
 				label: "Milestones we've shared",
 				icon: "trophy",
-				tint: "chip-1",
 				phrase: "the milestones you've shared",
 			},
 			{
 				id: "funny",
 				label: "Funny or unexpected moments",
 				icon: "smile",
-				tint: "chip-2",
 				phrase: "the funny and unexpected moments",
 			},
 			{
 				id: "everyday",
 				label: "Ordinary everyday memories",
 				icon: "camera",
-				tint: "chip-3",
 				phrase: "the ordinary everyday memories",
 			},
 			{
 				id: "challenges",
 				label: "Challenges we came through together",
 				icon: "growth",
-				tint: "chip-4",
 				phrase: "the challenges you came through together",
 			},
 			{
 				id: "traditions",
 				label: "Traditions and experiences we share",
 				icon: "leaf",
-				tint: "chip-5",
 				phrase: "the traditions and experiences you share",
 			},
 			EVERYTHING,
@@ -711,42 +637,36 @@ const PARTNER_QUESTIONS: Question[] = [
 	{
 		id: "meaning",
 		slot: "meaning",
-		prompt:
-			"Years from now, what would you most want these journals to communicate?",
+		prompt: "Years from now, what should these journals communicate?",
 		options: [
 			{
 				id: "mean_to_me",
 				label: "How much they mean to me",
 				icon: "heart",
-				tint: "chip-1",
 				phrase: "how much they mean to you",
 			},
 			{
 				id: "noticed",
 				label: "What I notice and appreciate about them",
 				icon: "eye",
-				tint: "chip-2",
 				phrase: "what you notice and appreciate about them",
 			},
 			{
 				id: "life_together",
 				label: "What our life together has really been like",
 				icon: "clock",
-				tint: "chip-3",
 				phrase: "what your life together has really been like",
 			},
 			{
 				id: "unsaid",
 				label: "Things I may not always say out loud",
 				icon: "chats",
-				tint: "chip-4",
 				phrase: "the things you may not always say out loud",
 			},
 			{
 				id: "learned",
 				label: "What I've learned alongside them",
 				icon: "school",
-				tint: "chip-5",
 				phrase: "what you've learned alongside them",
 			},
 			EVERYTHING,
@@ -755,48 +675,43 @@ const PARTNER_QUESTIONS: Question[] = [
 	{
 		id: "value",
 		slot: "value",
-		prompt: "What would make these journals feel most meaningful to you?",
+		prompt: "What would make these journals feel meaningful?",
 		options: [
 			{
 				id: "otherwise_forgotten",
 				label: "Preserving moments that could otherwise be forgotten",
 				icon: "hourglass",
-				tint: "chip-1",
 				phrase: "preserving moments that could otherwise be forgotten",
 			},
 			{
 				id: "remember_differently",
 				label: "Capturing stories we may remember differently later",
 				icon: "album",
-				tint: "chip-2",
 				phrase: "capturing stories you may remember differently later",
 			},
 			{
 				id: "unsaid",
 				label: "Sharing thoughts I may not always say out loud",
 				icon: "chats",
-				tint: "chip-3",
 				phrase: "sharing thoughts you may not always say out loud",
 			},
 			{
 				id: "personal",
 				label: "Creating something personal for them",
 				icon: "gift",
-				tint: "chip-4",
 				phrase: "creating something personal for them",
 			},
 			{
 				id: "over_time",
 				label: "Showing how our life changed over time",
 				icon: "growth",
-				tint: "chip-5",
 				phrase: "showing how your life changed over time",
 			},
 			EVERYTHING,
 		],
 	},
 	captureQuestion(
-		"How would you most naturally want to capture these stories and memories?",
+		"What would feel natural for capturing these stories and memories?",
 	),
 	CONFIRMATION_QUESTION,
 ];
@@ -805,43 +720,38 @@ const OTHER_QUESTIONS: Question[] = [
 	{
 		id: "why",
 		slot: "why",
-		prompt: "What would be your biggest reason for keeping this journal?",
+		prompt: "What would be the biggest reason for keeping this journal?",
 		helper:
-			"There are no wrong answers. This helps us understand what matters most to you.",
+			"There are no wrong answers. This helps us understand what matters to you.",
 		options: [
 			{
 				id: "shared_memories",
-				label: "Preserving memories we share",
-				icon: "album",
-				tint: "chip-1",
-				phrase: "preserve the memories you share",
+				label: "Preserving shared memories",
+				icon: "smile",
+				phrase: "preserve shared memories",
 			},
 			{
 				id: "share_feelings",
-				label: "Sharing my thoughts and feelings with them",
-				icon: "chat",
-				tint: "chip-2",
-				phrase: "share your thoughts and feelings with them",
+				label: "Sharing my thoughts and feelings",
+				icon: "smile",
+				phrase: "share your thoughts and feelings",
 			},
 			{
 				id: "pass_lessons",
 				label: "Passing along lessons and advice",
-				icon: "idea",
-				tint: "chip-3",
+				icon: "smile",
 				phrase: "pass along lessons and advice",
 			},
 			{
-				id: "our_story",
-				label: "Helping them understand our story",
-				icon: "book",
-				tint: "chip-4",
-				phrase: "help them understand your story",
+				id: "family_story",
+				label: "Helping them understand our family’s story",
+				icon: "smile",
+				phrase: "help them understand your family’s story",
 			},
 			{
 				id: "something_personal",
 				label: "Giving them something personal from me",
-				icon: "gift",
-				tint: "chip-5",
+				icon: "smile",
 				phrase: "give them something personal from you",
 			},
 			EVERYTHING,
@@ -850,42 +760,37 @@ const OTHER_QUESTIONS: Question[] = [
 	{
 		id: "what",
 		slot: "what",
-		prompt: "What kinds of moments would you most want to capture?",
+		prompt: "What kinds of moments should this journal capture?",
 		footer: "Some people deserve more than a passing mention.",
 		options: [
 			{
 				id: "milestones",
 				label: "Milestones and accomplishments",
 				icon: "trophy",
-				tint: "chip-1",
 				phrase: "milestones and accomplishments",
 			},
 			{
 				id: "funny",
 				label: "Funny or unexpected moments",
 				icon: "smile",
-				tint: "chip-2",
 				phrase: "the funny and unexpected moments",
 			},
 			{
 				id: "everyday",
 				label: "Ordinary everyday memories",
 				icon: "camera",
-				tint: "chip-3",
 				phrase: "the ordinary everyday memories",
 			},
 			{
 				id: "challenges",
 				label: "Challenges and what we learned from them",
 				icon: "growth",
-				tint: "chip-4",
 				phrase: "challenges and what you learned from them",
 			},
 			{
 				id: "traditions",
 				label: "Traditions and experiences we share",
 				icon: "leaf",
-				tint: "chip-5",
 				phrase: "the traditions and experiences you share",
 			},
 			EVERYTHING,
@@ -894,42 +799,36 @@ const OTHER_QUESTIONS: Question[] = [
 	{
 		id: "meaning",
 		slot: "meaning",
-		prompt:
-			"Years from now, what would you most want these journals to communicate?",
+		prompt: "Years from now, what should these journals communicate?",
 		options: [
 			{
 				id: "mean_to_me",
 				label: "How much they mean to me",
 				icon: "heart",
-				tint: "chip-1",
 				phrase: "how much they mean to you",
 			},
 			{
 				id: "noticed",
 				label: "What I noticed and appreciated about them",
 				icon: "eye",
-				tint: "chip-2",
 				phrase: "what you noticed and appreciated about them",
 			},
 			{
 				id: "time_together",
 				label: "What our time together was really like",
 				icon: "clock",
-				tint: "chip-3",
 				phrase: "what your time together was really like",
 			},
 			{
 				id: "unsaid",
 				label: "Things I may not always say out loud",
 				icon: "chats",
-				tint: "chip-4",
 				phrase: "the things you may not always say out loud",
 			},
 			{
 				id: "learned",
 				label: "What I've learned along the way",
 				icon: "school",
-				tint: "chip-5",
 				phrase: "what you've learned along the way",
 			},
 			EVERYTHING,
@@ -938,48 +837,43 @@ const OTHER_QUESTIONS: Question[] = [
 	{
 		id: "value",
 		slot: "value",
-		prompt: "What would make these journals feel most meaningful to you?",
+		prompt: "What would make these journals feel meaningful?",
 		options: [
 			{
 				id: "otherwise_forgotten",
 				label: "Preserving moments that could otherwise be forgotten",
 				icon: "hourglass",
-				tint: "chip-1",
 				phrase: "preserving moments that could otherwise be forgotten",
 			},
 			{
 				id: "remember_differently",
 				label: "Capturing stories we may remember differently later",
 				icon: "album",
-				tint: "chip-2",
 				phrase: "capturing stories you may remember differently later",
 			},
 			{
 				id: "unsaid",
 				label: "Sharing thoughts I may not always say out loud",
 				icon: "chats",
-				tint: "chip-3",
 				phrase: "sharing thoughts you may not always say out loud",
 			},
 			{
 				id: "personal",
 				label: "Creating something personal for them",
 				icon: "gift",
-				tint: "chip-4",
 				phrase: "creating something personal for them",
 			},
 			{
 				id: "over_time",
 				label: "Showing how life changed over time",
 				icon: "growth",
-				tint: "chip-5",
 				phrase: "showing how life changed over time",
 			},
 			EVERYTHING,
 		],
 	},
 	captureQuestion(
-		"How would you most naturally want to capture these stories and memories?",
+		"What would feel natural for capturing these stories and memories?",
 	),
 	CONFIRMATION_QUESTION,
 ];
@@ -988,44 +882,39 @@ const MYSELF_QUESTIONS: Question[] = [
 	{
 		id: "why",
 		slot: "why",
-		prompt: "What would be your biggest reason for keeping this journal?",
+		prompt: "What would be the biggest reason for keeping this journal?",
 		helper:
-			"There are no wrong answers. This helps us understand what matters most to you.",
+			"There are no wrong answers. This helps us understand what matters to you.",
 		options: [
 			{
-				id: "remember_experiences",
-				label: "Remembering experiences I've had",
-				icon: "album",
-				tint: "chip-1",
-				phrase: "remember the experiences you've had",
+				id: "preserve_memories",
+				label: "Preserving my memories",
+				icon: "smile",
+				phrase: "preserve your memories",
 			},
 			{
-				id: "grow_change",
-				label: "Seeing how I grow and change",
-				icon: "growth",
-				tint: "chip-2",
-				phrase: "see how you grow and change",
+				id: "express_feelings",
+				label: "Expressing my thoughts and feelings",
+				icon: "smile",
+				phrase: "express your thoughts and feelings",
 			},
 			{
-				id: "working_toward",
-				label: "Recording what I'm working toward",
-				icon: "compass",
-				tint: "chip-3",
-				phrase: "record what you're working toward",
+				id: "record_lessons",
+				label: "Recording lessons and advice",
+				icon: "smile",
+				phrase: "record lessons and advice",
 			},
 			{
-				id: "thoughts_feelings",
-				label: "Capturing my thoughts and feelings",
-				icon: "chat",
-				tint: "chip-4",
-				phrase: "capture your thoughts and feelings",
+				id: "own_story",
+				label: "Understanding my own story",
+				icon: "smile",
+				phrase: "understand your own story",
 			},
 			{
-				id: "preserve_story",
-				label: "Preserving my story for the future",
-				icon: "hourglass",
-				tint: "chip-5",
-				phrase: "preserve your story for the future",
+				id: "future_self",
+				label: "Leaving something personal for my future self",
+				icon: "smile",
+				phrase: "leave something personal for your future self",
 			},
 			EVERYTHING,
 		],
@@ -1033,42 +922,37 @@ const MYSELF_QUESTIONS: Question[] = [
 	{
 		id: "what",
 		slot: "what",
-		prompt: "What parts of your life would you most want to capture?",
+		prompt: "What kinds of moments should this journal capture?",
 		footer: "Your story is happening right now.",
 		options: [
 			{
 				id: "milestones",
 				label: "Important milestones",
 				icon: "trophy",
-				tint: "chip-1",
 				phrase: "the important milestones",
 			},
 			{
 				id: "everyday",
 				label: "Everyday experiences",
 				icon: "camera",
-				tint: "chip-2",
 				phrase: "the everyday experiences of your life",
 			},
 			{
 				id: "challenges",
 				label: "Challenges and what I learned from them",
 				icon: "growth",
-				tint: "chip-3",
 				phrase: "challenges and what you learned from them",
 			},
 			{
 				id: "accomplishments",
 				label: "Accomplishments I'm proud of",
 				icon: "ribbon",
-				tint: "chip-4",
 				phrase: "the accomplishments you're proud of",
 			},
 			{
 				id: "relationships",
 				label: "Relationships and people important to me",
 				icon: "people",
-				tint: "chip-5",
 				phrase: "the relationships and people important to you",
 			},
 			EVERYTHING,
@@ -1078,41 +962,36 @@ const MYSELF_QUESTIONS: Question[] = [
 		id: "meaning",
 		slot: "meaning",
 		prompt:
-			"Years from now, what would you most want these journals to remind you of?",
+			"Years from now, what would you want these journals to remind you of?",
 		options: [
 			{
 				id: "who_i_was",
 				label: "Who I was at different points in my life",
 				icon: "person",
-				tint: "chip-1",
 				phrase: "who you were at different points in your life",
 			},
 			{
 				id: "mattered_most",
-				label: "What mattered most to me",
+				label: "What mattered to me",
 				icon: "heart",
-				tint: "chip-2",
-				phrase: "what mattered most to you",
+				phrase: "what mattered to you",
 			},
 			{
 				id: "grown_changed",
 				label: "How I've grown and changed",
 				icon: "growth",
-				tint: "chip-3",
 				phrase: "how you've grown and changed",
 			},
 			{
 				id: "accomplished",
 				label: "Things I've accomplished",
 				icon: "trophy",
-				tint: "chip-4",
 				phrase: "the things you've accomplished",
 			},
 			{
 				id: "lessons",
 				label: "Lessons I've learned",
 				icon: "school",
-				tint: "chip-5",
 				phrase: "the lessons you've learned",
 			},
 			EVERYTHING,
@@ -1121,73 +1000,94 @@ const MYSELF_QUESTIONS: Question[] = [
 	{
 		id: "value",
 		slot: "value",
-		prompt: "What would make these journals feel most meaningful to you?",
+		prompt: "What would make these journals feel meaningful?",
 		options: [
 			{
 				id: "otherwise_forget",
 				label: "Preserving moments I might otherwise forget",
 				icon: "hourglass",
-				tint: "chip-1",
 				phrase: "preserving moments you might otherwise forget",
 			},
 			{
 				id: "look_back",
 				label: "Being able to look back on my life",
 				icon: "eye",
-				tint: "chip-2",
 				phrase: "being able to look back on your life",
 			},
 			{
 				id: "changed_over_time",
 				label: "Seeing how I've changed over time",
 				icon: "growth",
-				tint: "chip-3",
 				phrase: "seeing how you've changed over time",
 			},
 			{
 				id: "thinking_feeling",
 				label: "Remembering what I was thinking and feeling",
 				icon: "chats",
-				tint: "chip-4",
 				phrase: "remembering what you were thinking and feeling",
 			},
 			{
 				id: "preserved",
 				label: "Having my story preserved for the future",
 				icon: "everything",
-				tint: "chip-5",
 				phrase: "having your story preserved for the future",
 			},
 			EVERYTHING,
 		],
 	},
 	captureQuestion(
-		"How would you most naturally want to capture your stories and memories?",
+		"What would feel natural for capturing these stories and memories?",
 	),
 	CONFIRMATION_QUESTION,
 ];
 
+/**
+ * From the Figma eyebrows ("CREATING FOR " + the recipient). Grandchild has no
+ * designed screen, so it follows the Child pattern.
+ */
 const EYEBROWS: Record<Recipient, string> = {
 	child: "CREATING FOR YOUR CHILDREN",
 	grandchild: "CREATING FOR YOUR GRANDCHILDREN",
-	partner: "CREATING FOR YOUR PARTNER",
-	other: "CREATING FOR SOMEONE IMPORTANT",
-	myself: "CREATING YOUR OWN STORY",
+	partner: "CREATING FOR MY PARTNER",
+	other: "CREATING FOR SOMEONE SPECIAL",
+	myself: "CREATING FOR MYSELF",
 };
 
-function withEyebrow(recipient: Recipient, questions: Question[]): Question[] {
-	return questions.map((question) => ({
-		...question,
-		eyebrow: EYEBROWS[recipient],
-	}));
+/**
+ * Icon for the option at each position, per slot. The Figma designs tie the
+ * glyph to the row (Partner's "Capturing our story together" carries the same
+ * house icon as Child's "Helping them understand our family's story"), so
+ * option copy can change per recipient without touching icons.
+ */
+const ICONS_BY_SLOT: Record<QuestionSlot, OptionIcon[]> = {
+	why: ["smile", "chat", "idea", "home", "gift", "everything"],
+	what: ["trophy", "smile", "camera", "growth", "leaf", "everything"],
+	meaning: ["heart", "eye", "clock", "chats", "school", "everything"],
+	value: ["hourglass", "album", "chats", "gift", "growth", "everything"],
+	how: ["write", "mic", "video", "mix"],
+	confirmation: ["heartPulse", "sparkle", "compass", "question"],
+};
+
+function finalize(recipient: Recipient, questions: Question[]): Question[] {
+	return questions.map((question) => {
+		const icons = question.slot === "who" ? [] : ICONS_BY_SLOT[question.slot];
+		return {
+			...question,
+			eyebrow: EYEBROWS[recipient],
+			options: question.options.map((option, index) => ({
+				...option,
+				icon: icons[index] ?? option.icon,
+			})),
+		};
+	});
 }
 
 export const QUESTION_SETS: Record<Recipient, Question[]> = {
-	child: withEyebrow("child", CHILD_QUESTIONS),
-	grandchild: withEyebrow("grandchild", GRANDCHILD_QUESTIONS),
-	partner: withEyebrow("partner", PARTNER_QUESTIONS),
-	other: withEyebrow("other", OTHER_QUESTIONS),
-	myself: withEyebrow("myself", MYSELF_QUESTIONS),
+	child: finalize("child", CHILD_QUESTIONS),
+	grandchild: finalize("grandchild", GRANDCHILD_QUESTIONS),
+	partner: finalize("partner", PARTNER_QUESTIONS),
+	other: finalize("other", OTHER_QUESTIONS),
+	myself: finalize("myself", MYSELF_QUESTIONS),
 };
 
 // --- Lookup + validation --------------------------------------------------

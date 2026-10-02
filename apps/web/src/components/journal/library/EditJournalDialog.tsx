@@ -67,18 +67,14 @@ export function EditJournalDialog({
 	const [error, setError] = useState<string | null>(null);
 	const [showErrors, setShowErrors] = useState(false);
 
-	const hasCover = coverFile !== null || Boolean(coverPreview);
 	const titleInvalid = !title.trim();
 	const dateInvalid = date === undefined;
 	const dedicationInvalid = !dedication.trim();
-	const imageInvalid = !hasCover;
-	const isValid =
-		!titleInvalid && !dateInvalid && !dedicationInvalid && !imageInvalid;
+	const isValid = !titleInvalid && !dateInvalid && !dedicationInvalid;
 
 	const titleShowError = showErrors && titleInvalid;
 	const dateShowError = showErrors && dateInvalid;
 	const dedicationShowError = showErrors && dedicationInvalid;
-	const imageShowError = showErrors && imageInvalid;
 
 	const resetFromJournal = useCallback((j: JournalDoc) => {
 		setTitle(j.title);
@@ -259,7 +255,6 @@ export function EditJournalDialog({
 						<span className={fieldLabelClass}>Upload image</span>
 						<JournalCoverImageUpload
 							imagePreview={coverPreview}
-							invalid={imageShowError}
 							onFileChange={handleCoverChange}
 							inputRef={fileRef}
 						/>

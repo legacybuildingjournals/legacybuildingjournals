@@ -1,6 +1,6 @@
 import { assets, brand, youtube } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 import { Button } from "@/components/journal/ui/button";
 import { InviteCodeField } from "@/features/welcome/InviteCodeField";
@@ -19,7 +19,6 @@ export function WelcomePage({
 }: WelcomePageProps) {
 	const videoContainerRef = useRef<HTMLElement>(null);
 	const playerRef = useRef<YT.Player | null>(null);
-	const [videoCompleted, setVideoCompleted] = useState(false);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -38,13 +37,6 @@ export function WelcomePage({
 					enablejsapi: 1,
 					playsinline: 1,
 					modestbranding: 1,
-				},
-				events: {
-					onStateChange: (event) => {
-						if (event.data === YT.PlayerState.ENDED) {
-							setVideoCompleted(true);
-						}
-					},
 				},
 			});
 		});
@@ -90,27 +82,14 @@ export function WelcomePage({
 					<Button
 						type="button"
 						onClick={onHomepage}
-						disabled={!videoCompleted || loading}
-						className={cn(
-							"min-h-11 min-w-[200px] rounded-full px-20 font-bold text-sm leading-none shadow-[2px_2px_4px_0px_rgb(170,170,170)]",
-							videoCompleted
-								? "fade-in animate-in duration-300 hover:opacity-95 disabled:opacity-70"
-								: "cursor-not-allowed bg-[#9ca3af] text-white opacity-100 hover:opacity-100",
-						)}
-						style={
-							videoCompleted
-								? {
-										backgroundColor: brand.white,
-										color: brand.primary,
-									}
-								: undefined
-						}
+						disabled={loading}
+						className="min-h-11 min-w-[200px] rounded-full px-20 font-bold text-sm leading-none shadow-[2px_2px_4px_0px_rgb(170,170,170)] hover:opacity-95 disabled:opacity-70"
+						style={{
+							backgroundColor: brand.white,
+							color: brand.primary,
+						}}
 					>
-						{loading
-							? "Loading…"
-							: videoCompleted
-								? "Homepage"
-								: "Watch video to continue"}
+						{loading ? "Loading…" : "Homepage"}
 					</Button>
 				</div>
 			</div>
