@@ -262,14 +262,25 @@ export function JournalDetailSheet({
 			toastMutationError(new Error(message), message);
 			return;
 		}
-		checkoutWindow.opener = null;
+		// Deliberately do NOT null `opener` here: severing it moves the popup into
+		// its own browsing context group, which revokes this window's permission
+		// to navigate it and makes the `location.replace` below throw. Peecho is a
+		// trusted destination, and we hand the tab straight to it.
 		try {
 			const { checkoutUrl } = await createBookOrderCheckout({
 				journalId,
 				entryIds: selectedEntries.map((entry) => entry._id),
 				includeJournal: allExportableSelected,
 			});
-			checkoutWindow.location.replace(checkoutUrl);
+			try {
+				checkoutWindow.location.replace(checkoutUrl);
+			} catch {
+				// Peecho has already created the publication by this point, so a
+				// failed navigation must not strand the user — reopen the tab
+				// rather than losing the checkout they just paid to generate.
+				checkoutWindow.close();
+				window.open(checkoutUrl, "_blank");
+			}
 			setOrdering(false);
 		} catch (err) {
 			checkoutWindow.close();
