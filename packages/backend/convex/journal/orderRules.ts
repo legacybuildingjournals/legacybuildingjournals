@@ -13,10 +13,11 @@
 export const MIN_BOOK_ORDER_PAGES = 20;
 
 /**
- * Entry count required before ordering is offered. Each entry contributes at
- * least one page (its writing page, plus one more per attached recording), so
- * this comfortably clears {@link MIN_BOOK_ORDER_PAGES} while staying a number
- * we can check in the client before rendering anything.
+ * Entry count required before ordering is offered. Every entry contributes at
+ * least one page — prose gets a writing page, a bare recording gets a QR page
+ * instead, and an entry with both gets one of each — so this comfortably clears
+ * {@link MIN_BOOK_ORDER_PAGES} while staying a number we can check in the
+ * client before rendering anything.
  */
 export const MIN_BOOK_ORDER_ENTRIES = 22;
 

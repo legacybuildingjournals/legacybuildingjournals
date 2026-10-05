@@ -41,6 +41,7 @@ import type * as notifications_helpers from "../notifications/helpers.js";
 import type * as notifications_messages from "../notifications/messages.js";
 import type * as notifications_mutations from "../notifications/mutations.js";
 import type * as notifications_queries from "../notifications/queries.js";
+import type * as onboarding_copy from "../onboarding/copy.js";
 import type * as onboarding_helpers from "../onboarding/helpers.js";
 import type * as onboarding_mutations from "../onboarding/mutations.js";
 import type * as onboarding_queries from "../onboarding/queries.js";
@@ -111,6 +112,7 @@ declare const fullApi: ApiFromModules<{
   "notifications/messages": typeof notifications_messages;
   "notifications/mutations": typeof notifications_mutations;
   "notifications/queries": typeof notifications_queries;
+  "onboarding/copy": typeof onboarding_copy;
   "onboarding/helpers": typeof onboarding_helpers;
   "onboarding/mutations": typeof onboarding_mutations;
   "onboarding/queries": typeof onboarding_queries;

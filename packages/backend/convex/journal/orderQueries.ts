@@ -42,12 +42,8 @@ export const getBookOrderData = internalQuery({
 						message: "Selected entries must belong to this journal.",
 					});
 				}
-				if (entry.mode !== "writing") {
-					throw new ConvexError({
-						code: "INVALID_ENTRY",
-						message: "Only writing entries can be ordered as a printed book.",
-					});
-				}
+				// Every mode is printable: the renderer gives a writing entry its prose
+				// page and a voice or video entry a scannable QR page instead.
 				return enrichEntry(ctx, entry);
 			}),
 		);
@@ -55,7 +51,7 @@ export const getBookOrderData = internalQuery({
 		if (entries.length === 0) {
 			throw new ConvexError({
 				code: "INVALID_ENTRY",
-				message: "Select at least one writing entry to order.",
+				message: "Select at least one entry to order.",
 			});
 		}
 
