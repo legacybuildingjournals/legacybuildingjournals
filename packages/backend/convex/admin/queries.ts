@@ -93,13 +93,18 @@ export const searchUserSuggestions = query({
 		const seen = new Set<string>();
 		const suggestions: ReturnType<typeof toAdminUserSummary>[] = [];
 
-		const exactEmail = await ctx.db
+		// Email is not unique in this table — a row orphaned by a deleted Clerk
+		// account leaves two on the same address. `.unique()` threw there, which
+		// broke admin search on precisely the accounts worth looking into. Show
+		// every exact match instead, so the duplicates are visible.
+		const exactEmailMatches = await ctx.db
 			.query("users")
 			.withIndex("by_email", (ix) => ix.eq("email", q))
-			.unique();
-		if (exactEmail) {
-			seen.add(exactEmail._id);
-			suggestions.push(toAdminUserSummary(exactEmail));
+			.collect();
+		for (const match of exactEmailMatches) {
+			if (seen.has(match._id)) continue;
+			seen.add(match._id);
+			suggestions.push(toAdminUserSummary(match));
 		}
 
 		// Exact-email above only covers a full match. Everything else — a
