@@ -135,6 +135,7 @@ export function AddJournalEntryPanel({
 		setDate(undefined);
 		setBody("");
 		setAudioFile(null);
+		setVideoFile(null);
 		setImageFile(null);
 		setImagePreview((prev) => {
 			if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
