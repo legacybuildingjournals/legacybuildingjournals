@@ -37,6 +37,13 @@ export function WelcomePage({
 					enablejsapi: 1,
 					playsinline: 1,
 					modestbranding: 1,
+					// Without this, the widget infers its trusted postMessage origin
+					// from document.referrer/ancestor chain instead of the current
+					// host. In an SPA that chain can be stale (e.g. after a Clerk
+					// sign-in redirect), so the handshake targets the wrong origin
+					// and the player can fail to initialize — the exact "target
+					// origin ... does not match recipient window's origin" error.
+					origin: window.location.origin,
 				},
 			});
 		});
