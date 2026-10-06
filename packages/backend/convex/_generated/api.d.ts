@@ -13,7 +13,6 @@ import type * as admin_billing from "../admin/billing.js";
 import type * as admin_helpers from "../admin/helpers.js";
 import type * as admin_mutations from "../admin/mutations.js";
 import type * as admin_queries from "../admin/queries.js";
-import type * as admin_tempDevReset from "../admin/tempDevReset.js";
 import type * as crons from "../crons.js";
 import type * as email_actions from "../email/actions.js";
 import type * as email_helpers from "../email/helpers.js";
@@ -84,7 +83,6 @@ declare const fullApi: ApiFromModules<{
   "admin/helpers": typeof admin_helpers;
   "admin/mutations": typeof admin_mutations;
   "admin/queries": typeof admin_queries;
-  "admin/tempDevReset": typeof admin_tempDevReset;
   crons: typeof crons;
   "email/actions": typeof email_actions;
   "email/helpers": typeof email_helpers;
