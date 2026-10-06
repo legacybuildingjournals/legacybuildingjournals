@@ -33,7 +33,7 @@ export function WelcomePage({
 			)}
 			style={{ backgroundImage: `url("${assets.heroBackground}")` }}
 		>
-			<div className="flex w-full max-w-[1400px] flex-col items-center justify-center gap-10">
+			<div className="flex w-full max-w-[1400px] flex-col items-center justify-center gap-6 sm:gap-10">
 				<h1
 					className="text-center font-semibold text-[clamp(2rem,5vw,44px)] text-white leading-[1.4]"
 					style={{
@@ -44,8 +44,12 @@ export function WelcomePage({
 				</h1>
 
 				<div className="flex w-full flex-col items-center gap-6">
-					<div className="w-full max-w-[800px] rounded-[20px] bg-transparent p-6 sm:p-10">
-						<div className="relative aspect-video min-h-[300px] w-full overflow-hidden rounded-[20px]">
+					{/* No padding on a phone: 24px a side cost the video an eighth of
+					    its width, and `min-h` is held back to sm because below that
+					    it beat `aspect-video` and squared the frame off — a 16:9
+					    video then sat in the middle under 134px of black bars. */}
+					<div className="w-full max-w-[800px] rounded-[20px] bg-transparent p-0 sm:p-10">
+						<div className="relative aspect-video w-full overflow-hidden rounded-[20px] sm:min-h-[300px]">
 							{/* Sits behind the iframe so the gap is never bare while
 							    YouTube connects; the iframe paints over it. */}
 							<div
@@ -69,7 +73,7 @@ export function WelcomePage({
 						type="button"
 						onClick={onContinue}
 						disabled={loading}
-						className="min-h-11 min-w-[200px] rounded-full px-20 font-bold text-sm leading-none shadow-[2px_2px_4px_0px_rgb(170,170,170)] hover:opacity-95 disabled:opacity-70"
+						className="min-h-11 min-w-[200px] rounded-full px-8 font-bold text-sm leading-none shadow-[2px_2px_4px_0px_rgb(170,170,170)] hover:opacity-95 disabled:opacity-70 sm:px-20"
 						style={{
 							backgroundColor: brand.white,
 							color: brand.primary,
