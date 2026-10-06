@@ -35,11 +35,11 @@ export const assertEmailAvailableForChange = action({
 			});
 		}
 
-		const existingInConvex = await ctx.runQuery(
-			internal.user.queries.getByEmailInternal,
-			{ email: normalized },
+		const takenByAnother = await ctx.runQuery(
+			internal.user.queries.isEmailOwnedByAnotherUser,
+			{ email: normalized, exceptClerkId: identity.subject },
 		);
-		if (existingInConvex && existingInConvex.clerkId !== identity.subject) {
+		if (takenByAnother) {
 			throw new ConvexError({
 				code: "EMAIL_IN_USE",
 				message: EMAIL_IN_USE_MESSAGE,

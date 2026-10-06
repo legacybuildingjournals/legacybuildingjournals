@@ -25,17 +25,25 @@ export const getByClerkIdInternal = internalQuery({
 	},
 });
 
-/** Internal: look up who owns an email in Convex (if anyone). */
-export const getByEmailInternal = internalQuery({
-	args: { email: v.string() },
-	handler: async (ctx, { email }) => {
+/**
+ * Internal: is this email held by someone other than `exceptClerkId`?
+ *
+ * Email is not unique in this table and never has been — a stale row from a
+ * deleted Clerk account, or a leftover from an earlier failed email change,
+ * leaves more than one row on the same address. `.unique()` throws on that,
+ * which turned an ordinary "is this taken?" check into a hard server error.
+ * Both callers only ever compare the owner against the signed-in user, so the
+ * answer is a boolean over every matching row.
+ */
+export const isEmailOwnedByAnotherUser = internalQuery({
+	args: { email: v.string(), exceptClerkId: v.string() },
+	handler: async (ctx, { email, exceptClerkId }) => {
 		const normalized = normalizeEmail(email);
-		const user = await ctx.db
+		const owners = await ctx.db
 			.query("users")
 			.withIndex("by_email", (q) => q.eq("email", normalized))
-			.unique();
-		if (!user) return null;
-		return { clerkId: user.clerkId };
+			.collect();
+		return owners.some((owner) => owner.clerkId !== exceptClerkId);
 	},
 });
 

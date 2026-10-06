@@ -1161,11 +1161,11 @@ export const syncCustomerEmail = action({
 		}
 
 		const normalizedEmail = email.trim().toLowerCase();
-		const existingOwner = await ctx.runQuery(
-			internal.user.queries.getByEmailInternal,
-			{ email: normalizedEmail },
+		const takenByAnother = await ctx.runQuery(
+			internal.user.queries.isEmailOwnedByAnotherUser,
+			{ email: normalizedEmail, exceptClerkId: identity.subject },
 		);
-		if (existingOwner && existingOwner.clerkId !== identity.subject) {
+		if (takenByAnother) {
 			throw new ConvexError({
 				code: "EMAIL_IN_USE",
 				message:
