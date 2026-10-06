@@ -133,3 +133,16 @@
 	font-weight: 600;
 	color: #1a1a1a;
 }
+
+/*
+ * Carry the onboarding canvas up onto the page background.
+ *
+ * The shell is `min-h-svh`, which is the *small* viewport height — the height
+ * with the mobile browser's chrome showing. When that chrome retracts the
+ * visible area grows past it, and whatever the body is painted with shows
+ * through underneath. Matching the body to the canvas means there is no seam
+ * at any viewport height, and none while overscrolling either.
+ */
+body:has(.onboarding-canvas) {
+	background-color: var(--color-onb-canvas);
+}

@@ -21,7 +21,10 @@ export function OnboardingShell({
 	return (
 		<div
 			className={cn(
-				"min-h-svh w-full bg-onb-canvas font-onb text-onb-ink",
+				// `onboarding-canvas` is a marker, not a style: a rule in index.css
+				// matches it to paint the body the same colour, so no seam shows
+				// below `min-h-svh` when the mobile browser chrome retracts.
+				"onboarding-canvas min-h-svh w-full bg-onb-canvas font-onb text-onb-ink",
 				className,
 			)}
 		>

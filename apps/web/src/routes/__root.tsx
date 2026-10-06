@@ -78,14 +78,22 @@ function RootComponent() {
 				attribute="class"
 				defaultTheme="dark"
 				forcedTheme={
-					isAuthRoute || isDashboard || isOnboarding ? "light" : undefined
+					// `/welcome` hosts the same light, mint onboarding UI as
+					// `/preapponboarding`. Left on the dark default it painted the page
+					// background black, which showed through below the card.
+					isAuthRoute || isDashboard || isOnboarding || isWelcome
+						? "light"
+						: undefined
 				}
 				disableTransitionOnChange
 				storageKey="vite-ui-theme"
 			>
 				<div
 					className={
-						isDashboard || isLegalPage || isOnboarding
+						// `h-svh` is a fixed height, so a welcome screen taller than the
+						// viewport spilled past it and left the page background showing
+						// underneath. The onboarding flow needs to grow instead.
+						isDashboard || isLegalPage || isOnboarding || isWelcome
 							? "min-h-svh"
 							: "grid h-svh grid-rows-[auto_1fr]"
 					}
