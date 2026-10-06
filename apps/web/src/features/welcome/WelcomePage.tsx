@@ -1,10 +1,17 @@
 import { assets, brand, youtube } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
-import { useEffect, useRef } from "react";
 
 import { Button } from "@/components/journal/ui/button";
 import { InviteCodeField } from "@/features/welcome/InviteCodeField";
-import { loadYouTubeIframeApi } from "@/features/welcome/loadYouTubeIframeApi";
+
+/**
+ * A plain embed, deliberately. Nothing here reads player state — the continue
+ * button is never gated on playback — so the IFrame Player API bought nothing
+ * and cost two sequential script downloads (iframe_api, then www-widgetapi.js)
+ * before the video could even start loading, which is what made it so slow to
+ * appear. A bare iframe is fetched during the initial render instead.
+ */
+const WELCOME_VIDEO_SRC = `https://www.youtube-nocookie.com/embed/${youtube.welcomeVideoId}?rel=0&playsinline=1&modestbranding=1`;
 
 type WelcomePageProps = {
 	userName: string;
@@ -18,44 +25,6 @@ export function WelcomePage({
 	onContinue,
 	loading = false,
 }: WelcomePageProps) {
-	const videoContainerRef = useRef<HTMLElement>(null);
-	const playerRef = useRef<YT.Player | null>(null);
-
-	useEffect(() => {
-		let cancelled = false;
-		const container = videoContainerRef.current;
-		if (!container) return;
-
-		void loadYouTubeIframeApi().then((YT) => {
-			if (cancelled) return;
-
-			playerRef.current = new YT.Player(container, {
-				width: "100%",
-				height: "100%",
-				videoId: youtube.welcomeVideoId,
-				playerVars: {
-					rel: 0,
-					enablejsapi: 1,
-					playsinline: 1,
-					modestbranding: 1,
-					// Without this, the widget infers its trusted postMessage origin
-					// from document.referrer/ancestor chain instead of the current
-					// host. In an SPA that chain can be stale (e.g. after a Clerk
-					// sign-in redirect), so the handshake targets the wrong origin
-					// and the player can fail to initialize — the exact "target
-					// origin ... does not match recipient window's origin" error.
-					origin: window.location.origin,
-				},
-			});
-		});
-
-		return () => {
-			cancelled = true;
-			playerRef.current?.destroy();
-			playerRef.current = null;
-		};
-	}, []);
-
 	return (
 		<main
 			className={cn(
@@ -77,10 +46,19 @@ export function WelcomePage({
 				<div className="flex w-full flex-col items-center gap-6">
 					<div className="w-full max-w-[800px] rounded-[20px] bg-transparent p-6 sm:p-10">
 						<div className="relative aspect-video min-h-[300px] w-full overflow-hidden rounded-[20px]">
-							<section
-								ref={videoContainerRef}
-								aria-label="Legacy Building welcome video"
-								className="absolute inset-0 size-full [&_iframe]:size-full"
+							{/* Sits behind the iframe so the gap is never bare while
+							    YouTube connects; the iframe paints over it. */}
+							<div
+								className="absolute inset-0 animate-pulse bg-black/20"
+								aria-hidden="true"
+							/>
+							<iframe
+								src={WELCOME_VIDEO_SRC}
+								title="Legacy Building welcome video"
+								allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+								referrerPolicy="strict-origin-when-cross-origin"
+								allowFullScreen
+								className="absolute inset-0 size-full border-0"
 							/>
 						</div>
 					</div>
