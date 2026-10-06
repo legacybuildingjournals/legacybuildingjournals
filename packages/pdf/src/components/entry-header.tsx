@@ -4,12 +4,24 @@ import { pdfColors, pdfMetrics } from "../theme";
 import { CalendarIcon } from "./icons";
 
 const styles = StyleSheet.create({
-	photo: {
+	photoFrame: {
 		width: pdfMetrics.photo.width,
 		height: pdfMetrics.photo.height,
 		borderRadius: pdfMetrics.photo.radius,
-		objectFit: "cover",
+		backgroundColor: pdfColors.cardTint,
 		alignSelf: "center",
+		overflow: "hidden",
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	photo: {
+		// `cover` filled the fixed 16:9 frame by cropping whatever didn't fit
+		// it — a portrait photo lost its top and bottom. `contain` shows the
+		// whole photo and letterboxes the frame instead; `photoFrame` gives
+		// that letterboxing a tinted backdrop rather than bare white.
+		width: "100%",
+		height: "100%",
+		objectFit: "contain",
 	},
 	title: {
 		fontSize: pdfMetrics.title.size,
@@ -53,7 +65,11 @@ export function EntryHeader({
 }) {
 	return (
 		<View>
-			{imageUrl ? <Image src={imageUrl} style={styles.photo} /> : null}
+			{imageUrl ? (
+				<View style={styles.photoFrame}>
+					<Image src={imageUrl} style={styles.photo} />
+				</View>
+			) : null}
 			<Text style={styles.title}>{title}</Text>
 			<View style={styles.dateRow}>
 				<CalendarIcon
