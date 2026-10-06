@@ -11,6 +11,9 @@
 		"ios": "expo run:ios",
 		"prebuild": "expo prebuild",
 		"web": "expo start --web",
+		"version:bump": "node scripts/bump-app-version.mjs",
+		"build:ios": "node scripts/bump-app-version.mjs && eas build --platform ios --profile production --auto-submit",
+		"build:android": "node scripts/bump-app-version.mjs && eas build --platform android --profile production",
 		"eas-build-pre-install": "corepack enable"
 	},
 	"dependencies": {
