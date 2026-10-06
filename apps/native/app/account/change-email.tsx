@@ -1,6 +1,16 @@
-import { useUser } from "@clerk/expo";
+import { useSession, useUser } from "@clerk/expo";
 import { api } from "@legacy-building/backend/convex/_generated/api";
-import { firstClerkErrorCode } from "@legacy-building/ui/lib/clerk-errors";
+import {
+	EMAIL_RE,
+	type EmailChangeVerificationMode,
+	emailChangeErrorMessage,
+	finalizePrimaryEmailChange,
+	resendEmailChangeVerification,
+	startEmailChangeVerification,
+	verificationCodeErrorMessage,
+	verifyEmailChangeCode,
+	WRONG_VERIFICATION_CODE_MESSAGE,
+} from "@legacy-building/ui/lib/email-change";
 import { useAction } from "convex/react";
 import { router } from "expo-router";
 import { useThemeColor } from "heroui-native/hooks";
@@ -19,34 +29,12 @@ import {
 import { AccountScreenHeader } from "@/components/account/account-screen-header";
 import { useMutationToast } from "@/lib/mutation-toast";
 
-function clerkErrorMessage(err: unknown, fallback: string): string {
-	const maybe = err as { errors?: { message?: string }[] } | undefined;
-	const first = maybe?.errors?.[0]?.message;
-	if (first) return first;
-	if (err instanceof Error) return err.message;
-	return fallback;
-}
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const EMAIL_IN_USE_MESSAGE =
-	"That email is already linked to another account. Choose a different email.";
-
-function emailChangeErrorMessage(err: unknown, fallback: string): string {
-	const clerkCode = firstClerkErrorCode(err);
-	if (
-		clerkCode === "form_identifier_exists" ||
-		clerkCode === "identifier_already_signed_up"
-	) {
-		return EMAIL_IN_USE_MESSAGE;
-	}
-	return clerkErrorMessage(err, fallback);
-}
-
 type ClerkUser = NonNullable<ReturnType<typeof useUser>["user"]>;
 type CreatedEmail = Awaited<ReturnType<ClerkUser["createEmailAddress"]>>;
 
 export default function ChangeEmailScreen() {
 	const { user } = useUser();
+	const { session } = useSession();
 	const assertEmailAvailable = useAction(
 		api.user.actions.assertEmailAvailableForChange,
 	);
@@ -60,6 +48,8 @@ export default function ChangeEmailScreen() {
 	const [email, setEmail] = useState(currentEmail);
 	const [code, setCode] = useState("");
 	const [pendingEmail, setPendingEmail] = useState<CreatedEmail | null>(null);
+	const [verificationMode, setVerificationMode] =
+		useState<EmailChangeVerificationMode>("email_address");
 	const [busy, setBusy] = useState(false);
 
 	// --- Phase 1: create the new email address + send a verification code -----
@@ -69,7 +59,7 @@ export default function ChangeEmailScreen() {
 			toast.error(new Error("invalid"), "Enter a valid email address.");
 			return;
 		}
-		if (next === currentEmail.toLowerCase()) {
+		if (next === currentEmail.trim().toLowerCase()) {
 			toast.error(new Error("same"), "That's already your email address.");
 			return;
 		}
@@ -79,14 +69,19 @@ export default function ChangeEmailScreen() {
 		try {
 			await assertEmailAvailable({ email: next });
 
-			const existingOnUser = user.emailAddresses.find(
-				(address) => address.emailAddress.toLowerCase() === next,
+			// Shared with web. It reuses or recreates the pending address as needed
+			// — including destroying one that is already verified from an earlier
+			// attempt, which is what otherwise fails with "This verification has
+			// already been verified."
+			const { pending, mode } = await startEmailChangeVerification(
+				user,
+				next,
+				(address) => user.createEmailAddress({ email: address }),
+				session,
 			);
 
-			const pending =
-				existingOnUser ?? (await user.createEmailAddress({ email: next }));
-			await pending.prepareVerification({ strategy: "email_code" });
 			setPendingEmail(pending);
+			setVerificationMode(mode);
 			setPhase("verify");
 			toast.success(`We sent a code to ${next}.`);
 		} catch (err) {
@@ -112,27 +107,59 @@ export default function ChangeEmailScreen() {
 
 		setBusy(true);
 		try {
-			await pendingEmail.attemptVerification({ code: code.trim() });
-			await user.update({ primaryEmailAddressId: pendingEmail.id });
-
-			// Remove every other (old) email so only the new one remains.
-			await Promise.all(
-				user.emailAddresses
-					.filter((e) => e.id !== pendingEmail.id)
-					.map((e) => e.destroy().catch(() => {})),
+			const verified = await verifyEmailChangeCode(
+				user,
+				pendingEmail,
+				code,
+				verificationMode,
+				session,
 			);
 
-			await user.reload();
-
-			// Propagate to Stripe (customer email) + Convex user row.
-			await syncCustomerEmail({ email: pendingEmail.emailAddress });
+			// Promotes to primary, drops every other address, then propagates to
+			// Stripe (customer email) + the Convex user row.
+			await finalizePrimaryEmailChange(
+				user,
+				verified,
+				syncCustomerEmail,
+				(emailAddressId) =>
+					user.update({ primaryEmailAddressId: emailAddressId }),
+			);
 
 			toast.success("Email updated.");
 			router.back();
 		} catch (err) {
 			toast.error(
 				err,
-				clerkErrorMessage(err, "Could not verify the code. Please try again."),
+				verificationCodeErrorMessage(err, WRONG_VERIFICATION_CODE_MESSAGE),
+			);
+		} finally {
+			setBusy(false);
+		}
+	};
+
+	const handleResendCode = async () => {
+		if (!user || !pendingEmail) return;
+
+		setBusy(true);
+		try {
+			const { pending, mode } = await resendEmailChangeVerification(
+				user,
+				pendingEmail,
+				(address) => user.createEmailAddress({ email: address }),
+				session,
+			);
+
+			setPendingEmail(pending);
+			setVerificationMode(mode);
+			setCode("");
+			toast.success(`We sent a new code to ${pending.emailAddress}.`);
+		} catch (err) {
+			toast.error(
+				err,
+				emailChangeErrorMessage(
+					err,
+					"Could not resend the verification code. Please try again.",
+				),
 			);
 		} finally {
 			setBusy(false);
@@ -221,10 +248,20 @@ export default function ChangeEmailScreen() {
 								</Text>
 							</Pressable>
 							<Pressable
+								onPress={() => void handleResendCode()}
+								disabled={busy}
+								accessibilityRole="button"
+								accessibilityLabel="Resend code"
+								className="items-center py-2 active:opacity-70 disabled:opacity-50"
+							>
+								<Text className="text-base text-primary">Resend code</Text>
+							</Pressable>
+							<Pressable
 								onPress={() => {
 									setPhase("form");
 									setCode("");
 									setPendingEmail(null);
+									setVerificationMode("email_address");
 								}}
 								disabled={busy}
 								accessibilityRole="button"
