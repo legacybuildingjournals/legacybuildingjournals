@@ -107,7 +107,7 @@ function WelcomeRoute() {
 	};
 
 	/** Skip the questions for anyone who already answered them externally. */
-	const handleHomepage = () => {
+	const handleContinue = () => {
 		if (existingResponse) {
 			// Their recipient came from the external form, so honour it here too.
 			void finishWelcome(
@@ -132,7 +132,7 @@ function WelcomeRoute() {
 	return (
 		<WelcomePage
 			userName={userName}
-			onHomepage={handleHomepage}
+			onContinue={handleContinue}
 			loading={submitting}
 		/>
 	);

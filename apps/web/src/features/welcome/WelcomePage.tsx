@@ -8,13 +8,14 @@ import { loadYouTubeIframeApi } from "@/features/welcome/loadYouTubeIframeApi";
 
 type WelcomePageProps = {
 	userName: string;
-	onHomepage: () => void;
+	/** Moves past the video — into the questions, or straight out if already answered. */
+	onContinue: () => void;
 	loading?: boolean;
 };
 
 export function WelcomePage({
 	userName,
-	onHomepage,
+	onContinue,
 	loading = false,
 }: WelcomePageProps) {
 	const videoContainerRef = useRef<HTMLElement>(null);
@@ -88,7 +89,7 @@ export function WelcomePage({
 
 					<Button
 						type="button"
-						onClick={onHomepage}
+						onClick={onContinue}
 						disabled={loading}
 						className="min-h-11 min-w-[200px] rounded-full px-20 font-bold text-sm leading-none shadow-[2px_2px_4px_0px_rgb(170,170,170)] hover:opacity-95 disabled:opacity-70"
 						style={{
@@ -96,7 +97,7 @@ export function WelcomePage({
 							color: brand.primary,
 						}}
 					>
-						{loading ? "Loading…" : "Homepage"}
+						{loading ? "Loading…" : "Skip the video"}
 					</Button>
 				</div>
 			</div>
