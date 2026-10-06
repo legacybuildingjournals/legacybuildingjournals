@@ -11,7 +11,6 @@ import {
 	type Recipient,
 } from "@legacy-building/backend/convex/onboarding/questions";
 import { resultFor } from "@legacy-building/backend/convex/onboarding/results";
-import { isValidInviteCodeFormat } from "@legacy-building/backend/convex/referrals/codes";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -78,12 +77,9 @@ export default function WelcomeScreen() {
 	const [username, setUsername] = useState("");
 	const [usernameTouched, setUsernameTouched] = useState(false);
 	const [saving, setSaving] = useState(false);
-	// Prefilled when the user arrived through a universal link; otherwise they
-	// type the code they saw on the invite page.
-	const [inviteCode, setInviteCode] = useState(
-		() => readPendingInviteCode() ?? "",
-	);
-	const [inviteNote, setInviteNote] = useState<string | null>(null);
+	// Set only when the user arrived through a universal link — the manual entry
+	// field is hidden, so there is no other way for a code to get here.
+	const [inviteCode] = useState(() => readPendingInviteCode() ?? "");
 
 	const suggestedUsername = useMemo(
 		() => defaultUsername(convexUser?.name, clerkUser?.fullName),
@@ -129,18 +125,14 @@ export default function WelcomeScreen() {
 			const code = inviteCode.trim();
 			if (code) {
 				try {
-					const result = await claimInvite({ code, via: "ios" });
-					if (result.status === "not_found") {
-						setInviteNote("That invite code wasn't found.");
-						setSaving(false);
-						return;
-					}
-					if (result.status === "own_code") {
-						setInviteNote("You can't use your own invite code.");
-						setSaving(false);
-						return;
-					}
-					if (result.status === "claimed") clearPendingInviteCode();
+					await claimInvite({ code, via: "ios" });
+					// The code can only have come from a universal link now that the
+					// manual field is hidden, so there is nothing for the user to
+					// correct and no field left to show an error in. Any settled
+					// outcome clears the stored code and carries on — blocking here
+					// would dead-end sign-up silently. A thrown error keeps the code
+					// so a network blip can still be retried next launch.
+					clearPendingInviteCode();
 				} catch {
 					// An invite is a bonus, never a blocker — carry on regardless.
 				}
@@ -284,31 +276,13 @@ export default function WelcomeScreen() {
 						/>
 					</View>
 
-					<View className="mt-5">
-						<AuthField
-							label="Invite code (optional)"
-							value={inviteCode}
-							onChangeText={(text) => {
-								setInviteNote(null);
-								setInviteCode(text.toUpperCase());
-							}}
-							autoCapitalize="characters"
-							autoCorrect={false}
-							returnKeyType="done"
-							placeholder="ABCD1234"
-							error={inviteNote ?? undefined}
-							helper={
-								inviteNote === null &&
-								inviteCode.trim() !== "" &&
-								!isValidInviteCodeFormat(inviteCode) ? (
-									<Text className="text-primary-foreground/70 text-sm">
-										Invite codes are 8 characters.
-									</Text>
-								) : null
-							}
-							onSubmitEditing={() => void handleUsernameContinue()}
-						/>
-					</View>
+					{/*
+					 * The manual "invite code" field is hidden for now. A code that
+					 * arrived through a universal link is still claimed silently in
+					 * `handleUsernameContinue`, so invite links keep working — only
+					 * typing a code by hand is gone. Restore from git history if the
+					 * manual path is wanted back.
+					 */}
 
 					<View className="flex-1" />
 
