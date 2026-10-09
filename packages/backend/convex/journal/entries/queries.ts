@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { query } from "../../_generated/server";
 import { assertEntryOwner, requireClerkUserId } from "../auth";
 import { enrichEntry } from "../enrich";
+import { compareEntriesOldestFirst } from "../sort";
 
 export const getEntryImageUrl = query({
 	args: { storageId: v.id("_storage") },
@@ -40,7 +41,7 @@ export const listByJournal = query({
 			.withIndex("by_journalId", (q) => q.eq("journalId", args.journalId))
 			.collect();
 
-		const sorted = entries.sort((a, b) => b.dateMs - a.dateMs);
+		const sorted = entries.sort(compareEntriesOldestFirst);
 		return await Promise.all(sorted.map((entry) => enrichEntry(ctx, entry)));
 	},
 });

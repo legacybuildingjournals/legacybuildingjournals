@@ -12,10 +12,14 @@ import { type DocumentProps, Font, renderToBuffer } from "@react-pdf/renderer";
 import QRCode from "qrcode";
 import { createElement, type ReactElement } from "react";
 
+import { compareEntriesOldestFirst } from "./sort";
+
 /** The entry fields the document needs, as returned by `enrichEntry`. */
 export type RenderableEntry = {
 	title?: string;
 	dateMs: number;
+	/** Tiebreaks entries sharing a `dateMs` — see `compareEntriesOldestFirst`. */
+	_creationTime: number;
 	body?: string;
 	imageUrl?: string;
 	audioUrl?: string;
@@ -103,8 +107,9 @@ function countPages(buffer: Buffer): number {
 }
 
 /**
- * Renders a journal to a PDF buffer. Entries are ordered oldest-first, which
- * reads more naturally in a printed book.
+ * Renders a journal to a PDF buffer. Entries are ordered oldest-first, with the
+ * same comparator the entry list uses, so the book is bound in the order the
+ * journal reads on screen.
  */
 export async function renderJournalPdf({
 	journal,
@@ -120,7 +125,7 @@ export async function renderJournalPdf({
 	// comes from is consulted during layout.
 	registerPdfFonts(Font);
 
-	const ordered = [...entries].sort((a, b) => a.dateMs - b.dateMs);
+	const ordered = [...entries].sort(compareEntriesOldestFirst);
 	const pdfEntries = await Promise.all(ordered.map(toPdfEntry));
 
 	// `renderToBuffer` is typed against the raw `Document` element; our wrapper
