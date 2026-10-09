@@ -8,7 +8,9 @@ const styles = StyleSheet.create({
 		width: pdfMetrics.photo.width,
 		height: pdfMetrics.photo.height,
 		borderRadius: pdfMetrics.photo.radius,
-		backgroundColor: pdfColors.cardTint,
+		// Deliberately unpainted. The frame used to carry `cardTint`, which read
+		// as a green slab either side of a letterboxed photo once the fit changed
+		// to `contain`. Left transparent, the letterboxing is just page.
 		alignSelf: "center",
 		overflow: "hidden",
 		alignItems: "center",
@@ -17,8 +19,7 @@ const styles = StyleSheet.create({
 	photo: {
 		// `cover` filled the fixed 16:9 frame by cropping whatever didn't fit
 		// it — a portrait photo lost its top and bottom. `contain` shows the
-		// whole photo and letterboxes the frame instead; `photoFrame` gives
-		// that letterboxing a tinted backdrop rather than bare white.
+		// whole photo and letterboxes the frame instead.
 		width: "100%",
 		height: "100%",
 		objectFit: "contain",
