@@ -221,8 +221,8 @@ export function JournalDetailSheet({
 		try {
 			const { url } = await exportJournal({
 				journalId: journal._id,
-				// Omitting the ids exports the whole journal, which is what adds the
-				// cover and dedication pages.
+				// Either form gets the cover and dedication when everything is
+				// selected — the action decides from what it ends up including.
 				entryIds: allExportableSelected
 					? undefined
 					: selectedEntries.map((entry) => entry._id),

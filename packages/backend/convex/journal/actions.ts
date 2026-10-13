@@ -117,10 +117,16 @@ export const exportJournal = action({
 		}
 
 		// The cover and dedication only make sense for a whole-journal export.
+		//
+		// Measured against what was actually included rather than whether ids were
+		// passed: selecting every entry is the same intent as exporting the
+		// journal, and the clients expressed that differently — web omitted the
+		// ids, native always sent the full list, so native silently lost its
+		// cover and dedication pages.
 		const { url } = await renderAndStore(ctx, {
 			journal,
 			entries,
-			includeFrontMatter: selected === null,
+			includeFrontMatter: entries.length === allEntries.length,
 		});
 
 		return { url };

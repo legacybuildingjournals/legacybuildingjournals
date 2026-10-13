@@ -118,3 +118,32 @@ describe("ENTRY_SORTS (the on-screen list order)", () => {
 		expect(isEntrySortKey("nonsense")).toBe(false);
 	});
 });
+
+describe("the printed book reads as a life, not a writing log", () => {
+	// Written in whatever order they were remembered, which is the point: the
+	// wedding was typed up first, the birth backfilled months later.
+	const birth = { dateMs: Date.UTC(1984, 4, 2), _creationTime: 3_000 };
+	const graduation = { dateMs: Date.UTC(2006, 5, 15), _creationTime: 1_000 };
+	const wedding = { dateMs: Date.UTC(2014, 8, 20), _creationTime: 2_000 };
+	const journal = [wedding, graduation, birth];
+
+	test("binds by when it happened, not when it was written", () => {
+		const bound = sortEntries(journal, "dateAsc");
+		expect(bound).toEqual([birth, graduation, wedding]);
+	});
+
+	test("the list's default view does not change the binding", () => {
+		// What someone sees on screen by default — newest written at the top.
+		expect(sortEntries(journal, DEFAULT_ENTRY_SORT)).toEqual([
+			birth,
+			wedding,
+			graduation,
+		]);
+		// The book ignores that entirely.
+		expect(sortEntries(journal, "dateAsc")).toEqual([
+			birth,
+			graduation,
+			wedding,
+		]);
+	});
+});
