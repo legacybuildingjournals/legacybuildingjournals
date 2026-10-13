@@ -4,6 +4,11 @@ import {
 	MIN_BOOK_ORDER_ENTRIES,
 	minimumBookOrderMessage,
 } from "@legacy-building/backend/convex/journal/orderRules";
+import {
+	DEFAULT_ENTRY_SORT,
+	type EntrySortKey,
+	sortEntries,
+} from "@legacy-building/backend/convex/journal/sort";
 import { brand } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
 import { useAction, useQuery } from "convex/react";
@@ -19,6 +24,7 @@ import {
 import { createPortal } from "react-dom";
 import { DeleteJournalDialog } from "@/components/journal/library/DeleteJournalDialog";
 import { EditJournalDialog } from "@/components/journal/library/EditJournalDialog";
+import { EntrySortMenu } from "@/components/journal/library/EntrySortMenu";
 import { JournalCoverImage } from "@/components/journal/library/JournalCoverImage";
 import { JournalEntryDetailView } from "@/components/journal/library/JournalEntryDetailView";
 import { JournalEntryRow } from "@/components/journal/library/JournalEntryRow";
@@ -107,9 +113,13 @@ export function JournalDetailSheet({
 		open && journalId ? { journalId } : "skip",
 	);
 
+	// A view preference only. The export and the printed book are always bound
+	// oldest journal date first, whatever is chosen here.
+	const [sortKey, setSortKey] = useState<EntrySortKey>(DEFAULT_ENTRY_SORT);
+
 	const enrichedEntries = useMemo(
-		() => (entries ?? []) as EnrichedJournalEntry[],
-		[entries],
+		() => sortEntries((entries ?? []) as EnrichedJournalEntry[], sortKey),
+		[entries, sortKey],
 	);
 
 	// Recording entries render as a "scan to listen" QR in the PDF, so every
@@ -514,6 +524,20 @@ export function JournalDetailSheet({
 														</>
 													) : null}
 												</div>
+
+												{entriesToShow.length > 0 ? (
+													<div className="mt-4 flex items-center justify-between gap-2 px-3">
+														<p className="font-medium text-[#8a8a8a] text-xs">
+															{entriesToShow.length}{" "}
+															{entriesToShow.length === 1 ? "entry" : "entries"}
+														</p>
+														<EntrySortMenu
+															value={sortKey}
+															onChange={setSortKey}
+															disabled={isExportBusy}
+														/>
+													</div>
+												) : null}
 
 												<div className="mt-3">
 													{entries === undefined ? (

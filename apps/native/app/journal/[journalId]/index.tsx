@@ -5,6 +5,11 @@ import {
 	MIN_BOOK_ORDER_ENTRIES,
 	minimumBookOrderMessage,
 } from "@legacy-building/backend/convex/journal/orderRules";
+import {
+	DEFAULT_ENTRY_SORT,
+	type EntrySortKey,
+	sortEntries,
+} from "@legacy-building/backend/convex/journal/sort";
 import { needsLightForeground } from "@legacy-building/ui/lib/color";
 import { useAction, useMutation, useQuery } from "convex/react";
 import * as Linking from "expo-linking";
@@ -24,6 +29,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useJournalPaywall } from "@/components/billing/journal-paywall-provider";
+import { EntrySortMenu } from "@/components/library/entry-sort-menu";
 import { JournalActionsMenu } from "@/components/library/journal-actions-menu";
 import { JournalColorSheet } from "@/components/library/journal-color-sheet";
 import { JournalEntryRow } from "@/components/library/journal-entry-row";
@@ -85,6 +91,14 @@ export default function JournalDetailScreen() {
 		backgroundColor && needsLightForeground(backgroundColor),
 	);
 	const headingColor = onDarkBackground ? "#ffffff" : undefined;
+	// A view preference only. The export and the printed book are always bound
+	// oldest journal date first, whatever is chosen here.
+	const [sortKey, setSortKey] = useState<EntrySortKey>(DEFAULT_ENTRY_SORT);
+	const sortedEntries = useMemo(
+		() => sortEntries(entries ?? [], sortKey),
+		[entries, sortKey],
+	);
+
 	// Recording entries are exportable too — the template gives their audio a
 	// dedicated "scan to hear" QR page.
 	const exportableEntries = useMemo(() => entries ?? [], [entries]);
@@ -504,26 +518,37 @@ export default function JournalDetailScreen() {
 							) : null}
 						</View>
 
+						{entries && entries.length > 0 && !selectionMode ? (
+							<View className="flex-row items-center justify-between">
+								<Text className="text-muted-foreground text-sm">
+									{entries.length} {entries.length === 1 ? "entry" : "entries"}
+								</Text>
+								<EntrySortMenu value={sortKey} onChange={setSortKey} />
+							</View>
+						) : null}
+
 						{entries && entries.length > 0 ? (
 							<View className="gap-3">
-								{(selectionMode ? exportableEntries : entries).map((entry) => (
-									<JournalEntryRow
-										key={entry._id}
-										title={entry.title}
-										dateMs={entry.dateMs}
-										mode={entry.mode}
-										selectable={selectionMode}
-										selected={selectedIds.has(entry._id)}
-										onPress={() =>
-											selectionMode
-												? toggleSelected(entry._id)
-												: router.push({
-														pathname: "/journal/entry/[entryId]",
-														params: { entryId: entry._id },
-													})
-										}
-									/>
-								))}
+								{(selectionMode ? exportableEntries : sortedEntries).map(
+									(entry) => (
+										<JournalEntryRow
+											key={entry._id}
+											title={entry.title}
+											dateMs={entry.dateMs}
+											mode={entry.mode}
+											selectable={selectionMode}
+											selected={selectedIds.has(entry._id)}
+											onPress={() =>
+												selectionMode
+													? toggleSelected(entry._id)
+													: router.push({
+															pathname: "/journal/entry/[entryId]",
+															params: { entryId: entry._id },
+														})
+											}
+										/>
+									),
+								)}
 							</View>
 						) : (
 							<View className="items-center gap-2 rounded-2xl border border-border border-dashed bg-background px-6 py-10">

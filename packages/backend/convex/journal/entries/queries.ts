@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import { query } from "../../_generated/server";
 import { assertEntryOwner, requireClerkUserId } from "../auth";
 import { enrichEntry } from "../enrich";
-import { compareEntriesOldestFirst } from "../sort";
+import { DEFAULT_ENTRY_SORT, sortEntries } from "../sort";
 
 export const getEntryImageUrl = query({
 	args: { storageId: v.id("_storage") },
@@ -41,7 +41,11 @@ export const listByJournal = query({
 			.withIndex("by_journalId", (q) => q.eq("journalId", args.journalId))
 			.collect();
 
-		const sorted = entries.sort(compareEntriesOldestFirst);
+		// The list's default view order. Clients re-sort locally when someone
+		// picks a different option, so this only has to be the common case —
+		// and it is deliberately *not* the export order, which stays oldest
+		// journal date first regardless of what the list is showing.
+		const sorted = sortEntries(entries, DEFAULT_ENTRY_SORT);
 		return await Promise.all(sorted.map((entry) => enrichEntry(ctx, entry)));
 	},
 });
