@@ -342,6 +342,29 @@ describe("claimOnboarding", () => {
 		expect(result.status).toBe("claimed");
 	});
 
+	test("matches on email before the Clerk webhook has written the user row", async () => {
+		// The claim runs once on /welcome and is never retried, so if it needed
+		// the users row it would silently lose the match whenever the webhook
+		// landed late — and the person would answer the questionnaire again.
+		// Deliberately no seedUser() here.
+		const t = setup();
+		await t.mutation(api.onboarding.mutations.submitExternal, {
+			email: "nouserrow@example.com",
+			recipient: "child",
+			answers: CHILD_ANSWERS,
+		});
+
+		const result = await asUser(
+			t,
+			"clerk_no_row",
+			"nouserrow@example.com",
+		).mutation(api.onboarding.mutations.claimOnboarding, {});
+
+		expect(result.status).toBe("claimed");
+		const rows = await allResponses(t);
+		expect(rows[0]?.clerkId).toBe("clerk_no_row");
+	});
+
 	test("returns none when nothing matches", async () => {
 		const t = setup();
 		await seedUser(t, "clerk_f", "nobody@example.com");

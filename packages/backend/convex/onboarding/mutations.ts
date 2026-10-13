@@ -211,7 +211,14 @@ export const claimOnboarding = mutation({
 		),
 	}),
 	handler: async (ctx, args) => {
-		const clerkId = await requireClerkUserId(ctx);
+		const identity = await ctx.auth.getUserIdentity();
+		if (!identity) {
+			throw new ConvexError({
+				code: "UNAUTHENTICATED",
+				message: "You must be signed in.",
+			});
+		}
+		const clerkId = identity.subject;
 
 		const alreadyLinked = await linkedResponseFor(ctx, clerkId);
 		if (alreadyLinked) return { status: "already_linked" as const };
@@ -236,9 +243,17 @@ export const claimOnboarding = mutation({
 			.query("users")
 			.withIndex("by_clerk_id", (q) => q.eq("clerkId", clerkId))
 			.unique();
-		if (!user) return { status: "none" as const };
 
-		const byEmail = await claimableByEmail(ctx, normalizeEmail(user.email));
+		// The Convex row is authoritative once it exists, but it is written by the
+		// Clerk webhook, which can land after the person is already on /welcome.
+		// This runs exactly once per session and is never retried, so depending on
+		// that row would silently lose the claim and make them answer the
+		// questionnaire a second time. The token on the identity carries the same
+		// address and is available immediately.
+		const email = user?.email ?? identity.email;
+		if (!email) return { status: "none" as const };
+
+		const byEmail = await claimableByEmail(ctx, normalizeEmail(email));
 		if (!byEmail) return { status: "none" as const };
 
 		await ctx.db.patch(byEmail._id, { clerkId, linkedAt: now });
