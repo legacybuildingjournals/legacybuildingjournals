@@ -1,5 +1,6 @@
 import { ConvexError, v } from "convex/values";
 
+import { internal } from "../_generated/api";
 import type { Doc } from "../_generated/dataModel";
 import { type MutationCtx, mutation } from "../_generated/server";
 import { requireClerkUserId } from "../journal/auth";
@@ -44,6 +45,28 @@ async function claimableByEmail(
 }
 
 /**
+ * Queues the results email. Scheduled rather than awaited: Resend is only
+ * reachable from a node action, and a mail failure must not cost someone the
+ * submission they just finished. A re-submission mails the updated answers,
+ * which is what the person asked for by submitting again.
+ */
+async function scheduleResultsEmail(
+	ctx: MutationCtx,
+	args: {
+		email: string;
+		recipient: string;
+		token: string;
+		answers: { questionId: string; optionId: string }[];
+	},
+): Promise<void> {
+	await ctx.scheduler.runAfter(
+		0,
+		internal.email.actions.sendOnboardingResults,
+		args,
+	);
+}
+
+/**
  * Stores answers from the external pre-app form.
  *
  * Unauthenticated by necessity — the whole point is that this runs before the
@@ -85,6 +108,12 @@ export const submitExternal = mutation({
 				answers: answerList,
 				completedAt: Date.now(),
 			});
+			await scheduleResultsEmail(ctx, {
+				email,
+				recipient,
+				token: existing.token,
+				answers: answerList,
+			});
 			return { token: existing.token };
 		}
 
@@ -96,6 +125,12 @@ export const submitExternal = mutation({
 			recipient,
 			answers: answerList,
 			completedAt: Date.now(),
+		});
+		await scheduleResultsEmail(ctx, {
+			email,
+			recipient,
+			token,
+			answers: answerList,
 		});
 		return { token };
 	},

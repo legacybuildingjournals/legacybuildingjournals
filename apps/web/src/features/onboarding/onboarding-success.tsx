@@ -2,7 +2,6 @@ import type {
 	AnswerRecord,
 	Recipient,
 } from "@legacy-building/backend/convex/onboarding/questions";
-import { env } from "@legacy-building/env/web";
 import {
 	detectVisitorPlatform,
 	storeTargetFor,
@@ -14,7 +13,7 @@ import {
 } from "@/components/onboarding/onboarding-card";
 import { OnboardingCompletion } from "@/components/onboarding/onboarding-completion";
 import { ONBOARDING_TOKEN_PARAM } from "@/lib/onboarding/pending-token";
-import { isOnboardingHost, ROUTES } from "@/lib/routes";
+import { appOriginForOnboardingHost, ROUTES } from "@/lib/routes";
 
 type OnboardingSuccessProps = {
 	recipient: Recipient;
@@ -41,12 +40,11 @@ export function OnboardingSuccess({
 		platform === "android" ? "Continue with Android" : "Continue with iOS";
 
 	// The token travels in the URL because the form may be served from its own
-	// hostname, where storage is a different origin than the app's. On that
-	// host a relative link would also just re-render this form, so point at the
-	// main origin when one is configured.
+	// hostname, where storage is a different origin than the app's. On that host
+	// a relative link would just re-render this form, so the origin is made
+	// absolute — see `appOriginForOnboardingHost`.
 	const signupPath = `${ROUTES.signup}?${ONBOARDING_TOKEN_PARAM}=${encodeURIComponent(token)}`;
-	const origin = isOnboardingHost() ? (env.VITE_APP_ORIGIN ?? "") : "";
-	const continueHref = `${origin}${signupPath}`;
+	const continueHref = `${appOriginForOnboardingHost()}${signupPath}`;
 
 	return (
 		<OnboardingCompletion

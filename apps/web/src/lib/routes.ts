@@ -55,3 +55,21 @@ export function isOnboardingHost(): boolean {
 	if (typeof window === "undefined") return false;
 	return window.location.hostname.toLowerCase() === host.toLowerCase();
 }
+
+/** Where the app lives when the form is served from its own hostname. */
+const DEFAULT_APP_ORIGIN = "https://app.legacybuildingjournals.com";
+
+/**
+ * Absolute origin to send someone to when leaving the onboarding host, and an
+ * empty string anywhere else — on the app's own hostname a relative link is
+ * correct.
+ *
+ * `VITE_APP_ORIGIN` used to fall back to `""`, which looked harmless and was
+ * not: because the onboarding host renders the form for *every* path, a
+ * relative "continue" link simply reopened the form. Falling back to the real
+ * origin means a missing env var can no longer strand anyone in that loop.
+ */
+export function appOriginForOnboardingHost(): string {
+	if (!isOnboardingHost()) return "";
+	return env.VITE_APP_ORIGIN?.trim() || DEFAULT_APP_ORIGIN;
+}
