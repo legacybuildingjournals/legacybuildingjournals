@@ -440,3 +440,221 @@ describe("claimOnboarding", () => {
 		).rejects.toThrow();
 	});
 });
+
+/**
+ * End-to-end journeys, asserted the way the product asks the question: after
+ * all this, does `myResponse` return answers — i.e. are the questions skipped?
+ *
+ * The blocks above cover each mutation in isolation; these cover the
+ * compositions people actually walk through, where a regression would show up
+ * as someone being made to answer the questionnaire twice.
+ */
+describe("journeys: the questionnaire is never asked twice", () => {
+	/** What both welcome flows read to decide whether to show the questions. */
+	async function seesQuestions(
+		t: TestConvex,
+		clerkId: string,
+		email: string,
+	): Promise<boolean> {
+		const response = await asUser(t, clerkId, email).query(
+			api.onboarding.queries.myResponse,
+			{},
+		);
+		return response === null;
+	}
+
+	test("existing account fills the form, then opens the app", async () => {
+		const t = setup();
+		await seedUser(t, "clerk_existing", "existing@example.com");
+
+		// Already registered, but never answered the questionnaire.
+		expect(
+			await seesQuestions(t, "clerk_existing", "existing@example.com"),
+		).toBe(true);
+
+		await t.mutation(api.onboarding.mutations.submitExternal, {
+			email: "existing@example.com",
+			recipient: "child",
+			answers: CHILD_ANSWERS,
+		});
+
+		const result = await asUser(
+			t,
+			"clerk_existing",
+			"existing@example.com",
+		).mutation(api.onboarding.mutations.claimOnboarding, {});
+
+		expect(result.status).toBe("claimed");
+		expect(
+			await seesQuestions(t, "clerk_existing", "existing@example.com"),
+		).toBe(false);
+	});
+
+	test("no account, fills the form, signs up via the web link (token)", async () => {
+		const t = setup();
+		const { token } = await t.mutation(
+			api.onboarding.mutations.submitExternal,
+			{
+				email: "tokenpath@example.com",
+				recipient: "child",
+				answers: CHILD_ANSWERS,
+			},
+		);
+
+		// Signs up afterwards, so the row is written only now.
+		await seedUser(t, "clerk_token", "tokenpath@example.com");
+		const result = await asUser(
+			t,
+			"clerk_token",
+			"tokenpath@example.com",
+		).mutation(api.onboarding.mutations.claimOnboarding, { token });
+
+		expect(result.status).toBe("claimed");
+		expect(await seesQuestions(t, "clerk_token", "tokenpath@example.com")).toBe(
+			false,
+		);
+	});
+
+	test("no account, fills the form, installs the app and signs up (email only)", async () => {
+		const t = setup();
+		await t.mutation(api.onboarding.mutations.submitExternal, {
+			email: "storepath@example.com",
+			recipient: "child",
+			answers: CHILD_ANSWERS,
+		});
+
+		// No token survives an App Store install, so the email is all there is.
+		await seedUser(t, "clerk_store", "storepath@example.com");
+		const result = await asUser(
+			t,
+			"clerk_store",
+			"storepath@example.com",
+		).mutation(api.onboarding.mutations.claimOnboarding, {});
+
+		expect(result.status).toBe("claimed");
+		expect(await seesQuestions(t, "clerk_store", "storepath@example.com")).toBe(
+			false,
+		);
+	});
+
+	test("signs up with a different email than the form, carrying the token", async () => {
+		const t = setup();
+		const { token } = await t.mutation(
+			api.onboarding.mutations.submitExternal,
+			{
+				email: "typed@example.com",
+				recipient: "child",
+				answers: CHILD_ANSWERS,
+			},
+		);
+
+		await seedUser(t, "clerk_diff", "actually-signed-up@example.com");
+		const result = await asUser(
+			t,
+			"clerk_diff",
+			"actually-signed-up@example.com",
+		).mutation(api.onboarding.mutations.claimOnboarding, { token });
+
+		expect(result.status).toBe("claimed");
+		expect(
+			await seesQuestions(t, "clerk_diff", "actually-signed-up@example.com"),
+		).toBe(false);
+	});
+
+	test("answers in-app on web, then opens the native app", async () => {
+		const t = setup();
+		await seedUser(t, "clerk_web", "webfirst@example.com");
+
+		await asUser(t, "clerk_web", "webfirst@example.com").mutation(
+			api.onboarding.mutations.submitInApp,
+			{ recipient: "child", answers: CHILD_ANSWERS, source: "web" },
+		);
+
+		// Native reads the same linked row; no claim is involved.
+		expect(await seesQuestions(t, "clerk_web", "webfirst@example.com")).toBe(
+			false,
+		);
+	});
+
+	test("an unclaimed form row does not shadow answers given in-app", async () => {
+		const t = setup();
+		await t.mutation(api.onboarding.mutations.submitExternal, {
+			email: "both@example.com",
+			recipient: "partner",
+			answers: answersFor("partner"),
+		});
+		await seedUser(t, "clerk_both", "both@example.com");
+
+		// Answers in-app without ever claiming the form row.
+		await asUser(t, "clerk_both", "both@example.com").mutation(
+			api.onboarding.mutations.submitInApp,
+			{ recipient: "child", answers: CHILD_ANSWERS, source: "web" },
+		);
+
+		const response = await asUser(t, "clerk_both", "both@example.com").query(
+			api.onboarding.queries.myResponse,
+			{},
+		);
+		// The in-app answers win: they are the linked row.
+		expect(response?.recipient).toBe("child");
+	});
+
+	test("re-filling the form after claiming leaves the claimed answers alone", async () => {
+		const t = setup();
+		await t.mutation(api.onboarding.mutations.submitExternal, {
+			email: "refill@example.com",
+			recipient: "child",
+			answers: CHILD_ANSWERS,
+		});
+		await seedUser(t, "clerk_refill", "refill@example.com");
+		await asUser(t, "clerk_refill", "refill@example.com").mutation(
+			api.onboarding.mutations.claimOnboarding,
+			{},
+		);
+
+		// Walks the public form again with the same address.
+		await t.mutation(api.onboarding.mutations.submitExternal, {
+			email: "refill@example.com",
+			recipient: "myself",
+			answers: answersFor("myself"),
+		});
+
+		const second = await asUser(
+			t,
+			"clerk_refill",
+			"refill@example.com",
+		).mutation(api.onboarding.mutations.claimOnboarding, {});
+		expect(second.status).toBe("already_linked");
+
+		const response = await asUser(
+			t,
+			"clerk_refill",
+			"refill@example.com",
+		).query(api.onboarding.queries.myResponse, {});
+		expect(response?.recipient).toBe("child");
+		expect(await seesQuestions(t, "clerk_refill", "refill@example.com")).toBe(
+			false,
+		);
+	});
+
+	test("claiming twice is harmless", async () => {
+		const t = setup();
+		await t.mutation(api.onboarding.mutations.submitExternal, {
+			email: "twice@example.com",
+			recipient: "child",
+			answers: CHILD_ANSWERS,
+		});
+		await seedUser(t, "clerk_twice", "twice@example.com");
+
+		const as = asUser(t, "clerk_twice", "twice@example.com");
+		expect(
+			(await as.mutation(api.onboarding.mutations.claimOnboarding, {})).status,
+		).toBe("claimed");
+		expect(
+			(await as.mutation(api.onboarding.mutations.claimOnboarding, {})).status,
+		).toBe("already_linked");
+
+		const rows = await allResponses(t);
+		expect(rows.filter((r) => r.clerkId === "clerk_twice")).toHaveLength(1);
+	});
+});

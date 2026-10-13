@@ -42,6 +42,22 @@ function WelcomeRoute() {
 	const [submitting, setSubmitting] = useState(false);
 	const [showQuestions, setShowQuestions] = useState(false);
 	const claimed = useRef(false);
+	const [claimSettled, setClaimSettled] = useState(false);
+
+	/**
+	 * True until both the claim and the response query have answered.
+	 *
+	 * `existingResponse` is `undefined` while loading and `null` when there is
+	 * nothing, and the claim runs as a separate mutation — so deciding too early
+	 * reads "no answers" for someone who has them, and makes them retake the
+	 * questionnaire. The continue button waits this out; it resolves in the time
+	 * it takes one mutation to round-trip.
+	 *
+	 * Gated on `isAuthenticated` so a session that never settles falls through
+	 * to the questions rather than leaving the button stuck.
+	 */
+	const decisionPending =
+		isAuthenticated && (!claimSettled || existingResponse === undefined);
 
 	// Links answers from the external form. The token wins when present — the
 	// person may have signed up with a different address than they typed into
@@ -56,7 +72,8 @@ function WelcomeRoute() {
 			})
 			.catch(() => {
 				// Never block onboarding on a stale or mistyped token.
-			});
+			})
+			.finally(() => setClaimSettled(true));
 	}, [isAuthenticated, claimOnboarding]);
 
 	if (!isLoaded || isLoading) {
@@ -108,6 +125,10 @@ function WelcomeRoute() {
 
 	/** Skip the questions for anyone who already answered them externally. */
 	const handleContinue = () => {
+		// The button is disabled while this is true; the guard is here so a stray
+		// programmatic call can't decide on a half-loaded answer either.
+		if (decisionPending) return;
+
 		if (existingResponse) {
 			// Their recipient came from the external form, so honour it here too.
 			void finishWelcome(
@@ -133,7 +154,7 @@ function WelcomeRoute() {
 		<WelcomePage
 			userName={userName}
 			onContinue={handleContinue}
-			loading={submitting}
+			loading={submitting || decisionPending}
 		/>
 	);
 }

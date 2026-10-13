@@ -181,6 +181,12 @@ export default function WelcomeScreen() {
 
 	/** After the video: skip the questions if they already answered externally. */
 	const handleVideoContinue = () => {
+		// `existingResponse` is undefined until the query answers, and treating
+		// that as "no answers" would make someone who completed the external form
+		// retake the questionnaire. The claim itself is already awaited back in
+		// `handleUsernameContinue`, so only the query is outstanding here.
+		if (existingResponse === undefined) return;
+
 		if (existingResponse) {
 			// Their recipient came from the external form, so honour it here too.
 			void finishWelcome(
@@ -335,7 +341,7 @@ export default function WelcomeScreen() {
 				<AuthPrimaryButton
 					label="Let's Go!"
 					onPress={handleVideoContinue}
-					loading={saving}
+					loading={saving || existingResponse === undefined}
 				/>
 			</View>
 		</OnboardingBackground>
