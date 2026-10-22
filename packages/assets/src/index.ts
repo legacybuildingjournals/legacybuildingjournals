@@ -1,4 +1,6 @@
 import authPanelBackground from "../images/auth-panel-background.jpg";
+import communityHero from "../images/community-hero.jpg";
+import communityHeroMobile from "../images/community-hero-mobile.jpg";
 import communityMemories from "../images/community-memories.jpeg";
 import communityQrExport from "../images/community-qr-export.jpeg";
 import defaultAvatar from "../images/default-avatar.jpg";
@@ -49,6 +51,9 @@ export const imageAssets = {
 	libraryEmptyImage,
 	communityQrExport,
 	communityMemories,
+	/** Community page banner. The wide crop; phones use the taller one. */
+	communityHero,
+	communityHeroMobile,
 } as const;
 
 /**

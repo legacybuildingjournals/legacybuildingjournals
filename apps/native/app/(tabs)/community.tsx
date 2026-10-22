@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
+import { imageAssets } from "@legacy-building/assets";
 import * as Linking from "expo-linking";
 import { useThemeColor } from "heroui-native/hooks";
+import type { ImageSourcePropType } from "react-native";
 import { Alert, Image, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -8,23 +10,29 @@ import { useNativeCurrentUser } from "@/hooks/use-native-current-user";
 import {
 	COMMUNITY_PRIVACY_NOTE,
 	COMMUNITY_SOCIALS,
-	COMMUNITY_UPDATES,
 } from "@/lib/community/content";
 
-/** Status pill colours — amber, matching the web community cards. */
-const BADGE_BG = "#fff7ed";
-const BADGE_TEXT = "#9a3412";
+/**
+ * `packages/assets` is typed for the web bundler, where an image import is a
+ * URL string. Metro resolves the same import to a numeric asset module, which
+ * is what `<Image source>` wants — so the cast reflects the native runtime
+ * rather than papering over a mismatch.
+ */
+const HERO = imageAssets.communityHeroMobile as unknown as ImageSourcePropType;
+
+/** The banner's own aspect ratio, so it scales without cropping its headline. */
+const HERO_ASPECT = 535 / 314;
 
 /**
- * Community tab: what's coming to the app, and where to follow along.
+ * Community tab: the banner, and where to follow along.
  *
  * All content is static (`lib/community/content.ts`), so the loading, empty and
  * error states the UX checklist asks for don't apply here — there is nothing to
- * fetch and the lists are never empty.
+ * fetch and the list is never empty.
  */
 export default function CommunityScreen() {
 	const insets = useSafeAreaInsets();
-	const [accent, mutedForeground] = useThemeColor(["accent", "muted"]);
+	const [accent, foreground] = useThemeColor(["accent", "foreground"]);
 	const { convexUser } = useNativeCurrentUser();
 	// First name only — the header reads as a possessive ("David's Community"),
 	// and a full name makes it wrap on narrow phones.
@@ -32,7 +40,7 @@ export default function CommunityScreen() {
 	const heading = firstName ? `${firstName}'s Community` : "Community";
 
 	return (
-		<View className="flex-1 bg-secondary/30">
+		<View className="flex-1 bg-background">
 			{/* Teal header */}
 			<View
 				className="bg-primary px-4 pb-4"
@@ -52,62 +60,24 @@ export default function CommunityScreen() {
 
 			<ScrollView
 				className="flex-1"
-				contentContainerClassName="px-4 pt-5 pb-10 gap-6"
+				contentContainerClassName="pb-10"
 				showsVerticalScrollIndicator={false}
 			>
-				{/* Upcoming updates */}
-				<View className="gap-3">
-					<Text className="font-bold text-foreground text-xl">
-						Upcoming Updates
-					</Text>
-
-					{COMMUNITY_UPDATES.map((update) => (
-						<Pressable
-							key={update.id}
-							onPress={() => {
-								if (update.url) void Linking.openURL(update.url);
-							}}
-							disabled={!update.url}
-							accessibilityRole={update.url ? "link" : "text"}
-							accessibilityLabel={`${update.title}. ${update.badge}`}
-							className="flex-row items-center gap-3 rounded-2xl bg-background p-3 active:opacity-90"
-						>
-							<Image
-								source={update.image}
-								className="size-16 rounded-xl"
-								resizeMode="cover"
-							/>
-							<View className="flex-1 gap-1.5">
-								<Text className="font-bold text-base text-foreground">
-									{update.title}
-								</Text>
-								<View
-									className="self-start rounded-full px-2.5 py-1"
-									style={{ backgroundColor: BADGE_BG }}
-								>
-									<Text
-										className="font-semibold text-xs"
-										style={{ color: BADGE_TEXT }}
-									>
-										{update.badge}
-									</Text>
-								</View>
-							</View>
-							{update.url ? (
-								<Ionicons
-									name="chevron-forward"
-									size={20}
-									color={mutedForeground}
-								/>
-							) : null}
-						</Pressable>
-					))}
+				{/* The headline is part of the artwork, so the image keeps its own
+				    ratio rather than being cropped to a fixed height. */}
+				<View className="px-3 pt-3">
+					<Image
+						source={HERO}
+						accessibilityLabel="Legacy Community — stories shared, connections that last."
+						className="w-full rounded-2xl"
+						style={{ aspectRatio: HERO_ASPECT }}
+						resizeMode="cover"
+					/>
 				</View>
 
-				{/* Socials */}
-				<View className="gap-3">
+				<View className="gap-4 px-4 pt-6">
 					<View className="flex-row items-center justify-between">
-						<Text className="font-bold text-foreground text-xl">
+						<Text className="font-bold text-2xl text-foreground">
 							Join Our Community
 						</Text>
 						<Pressable
@@ -123,7 +93,7 @@ export default function CommunityScreen() {
 						>
 							<Ionicons
 								name="information-circle-outline"
-								size={24}
+								size={26}
 								color={accent}
 							/>
 						</Pressable>
@@ -137,23 +107,26 @@ export default function CommunityScreen() {
 								onPress={() => void Linking.openURL(social.url)}
 								accessibilityRole="link"
 								accessibilityLabel={`${social.name} — ${social.caption}`}
-								className="w-[48%] items-center gap-1.5 rounded-2xl bg-background px-3 py-5 active:opacity-90"
+								className="w-[48%] items-center gap-1 rounded-2xl bg-secondary/40 px-3 py-6 active:opacity-90"
 							>
 								<View
-									className="size-12 items-center justify-center rounded-full"
+									className="size-14 items-center justify-center rounded-full"
 									style={{ backgroundColor: social.tint }}
 								>
-									<Ionicons name={social.icon} size={26} color={social.color} />
+									<Ionicons name={social.icon} size={28} color={social.color} />
 								</View>
-								<Text className="mt-1 font-bold text-base text-foreground">
+								<Text className="mt-2 font-bold text-base text-foreground">
 									{social.name}
 								</Text>
-								<Text
-									className="font-semibold text-xs"
-									style={{ color: accent }}
-								>
-									{social.linkLabel}
-								</Text>
+								<View className="flex-row items-center gap-1">
+									<Text
+										className="font-semibold text-xs"
+										style={{ color: accent }}
+									>
+										{social.linkLabel}
+									</Text>
+									<Ionicons name="open-outline" size={12} color={accent} />
+								</View>
 							</Pressable>
 						))}
 					</View>

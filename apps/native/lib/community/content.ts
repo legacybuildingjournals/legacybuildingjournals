@@ -1,6 +1,4 @@
 import type { Ionicons } from "@expo/vector-icons";
-import { imageAssets } from "@legacy-building/assets";
-import type { ImageSourcePropType } from "react-native";
 
 /**
  * Community tab copy and links.
@@ -8,43 +6,10 @@ import type { ImageSourcePropType } from "react-native";
  * Kept as constants so the tab ships without a CMS. Editing any of this needs a
  * new build — if it starts changing often, move it to a Convex table and read it
  * with a query instead.
+ *
+ * The "Upcoming Updates" rows that used to live here came out with the
+ * redesign; git history has them if they are wanted back.
  */
-
-export type CommunityUpdate = {
-	id: string;
-	title: string;
-	/** Status pill under the title. */
-	badge: string;
-	/** Thumbnail — the same artwork the web community page uses. */
-	image: ImageSourcePropType;
-	/** Optional destination; rows without one render as read-only. */
-	url?: string;
-};
-
-/**
- * `packages/assets` is typed for the web bundler, where an image import is a
- * URL string. Metro resolves the same import to a numeric asset module, which
- * is what `<Image source>` wants — so the cast reflects the native runtime
- * rather than papering over a mismatch.
- */
-function nativeImage(asset: unknown): ImageSourcePropType {
-	return asset as ImageSourcePropType;
-}
-
-export const COMMUNITY_UPDATES: CommunityUpdate[] = [
-	{
-		id: "qr-export",
-		title: "Easy export with QR code",
-		badge: "Shipped",
-		image: nativeImage(imageAssets.communityQrExport),
-	},
-	{
-		id: "relive-memories",
-		title: "Record videos of your memories",
-		badge: "Shipped",
-		image: nativeImage(imageAssets.communityMemories),
-	},
-];
 
 export type CommunitySocial = {
 	id: string;
