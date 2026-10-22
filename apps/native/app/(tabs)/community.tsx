@@ -20,8 +20,8 @@ import {
  */
 const HERO = imageAssets.communityHeroMobile as unknown as ImageSourcePropType;
 
-/** The banner's own aspect ratio, so it scales without cropping its headline. */
-const HERO_ASPECT = 535 / 314;
+/** The artwork's own ratio, so it scales without cropping its headline. */
+const HERO_ASPECT = 370 / 228;
 
 /**
  * Community tab: the banner, and where to follow along.
@@ -32,7 +32,7 @@ const HERO_ASPECT = 535 / 314;
  */
 export default function CommunityScreen() {
 	const insets = useSafeAreaInsets();
-	const [accent, foreground] = useThemeColor(["accent", "foreground"]);
+	const accent = useThemeColor("accent");
 	const { convexUser } = useNativeCurrentUser();
 	// First name only — the header reads as a possessive ("David's Community"),
 	// and a full name makes it wrap on narrow phones.
@@ -63,15 +63,16 @@ export default function CommunityScreen() {
 				contentContainerClassName="pb-10"
 				showsVerticalScrollIndicator={false}
 			>
-				{/* The headline is part of the artwork, so the image keeps its own
-				    ratio rather than being cropped to a fixed height. */}
+				{/* The headline is part of the artwork and its corners are already
+				    rounded, so the image keeps its own ratio and nothing is clipped
+				    or cropped on top of it. */}
 				<View className="px-3 pt-3">
 					<Image
 						source={HERO}
-						accessibilityLabel="Legacy Community — stories shared, connections that last."
-						className="w-full rounded-2xl"
+						accessibilityLabel="Legacy Community — Your Story. Your Words. Your Voice. Your Legacy."
+						className="w-full"
 						style={{ aspectRatio: HERO_ASPECT }}
-						resizeMode="cover"
+						resizeMode="contain"
 					/>
 				</View>
 

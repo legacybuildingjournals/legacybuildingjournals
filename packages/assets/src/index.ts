@@ -1,6 +1,6 @@
 import authPanelBackground from "../images/auth-panel-background.jpg";
-import communityHero from "../images/community-hero.jpg";
-import communityHeroMobile from "../images/community-hero-mobile.jpg";
+import communityHero from "../images/community-hero.webp";
+import communityHeroMobile from "../images/community-hero-mobile.webp";
 import communityMemories from "../images/community-memories.jpeg";
 import communityQrExport from "../images/community-qr-export.jpeg";
 import defaultAvatar from "../images/default-avatar.jpg";
@@ -51,7 +51,12 @@ export const imageAssets = {
 	libraryEmptyImage,
 	communityQrExport,
 	communityMemories,
-	/** Community page banner. The wide crop; phones use the taller one. */
+	/**
+	 * Community page banner, as exported by the designer: the headline is part
+	 * of the artwork and the corners are already rounded, so neither is
+	 * re-applied in code. The wide one is sized to the web content column;
+	 * phones use the card.
+	 */
 	communityHero,
 	communityHeroMobile,
 } as const;

@@ -30,19 +30,21 @@ export function DashboardCommunityPage() {
 		>
 			<div className="mx-auto flex w-full max-w-[1280px] flex-col gap-8 px-4 py-6 sm:gap-10 sm:py-8 md:px-8">
 				{/*
-				 * The headline is part of the artwork rather than text over it, so
-				 * the phone gets its own crop — scaling the wide one would shrink
-				 * the words past reading size.
+				 * Two exports of the same artwork: the headline is part of the image
+				 * rather than text over it, so a phone gets the card rather than the
+				 * wide banner scaled down, which would shrink the words past reading
+				 * size. Both arrive with their corners already rounded, so nothing
+				 * here clips them again.
 				 */}
-				<picture className="block overflow-hidden rounded-2xl">
+				<picture className="block">
 					<source
 						media="(max-width: 639px)"
 						srcSet={assets.communityHeroMobile}
 					/>
 					<img
 						src={assets.communityHero}
-						alt="Legacy Community — stories shared, connections that last."
-						className="block w-full object-cover"
+						alt="Legacy Community — Your Story. Your Words. Your Voice. Your Legacy."
+						className="block w-full"
 					/>
 				</picture>
 
