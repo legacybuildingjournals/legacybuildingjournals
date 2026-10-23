@@ -87,13 +87,15 @@ function SortableJournalCard({
 		<div
 			ref={setNodeRef}
 			style={style}
-			className={cn("relative touch-none", isDragging && "z-10 opacity-60")}
+			className={cn("relative", isDragging && "z-10 opacity-60")}
 		>
+			{/* Only the handle opts out of browser panning; on the card itself it
+			    would stop a phone from scrolling the page. */}
 			<button
 				type="button"
 				ref={setActivatorNodeRef}
 				className={cn(
-					"absolute top-2 left-2 z-20 flex size-8 cursor-grab items-center justify-center rounded-lg bg-white/90 shadow-sm active:cursor-grabbing",
+					"absolute top-2 left-2 z-20 flex size-8 cursor-grab touch-none items-center justify-center rounded-lg bg-white/90 shadow-sm active:cursor-grabbing",
 					"text-[#525252] hover:bg-white",
 				)}
 				aria-label={`Drag to reorder ${journal.title}`}
