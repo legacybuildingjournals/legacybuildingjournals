@@ -3,7 +3,15 @@ import { imageAssets } from "@legacy-building/assets";
 import * as Linking from "expo-linking";
 import { useThemeColor } from "heroui-native/hooks";
 import type { ImageSourcePropType } from "react-native";
-import { Alert, Image, Pressable, ScrollView, Text, View } from "react-native";
+import {
+	Alert,
+	Image,
+	Pressable,
+	ScrollView,
+	Text,
+	useWindowDimensions,
+	View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useNativeCurrentUser } from "@/hooks/use-native-current-user";
@@ -23,6 +31,9 @@ const HERO = imageAssets.communityHeroMobile as unknown as ImageSourcePropType;
 /** The artwork's own ratio, so it scales without cropping its headline. */
 const HERO_ASPECT = 370 / 228;
 
+/** Matches the `px-4` gutter the heading and cards below use. */
+const HERO_GUTTER = 16;
+
 /**
  * Community tab: the banner, and where to follow along.
  *
@@ -32,6 +43,11 @@ const HERO_ASPECT = 370 / 228;
  */
 export default function CommunityScreen() {
 	const insets = useSafeAreaInsets();
+	const { width: windowWidth } = useWindowDimensions();
+	// Sized in points rather than `width: "100%"`: on device builds a percentage
+	// left the image at its 370pt natural width, short of the cards on wider phones.
+	const heroWidth = windowWidth - HERO_GUTTER * 2;
+	const heroHeight = heroWidth / HERO_ASPECT;
 	const accent = useThemeColor("accent");
 	const { convexUser } = useNativeCurrentUser();
 	// First name only — the header reads as a possessive ("David's Community"),
@@ -66,15 +82,21 @@ export default function CommunityScreen() {
 				{/* The headline is part of the artwork, so the image keeps its own
 				    ratio. The export only rounds its top corners, so the clip here
 				    gives it the same corners as the cards below. */}
-				<View className="px-4 pt-4">
-					<View className="overflow-hidden rounded-2xl">
-						<Image
-							source={HERO}
-							accessibilityLabel="Legacy Community — Your Story. Your Words. Your Voice. Your Legacy."
-							style={{ width: "100%", aspectRatio: HERO_ASPECT }}
-							resizeMode="cover"
-						/>
-					</View>
+				<View
+					className="overflow-hidden rounded-2xl"
+					style={{
+						marginTop: 16,
+						width: heroWidth,
+						height: heroHeight,
+						alignSelf: "center",
+					}}
+				>
+					<Image
+						source={HERO}
+						accessibilityLabel="Legacy Community — Your Story. Your Words. Your Voice. Your Legacy."
+						style={{ width: heroWidth, height: heroHeight }}
+						resizeMode="cover"
+					/>
 				</View>
 
 				<View className="gap-4 px-4 pt-6">
