@@ -33,10 +33,10 @@ export function DashboardCommunityPage() {
 				 * Two exports of the same artwork: the headline is part of the image
 				 * rather than text over it, so a phone gets the card rather than the
 				 * wide banner scaled down, which would shrink the words past reading
-				 * size. Both arrive with their corners already rounded, so nothing
-				 * here clips them again.
+				 * size. The card export only rounds its top corners, so the clip
+				 * here keeps both matching the cards below.
 				 */}
-				<picture className="block">
+				<picture className="block overflow-hidden rounded-2xl">
 					<source
 						media="(max-width: 639px)"
 						srcSet={assets.communityHeroMobile}

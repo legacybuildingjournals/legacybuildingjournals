@@ -63,17 +63,18 @@ export default function CommunityScreen() {
 				contentContainerClassName="pb-10"
 				showsVerticalScrollIndicator={false}
 			>
-				{/* The headline is part of the artwork and its corners are already
-				    rounded, so the image keeps its own ratio and nothing is clipped
-				    or cropped on top of it. */}
-				<View className="px-3 pt-3">
-					<Image
-						source={HERO}
-						accessibilityLabel="Legacy Community — Your Story. Your Words. Your Voice. Your Legacy."
-						className="w-full"
-						style={{ aspectRatio: HERO_ASPECT }}
-						resizeMode="contain"
-					/>
+				{/* The headline is part of the artwork, so the image keeps its own
+				    ratio. The export only rounds its top corners, so the clip here
+				    gives it the same corners as the cards below. */}
+				<View className="px-4 pt-4">
+					<View className="overflow-hidden rounded-2xl">
+						<Image
+							source={HERO}
+							accessibilityLabel="Legacy Community — Your Story. Your Words. Your Voice. Your Legacy."
+							style={{ width: "100%", aspectRatio: HERO_ASPECT }}
+							resizeMode="cover"
+						/>
+					</View>
 				</View>
 
 				<View className="gap-4 px-4 pt-6">
