@@ -24,6 +24,26 @@ export const getById = query({
 	},
 });
 
+/**
+ * Resolves a printed QR code to its recording. Intentionally unauthenticated —
+ * anyone holding the book can scan it — so it returns only what the player
+ * page needs, and the entry id (unguessable) is the only capability.
+ */
+export const getPublicMemory = query({
+	args: {
+		id: v.id("journalEntries"),
+		kind: v.union(v.literal("voice"), v.literal("video")),
+	},
+	handler: async (ctx, args) => {
+		const entry = await ctx.db.get(args.id);
+		if (!entry) return null;
+		const { audioUrl, videoUrl } = await enrichEntry(ctx, entry);
+		const url = args.kind === "video" ? videoUrl : audioUrl;
+		if (!url) return null;
+		return { url, title: entry.title ?? null, dateMs: entry.dateMs };
+	},
+});
+
 export const listByJournal = query({
 	args: { journalId: v.id("journals") },
 	handler: async (ctx, args) => {

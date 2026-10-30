@@ -35,6 +35,52 @@ async function getFFmpeg(): Promise<FFmpeg> {
 }
 
 /**
+ * Re-encodes a recorded video to H.264 + AAC in an MP4 container — the only
+ * combination iOS Safari plays reliably. Browsers record VP9/Opus (in WebM or
+ * even inside MP4), which iOS cannot play from a plain link such as a QR code.
+ * Returns the original blob if conversion fails.
+ */
+export async function transcodeVideoForIos(videoBlob: Blob): Promise<Blob> {
+	try {
+		const ffmpeg = await getFFmpeg();
+
+		await ffmpeg.writeFile("input", await fetchFile(videoBlob));
+
+		await ffmpeg.exec([
+			"-i",
+			"input",
+			"-c:v",
+			"libx264",
+			"-preset",
+			"veryfast",
+			"-pix_fmt",
+			"yuv420p",
+			"-c:a",
+			"aac",
+			"-b:a",
+			"128k",
+			"-movflags",
+			"+faststart",
+			"output.mp4",
+		]);
+
+		const data = await ffmpeg.readFile("output.mp4");
+		const safeBytes =
+			typeof data === "string"
+				? new TextEncoder().encode(data)
+				: (data as Uint8Array).slice();
+
+		await ffmpeg.deleteFile("input");
+		await ffmpeg.deleteFile("output.mp4");
+
+		return new Blob([safeBytes], { type: "video/mp4" });
+	} catch (err) {
+		console.error("Video → H.264 conversion failed, keeping original:", err);
+		return videoBlob;
+	}
+}
+
+/**
  * Converts a WebM audio blob to an MP4 (AAC audio) blob using FFmpeg.wasm.
  * Falls back to the original blob if conversion fails.
  */

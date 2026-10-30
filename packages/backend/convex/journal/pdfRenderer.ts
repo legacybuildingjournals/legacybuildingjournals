@@ -12,10 +12,12 @@ import { type DocumentProps, Font, renderToBuffer } from "@react-pdf/renderer";
 import QRCode from "qrcode";
 import { createElement, type ReactElement } from "react";
 
+import { memoryLinkUrl } from "./memoryLinks";
 import { compareEntriesOldestFirst } from "./sort";
 
 /** The entry fields the document needs, as returned by `enrichEntry`. */
 export type RenderableEntry = {
+	_id: string;
 	title?: string;
 	dateMs: number;
 	/** Tiebreaks entries sharing a `dateMs` — see `compareEntriesOldestFirst`. */
@@ -54,9 +56,15 @@ function formatEntryDate(ms: number): string {
  * in the layout widens that further, so scanning stays reliable in print.
  */
 async function buildMemories(entry: RenderableEntry): Promise<JournalMemory[]> {
+	// Only entries that have a recording get a code; the code itself carries a
+	// link on our domain, not the storage URL (see `memoryLinkUrl`).
 	const sources: Array<{ kind: MemoryKind; url: string }> = [];
-	if (entry.audioUrl) sources.push({ kind: "voice", url: entry.audioUrl });
-	if (entry.videoUrl) sources.push({ kind: "video", url: entry.videoUrl });
+	if (entry.audioUrl) {
+		sources.push({ kind: "voice", url: memoryLinkUrl(entry._id, "voice") });
+	}
+	if (entry.videoUrl) {
+		sources.push({ kind: "video", url: memoryLinkUrl(entry._id, "video") });
+	}
 
 	const memories: JournalMemory[] = [];
 	for (const source of sources) {

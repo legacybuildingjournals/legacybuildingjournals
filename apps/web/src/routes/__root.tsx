@@ -48,8 +48,15 @@ function RootComponent() {
 	const isAuthRoute = isAuthPath(pathname);
 	const isWelcome = pathname === ROUTES.welcome;
 	const isOnboarding = pathname === ROUTES.preappOnboarding;
+	// Scanned from a printed book: a bare player, no marketing chrome.
+	const isMemory = pathname.startsWith("/m/");
 	const showMarketingHeader =
-		!isDashboard && !isLegalPage && !isAuthRoute && !isWelcome && !isOnboarding;
+		!isDashboard &&
+		!isLegalPage &&
+		!isAuthRoute &&
+		!isWelcome &&
+		!isOnboarding &&
+		!isMemory;
 
 	// On the dedicated onboarding hostname the app is the form and nothing
 	// else, whatever path was requested — see `isOnboardingHost`.
@@ -81,7 +88,7 @@ function RootComponent() {
 					// `/welcome` hosts the same light, mint onboarding UI as
 					// `/preapponboarding`. Left on the dark default it painted the page
 					// background black, which showed through below the card.
-					isAuthRoute || isDashboard || isOnboarding || isWelcome
+					isAuthRoute || isDashboard || isOnboarding || isWelcome || isMemory
 						? "light"
 						: undefined
 				}
@@ -93,7 +100,7 @@ function RootComponent() {
 						// `h-svh` is a fixed height, so a welcome screen taller than the
 						// viewport spilled past it and left the page background showing
 						// underneath. The onboarding flow needs to grow instead.
-						isDashboard || isLegalPage || isOnboarding || isWelcome
+						isDashboard || isLegalPage || isOnboarding || isWelcome || isMemory
 							? "min-h-svh"
 							: "grid h-svh grid-rows-[auto_1fr]"
 					}

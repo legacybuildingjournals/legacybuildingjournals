@@ -1,5 +1,6 @@
-import { Circle, Square, Video } from "lucide-react";
+import { Circle, Loader2, Square, Video } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/journal/ui/button";
 import {
@@ -9,9 +10,15 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/journal/ui/dialog";
+import { transcodeVideoForIos } from "@/lib/journal/convertToMp4";
 
+// iOS only plays H.264 + AAC from a plain link (e.g. a printed QR code). Chrome's
+// bare "video/mp4" records VP9/Opus, so ask for the codecs explicitly and keep
+// bare "video/mp4" only as the Safari fallback, where it already means H.264/AAC.
 function pickVideoMimeType(): string {
 	const candidates = [
+		"video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+		"video/mp4;codecs=avc1,mp4a.40.2",
 		"video/mp4",
 		"video/webm;codecs=vp9,opus",
 		"video/webm;codecs=vp8,opus",
@@ -26,6 +33,13 @@ function pickVideoMimeType(): string {
 function mimeToExtension(mimeType: string): string {
 	if (mimeType.startsWith("video/mp4")) return "mp4";
 	return "webm";
+}
+
+/** True when the recording isn't H.264/AAC-in-MP4 and iOS would not play it. */
+function needsIosTranscode(mimeType: string): boolean {
+	const type = mimeType.toLowerCase();
+	if (!type.startsWith("video/mp4")) return true;
+	return /vp0?[89]|av01|opus/.test(type);
 }
 
 function formatDurationSeconds(totalSeconds: number): string {
@@ -61,6 +75,7 @@ export function CameraRecorderDialog({
 	const chunksRef = useRef<Blob[]>([]);
 
 	const [recording, setRecording] = useState(false);
+	const [processing, setProcessing] = useState(false);
 	const [duration, setDuration] = useState(0);
 	const [error, setError] = useState<string | null>(null);
 
@@ -136,8 +151,36 @@ export function CameraRecorderDialog({
 			const file = new File([blob], `recording-${Date.now()}.${ext}`, {
 				type: actualMimeType,
 			});
-			onRecorded(file);
-			onOpenChange(false);
+
+			if (!needsIosTranscode(actualMimeType)) {
+				onRecorded(file);
+				onOpenChange(false);
+				return;
+			}
+
+			// The browser couldn't record H.264/AAC, so convert before saving —
+			// otherwise the entry (and its QR code) won't play on iOS.
+			stopStream();
+			setProcessing(true);
+			void transcodeVideoForIos(blob)
+				.then((converted) => {
+					if (converted === blob) {
+						toast.warning(
+							"Couldn't convert the video for iPhones. It may not play there.",
+						);
+						onRecorded(file);
+						return;
+					}
+					onRecorded(
+						new File([converted], `recording-${Date.now()}.mp4`, {
+							type: "video/mp4",
+						}),
+					);
+				})
+				.finally(() => {
+					setProcessing(false);
+					onOpenChange(false);
+				});
 		};
 		recorderRef.current = recorder;
 		recorder.start();
@@ -157,6 +200,7 @@ export function CameraRecorderDialog({
 		<Dialog
 			open={open}
 			onOpenChange={(next) => {
+				if (!next && processing) return;
 				if (!next && recording) stopRecording();
 				onOpenChange(next);
 			}}
@@ -196,12 +240,18 @@ export function CameraRecorderDialog({
 						<Button
 							type="button"
 							onClick={recording ? stopRecording : startRecording}
+							disabled={processing}
 							className="h-11 w-full rounded-[8px] font-semibold text-sm text-white shadow-none transition-opacity hover:opacity-95 active:scale-[0.99]"
 							style={{
 								backgroundColor: recording ? "#b0200c" : accentColor,
 							}}
 						>
-							{recording ? (
+							{processing ? (
+								<>
+									<Loader2 className="mr-2 size-4 animate-spin" />
+									Processing video...
+								</>
+							) : recording ? (
 								<>
 									<Square className="mr-2 size-4 fill-current" />
 									Stop Recording

@@ -3,10 +3,12 @@ import { cn } from "@legacy-building/ui/lib/utils";
 import { Pause, Play, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+// Ask for AAC explicitly: Chrome's bare "audio/mp4" can record Opus, which iOS
+// won't play from a plain link. Bare "audio/mp4" stays as the Safari fallback.
 function pickMimeType(): string {
 	const candidates = [
-		"audio/mp4",
 		"audio/mp4;codecs=mp4a.40.2",
+		"audio/mp4",
 		"audio/webm;codecs=opus",
 		"audio/webm",
 	];

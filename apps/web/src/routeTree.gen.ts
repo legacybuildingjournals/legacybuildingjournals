@@ -21,6 +21,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as MEntryIdRouteImport } from './routes/m.$entryId'
 import { Route as LoginContinueRouteImport } from './routes/login.continue'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
 import { Route as DashboardLibraryRouteImport } from './routes/dashboard/library'
@@ -92,6 +93,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardRouteRoute,
+} as any)
+const MEntryIdRoute = MEntryIdRouteImport.update({
+  id: '/m/$entryId',
+  path: '/m/$entryId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const LoginContinueRoute = LoginContinueRouteImport.update({
   id: '/continue',
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/library': typeof DashboardLibraryRoute
   '/invite/$code': typeof InviteCodeRoute
   '/login/continue': typeof LoginContinueRoute
+  '/m/$entryId': typeof MEntryIdRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/billing/checkout': typeof DashboardBillingCheckoutRoute
   '/dashboard/billing/compare': typeof DashboardBillingCompareRoute
@@ -192,6 +199,7 @@ export interface FileRoutesByTo {
   '/dashboard/library': typeof DashboardLibraryRoute
   '/invite/$code': typeof InviteCodeRoute
   '/login/continue': typeof LoginContinueRoute
+  '/m/$entryId': typeof MEntryIdRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/billing/checkout': typeof DashboardBillingCheckoutRoute
   '/dashboard/billing/compare': typeof DashboardBillingCompareRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/dashboard/library': typeof DashboardLibraryRoute
   '/invite/$code': typeof InviteCodeRoute
   '/login/continue': typeof LoginContinueRoute
+  '/m/$entryId': typeof MEntryIdRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/billing/checkout': typeof DashboardBillingCheckoutRoute
   '/dashboard/billing/compare': typeof DashboardBillingCompareRoute
@@ -245,6 +254,7 @@ export interface FileRouteTypes {
     | '/dashboard/library'
     | '/invite/$code'
     | '/login/continue'
+    | '/m/$entryId'
     | '/dashboard/'
     | '/dashboard/billing/checkout'
     | '/dashboard/billing/compare'
@@ -268,6 +278,7 @@ export interface FileRouteTypes {
     | '/dashboard/library'
     | '/invite/$code'
     | '/login/continue'
+    | '/m/$entryId'
     | '/dashboard'
     | '/dashboard/billing/checkout'
     | '/dashboard/billing/compare'
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
     | '/dashboard/library'
     | '/invite/$code'
     | '/login/continue'
+    | '/m/$entryId'
     | '/dashboard/'
     | '/dashboard/billing/checkout'
     | '/dashboard/billing/compare'
@@ -313,6 +325,7 @@ export interface RootRouteChildren {
   VerifyEmailRoute: typeof VerifyEmailRoute
   WelcomeRoute: typeof WelcomeRoute
   InviteCodeRoute: typeof InviteCodeRoute
+  MEntryIdRoute: typeof MEntryIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -400,6 +413,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
+    }
+    '/m/$entryId': {
+      id: '/m/$entryId'
+      path: '/m/$entryId'
+      fullPath: '/m/$entryId'
+      preLoaderRoute: typeof MEntryIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/login/continue': {
       id: '/login/continue'
@@ -543,6 +563,7 @@ const rootRouteChildren: RootRouteChildren = {
   VerifyEmailRoute: VerifyEmailRoute,
   WelcomeRoute: WelcomeRoute,
   InviteCodeRoute: InviteCodeRoute,
+  MEntryIdRoute: MEntryIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
