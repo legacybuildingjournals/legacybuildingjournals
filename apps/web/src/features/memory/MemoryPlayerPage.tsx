@@ -1,5 +1,4 @@
 import { api } from "@legacy-building/backend/convex/_generated/api";
-import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
 import { Skeleton } from "@legacy-building/ui/components/skeleton";
 import { useQuery } from "convex/react";
 import { VolumeX } from "lucide-react";
@@ -25,9 +24,8 @@ export function MemoryPlayerPage({
 	entryId: string;
 	kind: MemoryKind;
 }) {
-	// A mistyped id throws in the validator; treat that as "not found".
 	const memory = useQuery(api.journal.entries.queries.getPublicMemory, {
-		id: entryId as Id<"journalEntries">,
+		id: entryId,
 		kind,
 	});
 

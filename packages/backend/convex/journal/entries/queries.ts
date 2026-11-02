@@ -31,11 +31,15 @@ export const getById = query({
  */
 export const getPublicMemory = query({
 	args: {
-		id: v.id("journalEntries"),
+		// A plain string: ids come from a printed link and may be mistyped or from
+		// another deployment, which should read as "not found", not throw.
+		id: v.string(),
 		kind: v.union(v.literal("voice"), v.literal("video")),
 	},
 	handler: async (ctx, args) => {
-		const entry = await ctx.db.get(args.id);
+		const entryId = ctx.db.normalizeId("journalEntries", args.id);
+		if (!entryId) return null;
+		const entry = await ctx.db.get(entryId);
 		if (!entry) return null;
 		const { audioUrl, videoUrl } = await enrichEntry(ctx, entry);
 		const url = args.kind === "video" ? videoUrl : audioUrl;
