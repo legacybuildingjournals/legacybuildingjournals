@@ -26,6 +26,7 @@ import type * as journal_auth from "../journal/auth.js";
 import type * as journal_enrich from "../journal/enrich.js";
 import type * as journal_entries_mutations from "../journal/entries/mutations.js";
 import type * as journal_entries_queries from "../journal/entries/queries.js";
+import type * as journal_memoryLinks from "../journal/memoryLinks.js";
 import type * as journal_migrations from "../journal/migrations.js";
 import type * as journal_mutations from "../journal/mutations.js";
 import type * as journal_orderHelpers from "../journal/orderHelpers.js";
@@ -96,6 +97,7 @@ declare const fullApi: ApiFromModules<{
   "journal/enrich": typeof journal_enrich;
   "journal/entries/mutations": typeof journal_entries_mutations;
   "journal/entries/queries": typeof journal_entries_queries;
+  "journal/memoryLinks": typeof journal_memoryLinks;
   "journal/migrations": typeof journal_migrations;
   "journal/mutations": typeof journal_mutations;
   "journal/orderHelpers": typeof journal_orderHelpers;
