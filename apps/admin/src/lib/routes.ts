@@ -1,3 +1,4 @@
+/** Admin route paths; use these instead of hard-coded strings. */
 export const ROUTES = {
 	home: "/",
 	signIn: "/sign-in",

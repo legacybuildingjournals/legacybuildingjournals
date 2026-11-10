@@ -1,6 +1,9 @@
 import { env } from "@legacy-building/env/web";
 
-/** Redirect-only entry; use login or dashboard for user-facing navigation. */
+/**
+ * Route paths for the web app. `home` is a redirect-only entry; use login or
+ * dashboard for user-facing navigation.
+ */
 export const ROUTES = {
 	home: "/",
 	dashboard: "/dashboard",
