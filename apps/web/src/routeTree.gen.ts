@@ -24,12 +24,18 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as MEntryIdRouteImport } from './routes/m.$entryId'
 import { Route as LoginContinueRouteImport } from './routes/login.continue'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
+import { Route as GiftTokenRouteImport } from './routes/gift.$token'
 import { Route as DashboardLibraryRouteImport } from './routes/dashboard/library'
+import { Route as DashboardGiftRouteImport } from './routes/dashboard/gift'
 import { Route as DashboardDeskRouteImport } from './routes/dashboard/desk'
 import { Route as DashboardCommunityRouteImport } from './routes/dashboard/community'
 import { Route as DashboardBillingRouteImport } from './routes/dashboard/billing'
 import { Route as DashboardAccountRouteImport } from './routes/dashboard/account'
+import { Route as DashboardGiftIndexRouteImport } from './routes/dashboard/gift/index'
 import { Route as DashboardBillingIndexRouteImport } from './routes/dashboard/billing/index'
+import { Route as DashboardGiftSuccessRouteImport } from './routes/dashboard/gift.success'
+import { Route as DashboardGiftDetailsRouteImport } from './routes/dashboard/gift.details'
+import { Route as DashboardGiftCheckoutRouteImport } from './routes/dashboard/gift.checkout'
 import { Route as DashboardBillingSuccessRouteImport } from './routes/dashboard/billing.success'
 import { Route as DashboardBillingCompareRouteImport } from './routes/dashboard/billing.compare'
 import { Route as DashboardBillingCheckoutRouteImport } from './routes/dashboard/billing.checkout'
@@ -109,9 +115,19 @@ const InviteCodeRoute = InviteCodeRouteImport.update({
   path: '/invite/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GiftTokenRoute = GiftTokenRouteImport.update({
+  id: '/gift/$token',
+  path: '/gift/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardLibraryRoute = DashboardLibraryRouteImport.update({
   id: '/library',
   path: '/library',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardGiftRoute = DashboardGiftRouteImport.update({
+  id: '/gift',
+  path: '/gift',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardDeskRoute = DashboardDeskRouteImport.update({
@@ -134,10 +150,30 @@ const DashboardAccountRoute = DashboardAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardGiftIndexRoute = DashboardGiftIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardGiftRoute,
+} as any)
 const DashboardBillingIndexRoute = DashboardBillingIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardBillingRoute,
+} as any)
+const DashboardGiftSuccessRoute = DashboardGiftSuccessRouteImport.update({
+  id: '/success',
+  path: '/success',
+  getParentRoute: () => DashboardGiftRoute,
+} as any)
+const DashboardGiftDetailsRoute = DashboardGiftDetailsRouteImport.update({
+  id: '/details',
+  path: '/details',
+  getParentRoute: () => DashboardGiftRoute,
+} as any)
+const DashboardGiftCheckoutRoute = DashboardGiftCheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => DashboardGiftRoute,
 } as any)
 const DashboardBillingSuccessRoute = DashboardBillingSuccessRouteImport.update({
   id: '/success',
@@ -172,7 +208,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/billing': typeof DashboardBillingRouteWithChildren
   '/dashboard/community': typeof DashboardCommunityRoute
   '/dashboard/desk': typeof DashboardDeskRoute
+  '/dashboard/gift': typeof DashboardGiftRouteWithChildren
   '/dashboard/library': typeof DashboardLibraryRoute
+  '/gift/$token': typeof GiftTokenRoute
   '/invite/$code': typeof InviteCodeRoute
   '/login/continue': typeof LoginContinueRoute
   '/m/$entryId': typeof MEntryIdRoute
@@ -180,7 +218,11 @@ export interface FileRoutesByFullPath {
   '/dashboard/billing/checkout': typeof DashboardBillingCheckoutRoute
   '/dashboard/billing/compare': typeof DashboardBillingCompareRoute
   '/dashboard/billing/success': typeof DashboardBillingSuccessRoute
+  '/dashboard/gift/checkout': typeof DashboardGiftCheckoutRoute
+  '/dashboard/gift/details': typeof DashboardGiftDetailsRoute
+  '/dashboard/gift/success': typeof DashboardGiftSuccessRoute
   '/dashboard/billing/': typeof DashboardBillingIndexRoute
+  '/dashboard/gift/': typeof DashboardGiftIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -197,6 +239,7 @@ export interface FileRoutesByTo {
   '/dashboard/community': typeof DashboardCommunityRoute
   '/dashboard/desk': typeof DashboardDeskRoute
   '/dashboard/library': typeof DashboardLibraryRoute
+  '/gift/$token': typeof GiftTokenRoute
   '/invite/$code': typeof InviteCodeRoute
   '/login/continue': typeof LoginContinueRoute
   '/m/$entryId': typeof MEntryIdRoute
@@ -204,7 +247,11 @@ export interface FileRoutesByTo {
   '/dashboard/billing/checkout': typeof DashboardBillingCheckoutRoute
   '/dashboard/billing/compare': typeof DashboardBillingCompareRoute
   '/dashboard/billing/success': typeof DashboardBillingSuccessRoute
+  '/dashboard/gift/checkout': typeof DashboardGiftCheckoutRoute
+  '/dashboard/gift/details': typeof DashboardGiftDetailsRoute
+  '/dashboard/gift/success': typeof DashboardGiftSuccessRoute
   '/dashboard/billing': typeof DashboardBillingIndexRoute
+  '/dashboard/gift': typeof DashboardGiftIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -223,7 +270,9 @@ export interface FileRoutesById {
   '/dashboard/billing': typeof DashboardBillingRouteWithChildren
   '/dashboard/community': typeof DashboardCommunityRoute
   '/dashboard/desk': typeof DashboardDeskRoute
+  '/dashboard/gift': typeof DashboardGiftRouteWithChildren
   '/dashboard/library': typeof DashboardLibraryRoute
+  '/gift/$token': typeof GiftTokenRoute
   '/invite/$code': typeof InviteCodeRoute
   '/login/continue': typeof LoginContinueRoute
   '/m/$entryId': typeof MEntryIdRoute
@@ -231,7 +280,11 @@ export interface FileRoutesById {
   '/dashboard/billing/checkout': typeof DashboardBillingCheckoutRoute
   '/dashboard/billing/compare': typeof DashboardBillingCompareRoute
   '/dashboard/billing/success': typeof DashboardBillingSuccessRoute
+  '/dashboard/gift/checkout': typeof DashboardGiftCheckoutRoute
+  '/dashboard/gift/details': typeof DashboardGiftDetailsRoute
+  '/dashboard/gift/success': typeof DashboardGiftSuccessRoute
   '/dashboard/billing/': typeof DashboardBillingIndexRoute
+  '/dashboard/gift/': typeof DashboardGiftIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -251,7 +304,9 @@ export interface FileRouteTypes {
     | '/dashboard/billing'
     | '/dashboard/community'
     | '/dashboard/desk'
+    | '/dashboard/gift'
     | '/dashboard/library'
+    | '/gift/$token'
     | '/invite/$code'
     | '/login/continue'
     | '/m/$entryId'
@@ -259,7 +314,11 @@ export interface FileRouteTypes {
     | '/dashboard/billing/checkout'
     | '/dashboard/billing/compare'
     | '/dashboard/billing/success'
+    | '/dashboard/gift/checkout'
+    | '/dashboard/gift/details'
+    | '/dashboard/gift/success'
     | '/dashboard/billing/'
+    | '/dashboard/gift/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -276,6 +335,7 @@ export interface FileRouteTypes {
     | '/dashboard/community'
     | '/dashboard/desk'
     | '/dashboard/library'
+    | '/gift/$token'
     | '/invite/$code'
     | '/login/continue'
     | '/m/$entryId'
@@ -283,7 +343,11 @@ export interface FileRouteTypes {
     | '/dashboard/billing/checkout'
     | '/dashboard/billing/compare'
     | '/dashboard/billing/success'
+    | '/dashboard/gift/checkout'
+    | '/dashboard/gift/details'
+    | '/dashboard/gift/success'
     | '/dashboard/billing'
+    | '/dashboard/gift'
   id:
     | '__root__'
     | '/'
@@ -301,7 +365,9 @@ export interface FileRouteTypes {
     | '/dashboard/billing'
     | '/dashboard/community'
     | '/dashboard/desk'
+    | '/dashboard/gift'
     | '/dashboard/library'
+    | '/gift/$token'
     | '/invite/$code'
     | '/login/continue'
     | '/m/$entryId'
@@ -309,7 +375,11 @@ export interface FileRouteTypes {
     | '/dashboard/billing/checkout'
     | '/dashboard/billing/compare'
     | '/dashboard/billing/success'
+    | '/dashboard/gift/checkout'
+    | '/dashboard/gift/details'
+    | '/dashboard/gift/success'
     | '/dashboard/billing/'
+    | '/dashboard/gift/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -324,6 +394,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
   WelcomeRoute: typeof WelcomeRoute
+  GiftTokenRoute: typeof GiftTokenRoute
   InviteCodeRoute: typeof InviteCodeRoute
   MEntryIdRoute: typeof MEntryIdRoute
 }
@@ -435,11 +506,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InviteCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/gift/$token': {
+      id: '/gift/$token'
+      path: '/gift/$token'
+      fullPath: '/gift/$token'
+      preLoaderRoute: typeof GiftTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/library': {
       id: '/dashboard/library'
       path: '/library'
       fullPath: '/dashboard/library'
       preLoaderRoute: typeof DashboardLibraryRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/gift': {
+      id: '/dashboard/gift'
+      path: '/gift'
+      fullPath: '/dashboard/gift'
+      preLoaderRoute: typeof DashboardGiftRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/desk': {
@@ -470,12 +555,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAccountRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/gift/': {
+      id: '/dashboard/gift/'
+      path: '/'
+      fullPath: '/dashboard/gift/'
+      preLoaderRoute: typeof DashboardGiftIndexRouteImport
+      parentRoute: typeof DashboardGiftRoute
+    }
     '/dashboard/billing/': {
       id: '/dashboard/billing/'
       path: '/'
       fullPath: '/dashboard/billing/'
       preLoaderRoute: typeof DashboardBillingIndexRouteImport
       parentRoute: typeof DashboardBillingRoute
+    }
+    '/dashboard/gift/success': {
+      id: '/dashboard/gift/success'
+      path: '/success'
+      fullPath: '/dashboard/gift/success'
+      preLoaderRoute: typeof DashboardGiftSuccessRouteImport
+      parentRoute: typeof DashboardGiftRoute
+    }
+    '/dashboard/gift/details': {
+      id: '/dashboard/gift/details'
+      path: '/details'
+      fullPath: '/dashboard/gift/details'
+      preLoaderRoute: typeof DashboardGiftDetailsRouteImport
+      parentRoute: typeof DashboardGiftRoute
+    }
+    '/dashboard/gift/checkout': {
+      id: '/dashboard/gift/checkout'
+      path: '/checkout'
+      fullPath: '/dashboard/gift/checkout'
+      preLoaderRoute: typeof DashboardGiftCheckoutRouteImport
+      parentRoute: typeof DashboardGiftRoute
     }
     '/dashboard/billing/success': {
       id: '/dashboard/billing/success'
@@ -518,11 +631,30 @@ const DashboardBillingRouteChildren: DashboardBillingRouteChildren = {
 const DashboardBillingRouteWithChildren =
   DashboardBillingRoute._addFileChildren(DashboardBillingRouteChildren)
 
+interface DashboardGiftRouteChildren {
+  DashboardGiftCheckoutRoute: typeof DashboardGiftCheckoutRoute
+  DashboardGiftDetailsRoute: typeof DashboardGiftDetailsRoute
+  DashboardGiftSuccessRoute: typeof DashboardGiftSuccessRoute
+  DashboardGiftIndexRoute: typeof DashboardGiftIndexRoute
+}
+
+const DashboardGiftRouteChildren: DashboardGiftRouteChildren = {
+  DashboardGiftCheckoutRoute: DashboardGiftCheckoutRoute,
+  DashboardGiftDetailsRoute: DashboardGiftDetailsRoute,
+  DashboardGiftSuccessRoute: DashboardGiftSuccessRoute,
+  DashboardGiftIndexRoute: DashboardGiftIndexRoute,
+}
+
+const DashboardGiftRouteWithChildren = DashboardGiftRoute._addFileChildren(
+  DashboardGiftRouteChildren,
+)
+
 interface DashboardRouteRouteChildren {
   DashboardAccountRoute: typeof DashboardAccountRoute
   DashboardBillingRoute: typeof DashboardBillingRouteWithChildren
   DashboardCommunityRoute: typeof DashboardCommunityRoute
   DashboardDeskRoute: typeof DashboardDeskRoute
+  DashboardGiftRoute: typeof DashboardGiftRouteWithChildren
   DashboardLibraryRoute: typeof DashboardLibraryRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
@@ -532,6 +664,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardBillingRoute: DashboardBillingRouteWithChildren,
   DashboardCommunityRoute: DashboardCommunityRoute,
   DashboardDeskRoute: DashboardDeskRoute,
+  DashboardGiftRoute: DashboardGiftRouteWithChildren,
   DashboardLibraryRoute: DashboardLibraryRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
@@ -562,6 +695,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   VerifyEmailRoute: VerifyEmailRoute,
   WelcomeRoute: WelcomeRoute,
+  GiftTokenRoute: GiftTokenRoute,
   InviteCodeRoute: InviteCodeRoute,
   MEntryIdRoute: MEntryIdRoute,
 }

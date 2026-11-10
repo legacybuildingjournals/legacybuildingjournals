@@ -1,4 +1,5 @@
 import { api } from "@legacy-building/backend/convex/_generated/api";
+import { RECIPIENT_INTRO_HEADING } from "@legacy-building/backend/convex/onboarding/copy";
 import {
 	type AnswerState,
 	applyAnswer,
@@ -7,7 +8,7 @@ import {
 	RECIPIENT_QUESTION,
 	type Recipient,
 } from "@legacy-building/backend/convex/onboarding/questions";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { PILL_PRIMARY } from "@/components/onboarding/onboarding-card";
 import { OnboardingCompletion } from "@/components/onboarding/onboarding-completion";
@@ -40,6 +41,7 @@ export function WelcomeOnboarding({
 	finishing,
 }: WelcomeOnboardingProps) {
 	const submitInApp = useMutation(api.onboarding.mutations.submitInApp);
+	const lifetime = useQuery(api.gifts.queries.myLifetimeStatus);
 
 	const [phase, setPhase] = useState<Phase>("intro");
 	const [answerState, setAnswerState] =
@@ -93,7 +95,12 @@ export function WelcomeOnboarding({
 	};
 
 	if (phase === "intro") {
-		return <OnboardingIntro onStart={() => setPhase("questions")} />;
+		return (
+			<OnboardingIntro
+				onStart={() => setPhase("questions")}
+				heading={lifetime?.hasLifetime ? RECIPIENT_INTRO_HEADING : undefined}
+			/>
+		);
 	}
 
 	if (phase === "result" && answerState.recipient) {

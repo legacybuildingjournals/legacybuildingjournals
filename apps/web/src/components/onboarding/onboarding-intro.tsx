@@ -19,7 +19,14 @@ const BADGE_BG = {
 } as const;
 
 /** The "Let's personalize the Legacy Building" screen shown before Q1. */
-export function OnboardingIntro({ onStart }: { onStart: () => void }) {
+export function OnboardingIntro({
+	onStart,
+	heading = WEB_INTRO_COPY.heading,
+}: {
+	onStart: () => void;
+	/** Overrides the heading (gift recipients get the SST-8 copy). */
+	heading?: string;
+}) {
 	return (
 		<OnboardingShell>
 			<OnboardingTopBar />
@@ -30,7 +37,7 @@ export function OnboardingIntro({ onStart }: { onStart: () => void }) {
 				className="mx-auto grid min-h-[calc(100svh-72px)] w-full max-w-[1128px] content-center items-center gap-8 px-2.5 py-8 sm:min-h-[calc(100svh-88px)] sm:px-12 lg:grid-cols-[minmax(0,554px)_461px] lg:justify-center lg:gap-x-6 lg:py-[46px]"
 			>
 				<OnboardingCard>
-					<CardHeading>{WEB_INTRO_COPY.heading}</CardHeading>
+					<CardHeading>{heading}</CardHeading>
 					<CardSubheading>{WEB_INTRO_COPY.subheading}</CardSubheading>
 					<p className="max-w-[448px] pb-5 text-center text-[15px] text-onb-muted-warm leading-[24.38px]">
 						{WEB_INTRO_COPY.body}

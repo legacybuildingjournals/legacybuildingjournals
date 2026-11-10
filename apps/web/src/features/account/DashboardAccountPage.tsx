@@ -24,6 +24,7 @@ import {
 } from "@/components/account/accountFormStyles";
 import { DeleteAccountDialog } from "@/components/account/delete-account-dialog";
 import { PersonalInfoCard } from "@/components/account/personal-info-card";
+import { GiftHistorySection } from "@/components/gift/GiftHistorySection";
 import { Button } from "@/components/journal/ui/button";
 import { defaultUsername } from "@/lib/account/username";
 import {
@@ -60,6 +61,8 @@ export function DashboardAccountPage() {
 	const { user, isLoaded: clerkLoaded } = useUser();
 	const { convexUser, isLoading } = useCurrentUser();
 	const subscription = useQuery(api.stripe.queries.getMySubscription);
+	const entitlement = useQuery(api.subscriptions.queries.getEntitlement);
+	const isLifetime = entitlement?.isLifetime === true;
 	const updateProfile = useMutation(api.user.mutations.updateProfile);
 
 	const [username, setUsername] = useState("");
@@ -112,7 +115,10 @@ export function DashboardAccountPage() {
 			subscription.status === "past_due");
 
 	const showBillingBanner =
-		hasLivePlan && subscription.currentPeriodEnd && !bannerDismissed;
+		!isLifetime &&
+		hasLivePlan &&
+		subscription.currentPeriodEnd &&
+		!bannerDismissed;
 
 	const activeSinceMs = convexUser?._creationTime;
 	const currentPlanName = planLabel(
@@ -179,6 +185,8 @@ export function DashboardAccountPage() {
 						/>
 					</section>
 
+					<GiftHistorySection />
+
 					<section className="flex flex-col gap-4">
 						<div className="flex flex-col gap-1">
 							<h2 className={accountSectionTitleClass}>Billings & Plan</h2>
@@ -188,7 +196,20 @@ export function DashboardAccountPage() {
 						</div>
 
 						<div className={accountCardClass}>
-							{hasLivePlan ? (
+							{isLifetime ? (
+								<div className="flex items-center gap-2">
+									<span
+										className="size-2.5 rounded-full bg-green-500"
+										aria-hidden
+									/>
+									<span className="font-semibold text-foreground text-lg">
+										Lifetime Access
+									</span>
+									<span className="text-muted-foreground text-sm">
+										· no subscription needed
+									</span>
+								</div>
+							) : hasLivePlan ? (
 								<div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
 									<div className="flex flex-col gap-3">
 										<div className="flex items-center gap-2">

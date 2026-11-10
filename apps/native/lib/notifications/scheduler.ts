@@ -1,7 +1,7 @@
 import * as Device from "expo-device";
-import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
+import { Notifications } from "./expo-notifications";
 import {
 	DAILY_PROMPT_MESSAGES,
 	FIRST_ENTRY_MESSAGES,
@@ -34,6 +34,7 @@ const DAILY_SCHEDULE_DAYS = 14;
  * fine for reflection nudges. Call once at app start.
  */
 export function configureNotificationHandler(): void {
+	if (!Notifications) return;
 	Notifications.setNotificationHandler({
 		handleNotification: async () => ({
 			shouldShowBanner: true,
@@ -46,6 +47,7 @@ export function configureNotificationHandler(): void {
 
 /** Android requires an explicit channel for heads-up notifications. */
 async function ensureAndroidChannel(): Promise<void> {
+	if (!Notifications) return;
 	if (Platform.OS !== "android") return;
 	await Notifications.setNotificationChannelAsync(ANDROID_CHANNEL_ID, {
 		name: "Reminders",
@@ -59,6 +61,7 @@ async function ensureAndroidChannel(): Promise<void> {
  * to post notifications. Does not prompt again once the user has answered.
  */
 export async function ensureNotificationPermission(): Promise<boolean> {
+	if (!Notifications) return false;
 	await ensureAndroidChannel();
 	const current = await Notifications.getPermissionsAsync();
 	if (current.granted) return true;
@@ -75,6 +78,7 @@ export async function getExpoPushToken(
 	projectId: string | undefined,
 ): Promise<string | null> {
 	if (!Device.isDevice) return null;
+	if (!Notifications) return null;
 	if (!projectId) {
 		console.warn("[notifications] No EAS projectId — cannot get a push token.");
 		return null;
@@ -92,11 +96,13 @@ export async function getExpoPushToken(
 
 /** Cancel every scheduled notification tagged with the given category. */
 async function cancelByCategory(category: string): Promise<void> {
-	const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+	const notifications = Notifications;
+	if (!notifications) return;
+	const scheduled = await notifications.getAllScheduledNotificationsAsync();
 	await Promise.all(
 		scheduled
 			.filter((n) => n.content.data?.category === category)
-			.map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)),
+			.map((n) => notifications.cancelScheduledNotificationAsync(n.identifier)),
 	);
 }
 
@@ -112,6 +118,7 @@ export async function rescheduleDailyPrompts(
 		"dailyPrompts" | "dailyPromptHour" | "dailyPromptMinute"
 	>,
 ): Promise<void> {
+	if (!Notifications) return;
 	await cancelByCategory(CATEGORY.dailyPrompt);
 	if (!prefs.dailyPrompts) return;
 
@@ -147,6 +154,7 @@ export async function rescheduleDailyPrompts(
  * lands just after the "Entry saved" toast.
  */
 export async function scheduleFirstEntryCelebration(): Promise<void> {
+	if (!Notifications) return;
 	const message = randomMessage(FIRST_ENTRY_MESSAGES);
 	await Notifications.scheduleNotificationAsync({
 		content: {
@@ -165,6 +173,7 @@ export async function scheduleFirstEntryCelebration(): Promise<void> {
 
 /** Cancel all locally-scheduled notifications (e.g. on sign-out). */
 export async function cancelAllLocalNotifications(): Promise<void> {
+	if (!Notifications) return;
 	await Notifications.cancelAllScheduledNotificationsAsync();
 }
 
@@ -175,6 +184,7 @@ export async function cancelAllLocalNotifications(): Promise<void> {
  * was denied.
  */
 export async function sendTestNotification(): Promise<boolean> {
+	if (!Notifications) return false;
 	const granted = await ensureNotificationPermission();
 	if (!granted) return false;
 	await Notifications.scheduleNotificationAsync({

@@ -19,9 +19,12 @@ export type Entitlement = {
 	/** Unix ms when the current period ends, normalized across providers. */
 	currentPeriodEnd: number | null;
 	willRenew: boolean | null;
+	/** Lifetime membership (redeemed gift). Nothing to manage or renew. */
+	isLifetime: boolean;
 };
 
 const NO_ACCESS: Entitlement = {
+	isLifetime: false,
 	hasAccess: false,
 	provider: null,
 	manageVia: "none",
@@ -63,6 +66,17 @@ export const getEntitlement = query({
 			};
 		}
 
+		// 1b. Lifetime (redeemed gift). Wins over any leftover subscription,
+		// which is being wound down (Stripe auto-cancelled, store: user splash).
+		if (user?.lifetimeAccess) {
+			return {
+				...NO_ACCESS,
+				hasAccess: true,
+				status: "active",
+				isLifetime: true,
+			};
+		}
+
 		// 2. Apple / Google IAP — takes precedence over Stripe.
 		const iap = await getActiveIapSubscription(ctx, clerkUserId);
 		if (iap) {
@@ -75,6 +89,7 @@ export const getEntitlement = query({
 				interval: iap.interval ?? null,
 				currentPeriodEnd: iap.currentPeriodEnd ?? null,
 				willRenew: iap.willRenew ?? null,
+				isLifetime: false,
 			};
 		}
 
@@ -103,6 +118,7 @@ export const getEntitlement = query({
 				// Stripe stores epoch seconds; normalize to ms.
 				currentPeriodEnd: sub.currentPeriodEnd * 1000,
 				willRenew: !sub.cancelAtPeriodEnd,
+				isLifetime: false,
 			};
 		}
 

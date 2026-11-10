@@ -76,6 +76,8 @@ function StackLayout() {
 				name="account/notifications"
 				options={{ headerShown: false }}
 			/>
+			<Stack.Screen name="gift/index" options={{ headerShown: false }} />
+			<Stack.Screen name="gift/details" options={{ headerShown: false }} />
 			<Stack.Screen
 				name="modal"
 				options={{ title: "Modal", presentation: "modal", headerShown: true }}

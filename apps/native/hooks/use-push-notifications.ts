@@ -2,12 +2,13 @@ import { api } from "@legacy-building/backend/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
-import * as Notifications from "expo-notifications";
+import type { NotificationResponse } from "expo-notifications";
 import { type Href, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef } from "react";
 import { AppState, type AppStateStatus, Platform } from "react-native";
 
 import { useNativeCurrentUser } from "@/hooks/use-native-current-user";
+import { Notifications } from "@/lib/notifications/expo-notifications";
 import {
 	configureNotificationHandler,
 	getExpoPushToken,
@@ -104,7 +105,7 @@ export function usePushNotifications(): void {
 
 	// Route notification taps to the screen named in the payload's `url`.
 	const handleResponse = useCallback(
-		(response: Notifications.NotificationResponse | null) => {
+		(response: NotificationResponse | null) => {
 			const url = response?.notification.request.content.data?.url;
 			if (typeof url === "string" && url.length > 0) {
 				router.push(url as Href);
@@ -115,7 +116,7 @@ export function usePushNotifications(): void {
 
 	useEffect(() => {
 		// expo-notifications doesn't implement the response APIs on web.
-		if (isWeb) return;
+		if (isWeb || !Notifications) return;
 		// Cold start: the app was opened by tapping a notification.
 		void Notifications.getLastNotificationResponseAsync().then(handleResponse);
 		// Warm taps while the app is running.

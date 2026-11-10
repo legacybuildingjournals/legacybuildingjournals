@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
+import { GiftLegacyCard } from "@/components/gift/GiftLegacyCard";
 import { Button } from "@/components/journal/ui/button";
 import {
 	Dialog,
@@ -40,6 +41,10 @@ export function JournalPaywallDialog({
 						legacy. You can browse the app freely until you&apos;re ready.
 					</DialogDescription>
 				</DialogHeader>
+				<GiftLegacyCard
+					className="mt-2"
+					onNavigate={() => onOpenChange(false)}
+				/>
 				<DialogFooter className="mt-2 flex-col gap-2 sm:flex-col">
 					<Button
 						asChild

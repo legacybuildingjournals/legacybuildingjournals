@@ -1,5 +1,5 @@
 {
 	"node": {
-		"externalPackages": ["@react-pdf/renderer"]
+		"externalPackages": ["@react-pdf/renderer", "@resvg/resvg-js"]
 	}
 }

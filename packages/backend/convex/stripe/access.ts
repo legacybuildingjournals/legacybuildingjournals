@@ -22,6 +22,8 @@ export async function userHasPaidFeatureAccess(
 	if (!user) return false;
 	if (user.role === "admin") return true;
 	if (user.betaAccess === true) return true;
+	// Lifetime membership from a redeemed gift.
+	if (user.lifetimeAccess) return true;
 
 	// Native IAP (Apple/Google) subscribers — synced from RevenueCat. This makes
 	// access work cross-platform: someone who subscribed in the app still has

@@ -3,6 +3,7 @@ import { cn } from "@legacy-building/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
 import { Check, Loader2 } from "lucide-react";
 
+import { GiftLegacyCard } from "@/components/gift/GiftLegacyCard";
 import { useBillingCheckout } from "@/hooks/useBillingCheckout";
 import {
 	BILLING_FEATURES,
@@ -275,6 +276,9 @@ export function BillingSubscribePanel() {
 					<p>{BILLING_SUBSCRIBE_COPY.printedBooksNote}</p>
 				</div>
 			</div>
+
+			{/* Figma paywall: "Give the Gift of a Legacy" → Gift Subscription. */}
+			<GiftLegacyCard className="w-full bg-background" />
 
 			<div className="flex w-full flex-col items-center gap-3">
 				{!hasActiveSub ? (

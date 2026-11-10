@@ -203,6 +203,7 @@ export function UserDetailDialog({
 											<SubscriptionStatusBadge
 												status={user.subscriptionStatus}
 												betaAccess={user.betaAccess}
+												lifetimeAccess={user.lifetimeAccess}
 											/>
 										</dd>
 									</div>

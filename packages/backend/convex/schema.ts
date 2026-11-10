@@ -21,6 +21,25 @@ const userSubscriptionStatusValidator = v.union(
 	v.literal("canceled"),
 	v.literal("none"),
 );
+/**
+ * Lifecycle of a gifted lifetime membership. Expiry is not a stored status: an
+ * unredeemed `paid` gift past `expiresAt` is expired, computed on read, so no
+ * cron is needed to flip rows.
+ */
+const giftStatusValidator = v.union(
+	/** Form saved, checkout not completed yet. Never shown to the recipient. */
+	v.literal("pending_payment"),
+	/** Payment confirmed by the provider webhook; redeemable. */
+	v.literal("paid"),
+	v.literal("redeemed"),
+	/** Refunded or charged back. Unredeemed: void. Redeemed: lifetime revoked. */
+	v.literal("refunded"),
+);
+const giftProviderValidator = v.union(
+	v.literal("stripe"),
+	v.literal("app_store"),
+	v.literal("play_store"),
+);
 const accountStatusValidator = v.union(
 	v.literal("active"),
 	v.literal("suspended"),
@@ -112,6 +131,14 @@ export default defineSchema({
 		accountStatus: v.optional(accountStatusValidator),
 		/** Admin-granted free access; bypasses subscription paywall. */
 		betaAccess: v.optional(v.boolean()),
+		/**
+		 * Lifetime membership, granted by redeeming a gift. Bound to this account
+		 * (not the email), so it survives email changes. Cleared if the gift is
+		 * refunded or charged back.
+		 */
+		lifetimeAccess: v.optional(
+			v.object({ giftId: v.id("gifts"), grantedAt: v.number() }),
+		),
 		/** Convex scheduled-function id for the day-5 trial reminder email. Cleared on send or conversion. */
 		trialReminderJobId: v.optional(v.id("_scheduled_functions")),
 		/**
@@ -290,4 +317,58 @@ export default defineSchema({
 		.index("by_token", ["token"])
 		.index("by_email", ["email"])
 		.index("by_clerk_id", ["clerkId"]),
+
+	/**
+	 * Gifted lifetime memberships. A row is created as `pending_payment` when the
+	 * purchaser saves the gift form (so the details survive a failed payment) and
+	 * becomes redeemable only when a provider webhook confirms payment. All
+	 * user ids are Clerk ids.
+	 */
+	gifts: defineTable({
+		purchaserId: v.string(),
+		purchaserName: v.string(),
+		purchaserEmail: v.string(),
+		recipientName: v.string(),
+		/** Lower-cased. Redemption requires a signed-in account with this email. */
+		recipientEmail: v.string(),
+		/** "Heartfelt Title": used as the email subject and on the gift card. */
+		title: v.string(),
+		message: v.string(),
+		status: giftStatusValidator,
+		provider: v.optional(giftProviderValidator),
+		/**
+		 * Provider payment id (Stripe PaymentIntent id, or store transaction id).
+		 * Unique per gift; the idempotency key against repeated webhooks.
+		 */
+		providerRef: v.optional(v.string()),
+		/** Charged amount in minor units, in the currency actually charged. */
+		amountMinor: v.optional(v.number()),
+		currency: v.optional(v.string()),
+		/** Unguessable token in the QR code / Claim My Gift link. Set when paid. */
+		redeemToken: v.optional(v.string()),
+		paidAt: v.optional(v.number()),
+		/** paidAt + 12 months. */
+		expiresAt: v.optional(v.number()),
+		cardImageId: v.optional(v.id("_storage")),
+		/**
+		 * Set when the purchaser starts an in-app (store) purchase for this
+		 * draft, so the RevenueCat webhook can match the store transaction to
+		 * the gift if the app's own confirmation never arrives.
+		 */
+		storeCheckoutStartedAt: v.optional(v.number()),
+		/** Guards the purchaser email against duplicate sends. */
+		purchaserEmailSentAt: v.optional(v.number()),
+		/** Last manual resend from the gift history (throttles the button). */
+		purchaserEmailResentAt: v.optional(v.number()),
+		redeemedBy: v.optional(v.string()),
+		redeemedAt: v.optional(v.number()),
+		refundedAt: v.optional(v.number()),
+		createdAt: v.number(),
+		updatedAt: v.number(),
+	})
+		.index("by_purchaser", ["purchaserId"])
+		.index("by_recipient_email", ["recipientEmail"])
+		.index("by_redeem_token", ["redeemToken"])
+		.index("by_provider_ref", ["providerRef"])
+		.index("by_status", ["status"]),
 });

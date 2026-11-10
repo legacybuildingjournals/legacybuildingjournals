@@ -58,6 +58,8 @@ export function toAdminUserSummary(user: Doc<"users">) {
 		accountStatus: effectiveAccountStatus(user),
 		subscriptionStatus: user.subscriptionStatus ?? null,
 		betaAccess: user.betaAccess === true,
+		/** Lifetime membership from a redeemed gift. */
+		lifetimeAccess: Boolean(user.lifetimeAccess),
 		hasPaidJournalAccess: mirroredPaidJournalAccess(user),
 		welcomeCompletedAt: user.welcomeCompletedAt ?? null,
 		agreedToTermsAt: user.agreedToTermsAt ?? null,

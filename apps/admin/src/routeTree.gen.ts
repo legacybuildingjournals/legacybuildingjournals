@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminUsersRouteImport } from './routes/_admin/users'
 import { Route as AdminSubscriptionsRouteImport } from './routes/_admin/subscriptions'
 import { Route as AdminSettingsRouteImport } from './routes/_admin/settings'
+import { Route as AdminGiftsRouteImport } from './routes/_admin/gifts'
 import { Route as AdminDashboardRouteImport } from './routes/_admin/dashboard'
 
 const SignInRoute = SignInRouteImport.update({
@@ -46,6 +47,11 @@ const AdminSettingsRoute = AdminSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminGiftsRoute = AdminGiftsRouteImport.update({
+  id: '/gifts',
+  path: '/gifts',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -56,6 +62,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/sign-in': typeof SignInRoute
   '/dashboard': typeof AdminDashboardRoute
+  '/gifts': typeof AdminGiftsRoute
   '/settings': typeof AdminSettingsRoute
   '/subscriptions': typeof AdminSubscriptionsRoute
   '/users': typeof AdminUsersRoute
@@ -64,6 +71,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sign-in': typeof SignInRoute
   '/dashboard': typeof AdminDashboardRoute
+  '/gifts': typeof AdminGiftsRoute
   '/settings': typeof AdminSettingsRoute
   '/subscriptions': typeof AdminSubscriptionsRoute
   '/users': typeof AdminUsersRoute
@@ -74,6 +82,7 @@ export interface FileRoutesById {
   '/_admin': typeof AdminRouteWithChildren
   '/sign-in': typeof SignInRoute
   '/_admin/dashboard': typeof AdminDashboardRoute
+  '/_admin/gifts': typeof AdminGiftsRoute
   '/_admin/settings': typeof AdminSettingsRoute
   '/_admin/subscriptions': typeof AdminSubscriptionsRoute
   '/_admin/users': typeof AdminUsersRoute
@@ -84,6 +93,7 @@ export interface FileRouteTypes {
     | '/'
     | '/sign-in'
     | '/dashboard'
+    | '/gifts'
     | '/settings'
     | '/subscriptions'
     | '/users'
@@ -92,6 +102,7 @@ export interface FileRouteTypes {
     | '/'
     | '/sign-in'
     | '/dashboard'
+    | '/gifts'
     | '/settings'
     | '/subscriptions'
     | '/users'
@@ -101,6 +112,7 @@ export interface FileRouteTypes {
     | '/_admin'
     | '/sign-in'
     | '/_admin/dashboard'
+    | '/_admin/gifts'
     | '/_admin/settings'
     | '/_admin/subscriptions'
     | '/_admin/users'
@@ -156,6 +168,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSettingsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/_admin/gifts': {
+      id: '/_admin/gifts'
+      path: '/gifts'
+      fullPath: '/gifts'
+      preLoaderRoute: typeof AdminGiftsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_admin/dashboard': {
       id: '/_admin/dashboard'
       path: '/dashboard'
@@ -168,6 +187,7 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminGiftsRoute: typeof AdminGiftsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
   AdminUsersRoute: typeof AdminUsersRoute
@@ -175,6 +195,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminDashboardRoute: AdminDashboardRoute,
+  AdminGiftsRoute: AdminGiftsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
   AdminUsersRoute: AdminUsersRoute,

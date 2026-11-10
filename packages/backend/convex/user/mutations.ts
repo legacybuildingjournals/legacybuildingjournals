@@ -6,6 +6,7 @@ import {
 	type MutationCtx,
 	mutation,
 } from "../_generated/server";
+import { scrubGiftsForDeletedUser } from "../gifts/helpers";
 import {
 	deleteEntryStorageFiles,
 	deleteJournalCoverStorage,
@@ -341,6 +342,9 @@ async function deleteAllDataForClerkUser(
 		await deleteEntryStorageFiles(ctx, entry);
 		await ctx.db.delete(entry._id);
 	}
+
+	// Gifts: keep purchase records, remove this person's details.
+	await scrubGiftsForDeletedUser(ctx, clerkId);
 
 	// Remove any synced native (Apple/Google) subscription records.
 	const subscriptions = await ctx.db

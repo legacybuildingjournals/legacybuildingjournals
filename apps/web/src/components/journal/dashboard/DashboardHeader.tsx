@@ -7,6 +7,7 @@ import {
 } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
 import { Link, type RouterState, useRouterState } from "@tanstack/react-router";
+import { Gift } from "lucide-react";
 import { DashboardHeaderProfileMenu } from "@/components/journal/dashboard/DashboardHeaderProfileMenu";
 import {
 	dashboardNavItems,
@@ -25,6 +26,10 @@ export function DashboardHeader() {
 	const { convexUser } = useCurrentUser();
 	const avatarUrl =
 		convexUser?.profilePictureUrl ?? user?.imageUrl ?? assets.defaultAvatar;
+	// Figma: the gift entry point sits in the Desk and Library headers (SST-1).
+	const showGift =
+		pathname.startsWith(ROUTES.dashboardDesk) ||
+		pathname.startsWith(ROUTES.dashboardLibrary);
 
 	return (
 		<header
@@ -77,7 +82,17 @@ export function DashboardHeader() {
 					})}
 				</nav>
 
-				<div className="flex shrink-0 items-center justify-end md:min-w-[200px]">
+				<div className="flex shrink-0 items-center justify-end gap-3 md:min-w-[200px]">
+					{showGift ? (
+						<Link
+							to={ROUTES.dashboardGift}
+							aria-label="Gift lifetime access"
+							title="Gift lifetime access"
+							className="flex size-10 items-center justify-center rounded-full text-white transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 active:scale-95"
+						>
+							<Gift className="size-6" aria-hidden />
+						</Link>
+					) : null}
 					<div className="md:hidden">
 						<DashboardHeaderProfileMenu avatarUrl={avatarUrl} mode="mobile" />
 					</div>

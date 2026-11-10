@@ -12,6 +12,13 @@ export const ROUTES = {
 	dashboardBillingCheckout: "/dashboard/billing/checkout",
 	dashboardBillingCompare: "/dashboard/billing/compare",
 	dashboardBillingSuccess: "/dashboard/billing/success",
+	/** Gift Lifetime Access: offer → details form → checkout → success. */
+	dashboardGift: "/dashboard/gift",
+	dashboardGiftDetails: "/dashboard/gift/details",
+	dashboardGiftCheckout: "/dashboard/gift/checkout",
+	dashboardGiftSuccess: "/dashboard/gift/success",
+	/** Public gift redeem page; append the token: `${ROUTES.giftRedeem}/<token>`. */
+	giftRedeem: "/gift",
 	welcome: "/welcome",
 	/** Invite landing; append the code: `${ROUTES.invite}/ABCD1234`. */
 	invite: "/invite",

@@ -2,6 +2,7 @@ import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 
 import { query } from "../_generated/server";
+import { giftDisplayStatus, normalizeEmail } from "../gifts/helpers";
 import {
 	getAdminUserBillingDetail,
 	mirroredPaidJournalAccess,
@@ -250,5 +251,169 @@ export const listSubscribers = query({
 			search: search || undefined,
 			status: args.status,
 		});
+	},
+});
+
+const giftStatusFilterValidator = v.union(
+	v.literal("paid"),
+	v.literal("redeemed"),
+	v.literal("expired"),
+	v.literal("refunded"),
+	v.literal("pending_payment"),
+);
+
+/**
+ * SST-9 gifting analytics, computed from the gift records themselves (which
+ * are written only by payment webhooks / verified store purchases and by
+ * redemption). "Purchased" = payment confirmed (anything past
+ * pending_payment); "successful" = purchased and not refunded.
+ */
+export const giftInsights = query({
+	args: {},
+	handler: async (ctx) => {
+		await requireAdmin(ctx);
+		const now = Date.now();
+		const gifts = await ctx.db.query("gifts").collect();
+
+		const counts = {
+			purchased: 0,
+			successful: 0,
+			redeemed: 0,
+			unclaimed: 0,
+			expired: 0,
+			refunded: 0,
+			checkoutsNotCompleted: 0,
+		};
+		const byProvider = { stripe: 0, app_store: 0, play_store: 0 };
+		const revenue = new Map<string, number>();
+		const purchasesByMonth = new Map<string, number>();
+		const redemptionsByMonth = new Map<string, number>();
+		const monthKey = (ms: number) => new Date(ms).toISOString().slice(0, 7);
+
+		for (const gift of gifts) {
+			const status = giftDisplayStatus(gift, now);
+			if (status === "pending_payment") {
+				counts.checkoutsNotCompleted += 1;
+				continue;
+			}
+			counts.purchased += 1;
+			if (gift.provider) byProvider[gift.provider] += 1;
+			if (gift.paidAt) {
+				const key = monthKey(gift.paidAt);
+				purchasesByMonth.set(key, (purchasesByMonth.get(key) ?? 0) + 1);
+			}
+			if (gift.redeemedAt) {
+				const key = monthKey(gift.redeemedAt);
+				redemptionsByMonth.set(key, (redemptionsByMonth.get(key) ?? 0) + 1);
+			}
+			if (status === "refunded") {
+				counts.refunded += 1;
+				continue;
+			}
+			counts.successful += 1;
+			if (status === "redeemed") counts.redeemed += 1;
+			else if (status === "expired") counts.expired += 1;
+			else counts.unclaimed += 1;
+			if (gift.amountMinor !== undefined && gift.currency) {
+				const currency = gift.currency.toLowerCase();
+				revenue.set(currency, (revenue.get(currency) ?? 0) + gift.amountMinor);
+			}
+		}
+
+		const lifetimeMembers = (await ctx.db.query("users").collect()).filter(
+			(user) => user.lifetimeAccess,
+		).length;
+
+		const months = [
+			...new Set([...purchasesByMonth.keys(), ...redemptionsByMonth.keys()]),
+		]
+			.sort()
+			.slice(-12);
+
+		return {
+			...counts,
+			redemptionRate:
+				counts.successful > 0 ? counts.redeemed / counts.successful : 0,
+			lifetimeMembers,
+			byProvider,
+			revenue: [...revenue.entries()]
+				.map(([currency, amountMinor]) => ({ currency, amountMinor }))
+				.sort((a, b) => b.amountMinor - a.amountMinor),
+			monthly: months.map((month) => ({
+				month,
+				purchased: purchasesByMonth.get(month) ?? 0,
+				redeemed: redemptionsByMonth.get(month) ?? 0,
+			})),
+		};
+	},
+});
+
+/**
+ * Paginated gift records for the admin Gifts page. `search` is an exact email
+ * (purchaser or recipient); `status` filters by display status.
+ */
+export const listGifts = query({
+	args: {
+		paginationOpts: paginationOptsValidator,
+		search: v.optional(v.string()),
+		status: v.optional(giftStatusFilterValidator),
+	},
+	handler: async (ctx, args) => {
+		await requireAdmin(ctx);
+		const now = Date.now();
+		const email = args.search ? normalizeEmail(args.search) : "";
+
+		const result = await ctx.db
+			.query("gifts")
+			.order("desc")
+			.filter((q) => {
+				const conditions = [];
+				if (email) {
+					conditions.push(
+						q.or(
+							q.eq(q.field("recipientEmail"), email),
+							q.eq(q.field("purchaserEmail"), email),
+						),
+					);
+				}
+				if (args.status === "expired") {
+					conditions.push(
+						q.and(
+							q.eq(q.field("status"), "paid"),
+							q.lte(q.field("expiresAt"), now),
+						),
+					);
+				} else if (args.status === "paid") {
+					conditions.push(
+						q.and(
+							q.eq(q.field("status"), "paid"),
+							q.gt(q.field("expiresAt"), now),
+						),
+					);
+				} else if (args.status) {
+					conditions.push(q.eq(q.field("status"), args.status));
+				}
+				return conditions.length > 0 ? q.and(...conditions) : true;
+			})
+			.paginate(args.paginationOpts);
+
+		return {
+			...result,
+			page: result.page.map((gift) => ({
+				_id: gift._id,
+				createdAt: gift.createdAt,
+				paidAt: gift.paidAt ?? null,
+				redeemedAt: gift.redeemedAt ?? null,
+				expiresAt: gift.expiresAt ?? null,
+				status: giftDisplayStatus(gift, now),
+				provider: gift.provider ?? null,
+				amountMinor: gift.amountMinor ?? null,
+				currency: gift.currency ?? null,
+				purchaserName: gift.purchaserName,
+				purchaserEmail: gift.purchaserEmail,
+				recipientName: gift.recipientName,
+				recipientEmail: gift.recipientEmail,
+			})),
+		};
 	},
 });

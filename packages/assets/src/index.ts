@@ -7,6 +7,8 @@ import defaultAvatar from "../images/default-avatar.jpg";
 import deskHeroBackground from "../images/desk-hero-background.jpeg";
 import digLogo from "../images/dig-logo.png";
 import favicon from "../images/favicon.png";
+import giftHero from "../images/gift-hero.jpg";
+import giftRedeemHero from "../images/gift-redeem-hero.jpg";
 import googleLogo from "../images/google logo.jpeg";
 import headerBackground from "../images/header-background.jpg";
 import heroBackground from "../images/hero-background.jpg";
@@ -59,6 +61,13 @@ export const imageAssets = {
 	 */
 	communityHero,
 	communityHeroMobile,
+	/**
+	 * Gift Lifetime Access hero (Gift Subscription / Gift Invite screens). The
+	 * headline is part of the artwork, so it isn't repeated in code.
+	 */
+	giftHero,
+	/** Top of the gift card artwork ("A Gift for Your Story"), for the redeem page. */
+	giftRedeemHero,
 } as const;
 
 /**

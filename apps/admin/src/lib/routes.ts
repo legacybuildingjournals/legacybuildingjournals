@@ -4,6 +4,7 @@ export const ROUTES = {
 	dashboard: "/dashboard",
 	users: "/users",
 	subscriptions: "/subscriptions",
+	gifts: "/gifts",
 	settings: "/settings",
 } as const;
 
