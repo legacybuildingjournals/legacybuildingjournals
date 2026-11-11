@@ -5,14 +5,26 @@ type Person = { name: string; initials: string; isYou: boolean };
 function PersonChip({
 	person,
 	roleLabel,
+	variant,
 }: {
 	person: Person;
 	roleLabel: string;
+	variant: "author" | "member";
 }) {
 	return (
 		<View className="flex-row items-center gap-2">
-			<View className="size-9 items-center justify-center rounded-full bg-accent/15">
-				<Text className="font-semibold text-primary text-xs">
+			{/* Author keeps the teal avatar; the member gets amber so the two
+			    people are easy to tell apart at a glance. */}
+			<View
+				className={`size-9 items-center justify-center rounded-full ${
+					variant === "member" ? "bg-warning" : "bg-accent/15"
+				}`}
+			>
+				<Text
+					className={`font-semibold text-xs ${
+						variant === "member" ? "text-foreground" : "text-primary"
+					}`}
+				>
 					{person.initials}
 				</Text>
 			</View>
@@ -53,8 +65,8 @@ export function JournalPeopleRow({
 						</Text>
 					</View>
 					<View className="flex-row flex-wrap gap-x-6 gap-y-2">
-						<PersonChip person={author} roleLabel="Author" />
-						<PersonChip person={member} roleLabel="Member" />
+						<PersonChip person={author} roleLabel="Author" variant="author" />
+						<PersonChip person={member} roleLabel="Member" variant="member" />
 					</View>
 					{!canAddEntries ? (
 						<Text className="rounded-xl bg-amber-50 p-2 text-amber-900 text-xs">

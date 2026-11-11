@@ -118,10 +118,8 @@ export function JournalEntryRow({
 						? `${selected ? "Selected" : "Not selected"} entry ${title}`
 						: `Open entry ${title}`
 			}
-			className={`relative overflow-hidden rounded-2xl pl-4 ${
-				locked
-					? "bg-accent/10"
-					: "bg-background active:scale-[0.98] active:opacity-90"
+			className={`relative overflow-hidden rounded-2xl bg-background pl-4 ${
+				locked ? "" : "active:scale-[0.98] active:opacity-90"
 			}`}
 			style={{
 				shadowColor: foreground,
@@ -131,6 +129,12 @@ export function JournalEntryRow({
 				elevation: 1,
 			}}
 		>
+			{/* Locked tint as an overlay on the opaque card: a translucent card
+			    background let Android's elevation shadow show through, so the
+			    card looked darker than the text area inside it. */}
+			{locked ? (
+				<View pointerEvents="none" className="absolute inset-0 bg-accent/10" />
+			) : null}
 			<View className="flex-row items-stretch">
 				<View className="flex-1 py-4 pr-3">
 					<View className="flex-row items-center gap-1.5">
