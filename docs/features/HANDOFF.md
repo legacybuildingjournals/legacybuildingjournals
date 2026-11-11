@@ -37,7 +37,14 @@ Design source: Figma copy owned by the user, file key `gH6VhLnUJM0vM1npzNvpOe` (
 - Also added: resend gift email (web + native history), account-deletion scrub for gifts, admin Gifts page (SST-9) + "Lifetime" badges, paywall "Give the Gift of a Legacy" card (web dialog + billing page, native paywall), Library background behind the native list (per-card ShelfLedge removed).
 - Checks: backend tsc + 124/124 tests, web check-types, native tsc, admin tsc (only the 2 old errors), Biome lint clean on changed files. Screens not checked in a running app yet.
 
-## Current local state
+## 2026-11-10 update (Journal Sharing code complete)
+- Gifting was pushed to `feature/gift-lifetime-access` and tested by the user on Vercel previews + Convex dev (`exuberant-lark-860`).
+- Journal Sharing is implemented on backend, web and native (details: `journal-sharing.md` "As built"). **Not committed, not pushed.**
+- `packages/backend/.env.local` now holds the user's **dev deploy key** (`dev:exuberant-lark-860`). Any `npx convex dev` from `packages/backend` pushes to dev. Claude ran it once by accident while regenerating `_generated/api.d.ts` (dev only; env untouched). Claude doesn't run the Convex CLI any more; the user runs `npx convex dev --once`.
+- `apps/web/.env.local` / `apps/native/.env.local` may point at a dead local backend (192.168.1.11:3210). Point them at dev before local runs.
+- Checks: backend tsc + 134/134 tests, web check-types, native tsc, Biome lint clean on changed files (one pre-existing warning in `(tabs)/_layout.tsx`).
+
+## Current local state (as of the gifting push; partly outdated)
 - Uncommitted changes on `main` (working tree). Nothing pushed. No branch created yet. Planned branch: `feature/gift-lifetime-access` → PR into `staging` (repo Actions only allow `feature|bugfix|hotfix|release/*` → `staging`, and `staging` → `main`).
 - Git-ignored env files written by Claude:
   - `apps/web/.env.local`: `VITE_CONVEX_URL=https://exuberant-lark-860.convex.cloud`, dev Clerk pk.
@@ -66,4 +73,4 @@ Design source: Figma copy owned by the user, file key `gH6VhLnUJM0vM1npzNvpOe` (
 5. Vercel (admin browser session, step by step): Preview-only env vars `VITE_CONVEX_URL` + `VITE_CLERK_PUBLISHABLE_KEY` (dev values) in both projects; check deployment protection; merge the PR from the admin GitHub session; note the Preview URLs.
 6. Stripe test mode: add the 4 webhook events, Adaptive Pricing.
 7. Run the full test flow (gift spec / gift-tasks.md checklist).
-8. Then Journal Sharing (spec agreed, not started).
+8. Journal Sharing: code complete (2026-11-10). Next: the user pushes the branch + `npx convex dev --once`, tests on the previews, then EAS / TestFlight / Google Play Console guidance.

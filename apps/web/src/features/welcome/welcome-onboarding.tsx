@@ -42,6 +42,9 @@ export function WelcomeOnboarding({
 }: WelcomeOnboardingProps) {
 	const submitInApp = useMutation(api.onboarding.mutations.submitInApp);
 	const lifetime = useQuery(api.gifts.queries.myLifetimeStatus);
+	// People who arrived through a gift or a shared journal get the
+	// "Let's personalize your legacy build." intro (SST-8, spec #17).
+	const sharedMember = useQuery(api.sharing.queries.isSharedJournalMember);
 
 	const [phase, setPhase] = useState<Phase>("intro");
 	const [answerState, setAnswerState] =
@@ -98,7 +101,11 @@ export function WelcomeOnboarding({
 		return (
 			<OnboardingIntro
 				onStart={() => setPhase("questions")}
-				heading={lifetime?.hasLifetime ? RECIPIENT_INTRO_HEADING : undefined}
+				heading={
+					lifetime?.hasLifetime || sharedMember
+						? RECIPIENT_INTRO_HEADING
+						: undefined
+				}
 			/>
 		);
 	}

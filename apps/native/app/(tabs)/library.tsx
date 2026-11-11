@@ -10,9 +10,14 @@ import { JournalListItem } from "@/components/library/journal-list-item";
 import { LibraryEmptyState } from "@/components/library/library-empty-state";
 import { StoryTabs } from "@/components/library/story-tabs";
 import { DashboardScreenHeader } from "@/components/navigation/dashboard-screen-header";
+import { OurStoryEmptyState } from "@/components/sharing/our-story-empty-state";
 import { useNativeCurrentUser } from "@/hooks/use-native-current-user";
 import { nativeImages } from "@/lib/assets";
-import { DEFAULT_STORY_TAB, type StoryTab } from "@/lib/journal/story-types";
+import {
+	DEFAULT_STORY_TAB,
+	isLibraryTab,
+	type LibraryTab,
+} from "@/lib/journal/story-types";
 
 export default function LibraryScreen() {
 	const router = useRouter();
@@ -22,8 +27,8 @@ export default function LibraryScreen() {
 	// `type` lets a caller land on a specific shelf — onboarding uses it to open
 	// the shelf matching who the user said the journal is for.
 	const { type } = useLocalSearchParams<{ type?: string }>();
-	const [storyType, setStoryType] = useState<StoryTab>(
-		type === "my_story" || type === "their_story" ? type : DEFAULT_STORY_TAB,
+	const [storyType, setStoryType] = useState<LibraryTab>(
+		isLibraryTab(type) ? type : DEFAULT_STORY_TAB,
 	);
 	const journals = useQuery(api.journal.queries.listByType, {
 		type: storyType,
@@ -39,7 +44,8 @@ export default function LibraryScreen() {
 	const goToCreate = () => {
 		router.push({
 			pathname: "/journal/create",
-			params: { type: storyType },
+			// Journals reach Our Story only by being shared (spec #2).
+			params: { type: storyType === "our_story" ? "my_story" : storyType },
 		});
 	};
 
@@ -73,6 +79,10 @@ export default function LibraryScreen() {
 							<View className="items-center justify-center py-12">
 								<Spinner size="lg" />
 							</View>
+						) : journals.length === 0 && storyType === "our_story" ? (
+							<OurStoryEmptyState
+								onGoToMyStory={() => setStoryType("my_story")}
+							/>
 						) : journals.length === 0 ? (
 							<LibraryEmptyState
 								ctaLabel="Begin Your Legacy"
@@ -85,6 +95,7 @@ export default function LibraryScreen() {
 										title={journal.title}
 										dateMs={journal.dateMs}
 										coverImageUrl={journal.coverImageUrl}
+										isShared={journal.isShared}
 										onPress={() =>
 											router.push({
 												pathname: "/journal/[journalId]",
@@ -103,7 +114,7 @@ export default function LibraryScreen() {
 						)}
 					</View>
 
-					{hasJournals ? (
+					{hasJournals && storyType !== "our_story" ? (
 						<View className="pt-2 pb-4">
 							<Pressable
 								onPress={goToCreate}

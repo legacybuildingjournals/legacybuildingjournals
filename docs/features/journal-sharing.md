@@ -1,7 +1,7 @@
 # Journal Sharing ("Our Story")
 
 Platforms: native app and web. **Web mobile view = Figma exactly; web desktop = existing desktop dashboard conventions** (web designs not final).
-Implemented **after** Gift Lifetime Access. **Status (2026-11-09): requirements agreed, nothing built yet.**
+Implemented **after** Gift Lifetime Access. **Status (2026-11-10): code complete on web, native and backend; not yet pushed or tested in the cloud.** See "As built" at the end.
 
 ## Summary
 
@@ -106,3 +106,24 @@ shares and gifts addressed to their verified email show up in the popup or claim
 Universal Links currently cover only `/invite/*` (`apps/web/public/.well-known/apple-app-site-association`). The share
 claim path (not the gift path, which is deliberately web-only) must be added there and to the Android intent filters. Android App Links are still blocked on a Play Console
 fingerprint (`docs/invite-links.md`). Until that's fixed, Android opens the web landing page, which can offer an "Open in app" button.
+
+## As built (2026-11-10)
+
+Claim path: **`/share/<token>`** (web route `routes/share.$token.tsx`, native `app/share/[token].tsx`, AASA `/share/*`).
+
+**Backend (`packages/backend/convex/`)**
+- `schema.ts`: `journalShares` (journalId, authorId, inviteEmail, token, status `pending | active`, memberId?, createdAt, expiresAt, acceptedAt?, emailSentAt?; indexes by_journal, by_member, by_author, by_invite_email, by_token). Cancelled/removed shares are deleted rather than kept with a status; "expired" is computed from `expiresAt` (30 days). `journalEntries.visibility?: "visible" | "hidden"`.
+- `journal/auth.ts`: `getJournalRole`, `getReadableJournal`, `requireJournalWriteAccess` (checks the **author's** access, error code `AUTHOR_SUBSCRIPTION_REQUIRED` for members), `canSeeEntry`, `requireUploadAccess`.
+- `journal/queries.ts`: `getById` returns `viewerRole` + `isShared`; `listByType` takes `our_story`; Desk shows shared journals.
+- `journal/entries/*`: role-aware reads; hidden entries come back to non-creators as locked stubs (`locked`, `isMine`, `createdByName`); create/update/remove are creator-only and accept `visibility`. The public QR player and PDF export skip hidden entries.
+- `sharing/`: `actions.sendInvite` (token, Resend email only when the invitee has no account), `mutations` (cancelInvite, removeMember, leaveJournal, acceptInvite + push to the author; internal createInvite, markInviteEmailSent), `queries` (getForJournal, myPendingInvites, getInviteByToken (public), isSharedJournalMember), `helpers.ts` (endShare deletes the member's entries; `scrubSharesForDeletedUser` runs on account deletion). Tests: `sharing/mutations.test.ts`.
+- `notifications/actions.sendPushToUser` (internal).
+
+**Web (`apps/web/src/`)**: Library tab Our Story (`LibraryStoryTabs`, `OurStoryEmptyState`), "Shared Journal" pill on cards, `JournalSharingPanel` + `ShareJournalDialog` in `JournalDetailSheet` (members don't get edit/delete/order book), `EntryVisibilityField` in add/edit entry when the journal is shared, locked rows with "By ..." bylines, `ShareInvitePopup` on the dashboard, `ShareClaimPage` + `PendingShareRedirect` (sign-up returns to the claim page), `guardJournalActionFor(ownerId)` so members skip the paywall, welcome heading for members.
+
+**Native (`apps/native/`)**: 3 story tabs, shared pill, `journal/[journalId]/share.tsx` (invite form), people row + ⋮ menu items (Share, Cancel invite, Remove member, Leave), `ShareInvitePopup` in the tabs layout, `share/[token].tsx`, visibility field in new/edit entry, Edit/Delete only for the entry's creator, members bypass the client paywall (the server still enforces the author's access).
+
+**Not done / to verify**
+- Nothing tested in a running app yet (web preview, Expo Go).
+- Android App Links for `/share/*` remain blocked on the Play Console fingerprint (same as `/invite/*`).
+- Convex dev needs `WEB_APP_URL` set (already needed for gifts) so invite links point to the preview.

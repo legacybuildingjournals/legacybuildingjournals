@@ -11,6 +11,7 @@ import {
 	deleteEntryStorageFiles,
 	deleteJournalCoverStorage,
 } from "../journal/storage";
+import { scrubSharesForDeletedUser } from "../sharing/helpers";
 
 async function deleteProfilePictureIfExists(
 	ctx: MutationCtx,
@@ -313,6 +314,10 @@ async function deleteAllDataForClerkUser(
 	ctx: MutationCtx,
 	clerkId: string,
 ): Promise<void> {
+	// Sharing first (spec #29): leave journals shared with this person (their
+	// entries go) and end shares of their own journals (deleted below).
+	await scrubSharesForDeletedUser(ctx, clerkId);
+
 	const journals = await ctx.db
 		.query("journals")
 		.withIndex("by_userId", (q) => q.eq("userId", clerkId))

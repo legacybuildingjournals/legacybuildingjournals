@@ -25,6 +25,10 @@ import { useJournalPaywall } from "@/components/billing/journal-paywall-provider
 import { DateField } from "@/components/library/date-field";
 import { EntryAudioPlayer } from "@/components/library/entry-audio-player";
 import { EntryVideoPlayer } from "@/components/library/entry-video-player";
+import {
+	type EntryVisibility,
+	EntryVisibilityField,
+} from "@/components/sharing/entry-visibility-field";
 import { parseMonthDayYear } from "@/lib/journal/parse-date";
 import {
 	type PickedEntryImage,
@@ -51,6 +55,14 @@ export default function EditEntryScreen() {
 		entryId ? { id: entryId } : "skip",
 	);
 	const updateEntry = useMutation(api.journal.entries.mutations.update);
+	const journal = useQuery(
+		api.journal.queries.getById,
+		entry ? { id: entry.journalId } : "skip",
+	);
+	const isSharedJournal = journal?.isShared === true;
+	// A member edits their own entries without their own subscription.
+	const isMember = journal?.viewerRole === "member";
+	const [visibility, setVisibility] = useState<EntryVisibility>("visible");
 	const generateUploadUrl = useMutation(
 		api.journal.mutations.generateUploadUrl,
 	);
@@ -86,6 +98,7 @@ export default function EditEntryScreen() {
 		setDateInput(dateMsToInput(entry.dateMs));
 		setBody(entry.body ?? "");
 		setExistingImageUrl(entry.imageUrl ?? null);
+		setVisibility(entry.visibility ?? "visible");
 		setHydrated(true);
 	}, [entry, hydrated]);
 
@@ -169,6 +182,7 @@ export default function EditEntryScreen() {
 				dateMs: dateMs as number,
 				body: isWriting ? body.trim() : undefined,
 				imageId,
+				visibility: isSharedJournal ? visibility : undefined,
 			});
 
 			toast.success("Entry updated.");
@@ -184,6 +198,10 @@ export default function EditEntryScreen() {
 		setShowErrors(true);
 		if (titleInvalid || dateInvalid || bodyInvalid || imageInvalid) return;
 		// Editing is a paid journal feature (the server enforces it too).
+		if (isMember) {
+			void runSave();
+			return;
+		}
 		guardJournalAction(() => void runSave());
 	};
 
@@ -392,6 +410,12 @@ export default function EditEntryScreen() {
 								</Text>
 							) : null}
 						</View>
+						{isSharedJournal ? (
+							<EntryVisibilityField
+								value={visibility}
+								onChange={setVisibility}
+							/>
+						) : null}
 					</ScrollView>
 				</KeyboardAvoidingView>
 			)}

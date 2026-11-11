@@ -11,6 +11,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import { PendingGiftRedirect } from "@/components/gift/PendingGiftRedirect";
 import Header from "@/components/header";
+import { PendingShareRedirect } from "@/components/sharing/PendingShareRedirect";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PreAppOnboarding } from "@/features/onboarding/pre-app-onboarding";
 import { isAuthPath, isOnboardingHost, ROUTES } from "@/lib/routes";
@@ -52,7 +53,9 @@ function RootComponent() {
 	// Scanned from a printed book: a bare player, no marketing chrome.
 	const isMemory = pathname.startsWith("/m/");
 	// Gift redeem page: its own light, chrome-free layout.
-	const isGift = pathname.startsWith(`${ROUTES.giftRedeem}/`);
+	const isGift =
+		pathname.startsWith(`${ROUTES.giftRedeem}/`) ||
+		pathname.startsWith(`${ROUTES.shareClaim}/`);
 	const showMarketingHeader =
 		!isDashboard &&
 		!isLegalPage &&
@@ -124,6 +127,7 @@ function RootComponent() {
 				</div>
 				<Toaster />
 				<PendingGiftRedirect />
+				<PendingShareRedirect />
 			</ThemeProvider>
 			<TanStackRouterDevtools position="bottom-left" />
 		</>

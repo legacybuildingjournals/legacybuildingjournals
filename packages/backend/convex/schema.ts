@@ -69,6 +69,25 @@ export const journalType = v.union(
 	v.literal("their_story"),
 );
 
+/**
+ * Library tabs. "our_story" is not a stored journal type: it lists journals
+ * that are actively shared (as author or member), whatever their own type.
+ */
+export const libraryTab = v.union(
+	v.literal("my_story"),
+	v.literal("their_story"),
+	v.literal("our_story"),
+);
+
+/**
+ * Who can see an entry inside a shared journal. Absent = "visible". A
+ * "hidden" entry shows only its title with a lock to everyone but its creator.
+ */
+export const entryVisibility = v.union(
+	v.literal("visible"),
+	v.literal("hidden"),
+);
+
 export const planIntervalValidator = v.union(
 	v.literal("monthly"),
 	v.literal("annual"),
@@ -278,6 +297,8 @@ export default defineSchema({
 		videoId: v.optional(v.id("_storage")),
 		videoUrl: v.optional(v.string()),
 		videoDurationMs: v.optional(v.number()),
+		/** Journal sharing: absent = visible to the other person. */
+		visibility: v.optional(entryVisibility),
 	})
 		.index("by_journalId", ["journalId"])
 		.index("by_userId", ["userId"]),
@@ -371,4 +392,32 @@ export default defineSchema({
 		.index("by_redeem_token", ["redeemToken"])
 		.index("by_provider_ref", ["providerRef"])
 		.index("by_status", ["status"]),
+
+	/**
+	 * Journal sharing ("Our Story"). One row per journal at most: a pending
+	 * invite or the active member. Cancelling, leaving or removing deletes the
+	 * row. All user ids are Clerk ids; once accepted, the share is bound to
+	 * the member's account, not the invited email.
+	 */
+	journalShares: defineTable({
+		journalId: v.id("journals"),
+		authorId: v.string(),
+		/** Lower-cased email the invite was sent to. */
+		inviteEmail: v.string(),
+		/** Unguessable token in the invite link. */
+		token: v.string(),
+		status: v.union(v.literal("pending"), v.literal("active")),
+		memberId: v.optional(v.string()),
+		createdAt: v.number(),
+		/** Pending invites expire 30 days after creation. */
+		expiresAt: v.number(),
+		acceptedAt: v.optional(v.number()),
+		/** Set when the invite email was sent (only for emails with no account). */
+		emailSentAt: v.optional(v.number()),
+	})
+		.index("by_journal", ["journalId"])
+		.index("by_member", ["memberId"])
+		.index("by_author", ["authorId"])
+		.index("by_invite_email", ["inviteEmail"])
+		.index("by_token", ["token"]),
 });

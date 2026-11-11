@@ -76,6 +76,11 @@ function StackLayout() {
 				name="account/notifications"
 				options={{ headerShown: false }}
 			/>
+			<Stack.Screen
+				name="journal/[journalId]/share"
+				options={{ headerShown: false }}
+			/>
+			<Stack.Screen name="share/[token]" options={{ headerShown: false }} />
 			<Stack.Screen name="gift/index" options={{ headerShown: false }} />
 			<Stack.Screen name="gift/details" options={{ headerShown: false }} />
 			<Stack.Screen

@@ -97,10 +97,12 @@ export const exportJournal = action({
 			});
 		}
 
-		const allEntries = await ctx.runQuery(
-			api.journal.entries.queries.listByJournal,
-			{ journalId: args.journalId },
-		);
+		// Shared journals: someone else's hidden entries are never exported.
+		const allEntries = (
+			await ctx.runQuery(api.journal.entries.queries.listByJournal, {
+				journalId: args.journalId,
+			})
+		).filter((entry) => !entry.locked);
 
 		const selected = args.entryIds
 			? new Set<Id<"journalEntries">>(args.entryIds)

@@ -13,6 +13,10 @@ type JournalEntryRowProps = {
 	/** When true, render a selection checkbox instead of the action icon. */
 	selectable?: boolean;
 	selected?: boolean;
+	/** Shared journals: "By You" / "By <name>" after the date. */
+	byline?: string | null;
+	/** Shared journals: someone else's "Not viewable" entry (title only). */
+	locked?: boolean;
 };
 
 function BookOpenTextIcon({
@@ -45,6 +49,8 @@ export function JournalEntryRow({
 	onPress,
 	selectable = false,
 	selected = false,
+	byline = null,
+	locked = false,
 }: JournalEntryRowProps) {
 	const [
 		accent,
@@ -95,15 +101,28 @@ export function JournalEntryRow({
 
 	return (
 		<Pressable
-			onPress={onPress}
+			onPress={locked ? undefined : onPress}
+			disabled={locked}
 			accessibilityRole={selectable ? "checkbox" : "button"}
-			accessibilityState={selectable ? { checked: selected } : undefined}
-			accessibilityLabel={
+			accessibilityState={
 				selectable
-					? `${selected ? "Selected" : "Not selected"} entry ${title}`
-					: `Open entry ${title}`
+					? { checked: selected }
+					: locked
+						? { disabled: true }
+						: undefined
 			}
-			className="relative overflow-hidden rounded-2xl bg-background pl-4 active:scale-[0.98] active:opacity-90"
+			accessibilityLabel={
+				locked
+					? `${title}, not viewable`
+					: selectable
+						? `${selected ? "Selected" : "Not selected"} entry ${title}`
+						: `Open entry ${title}`
+			}
+			className={`relative overflow-hidden rounded-2xl pl-4 ${
+				locked
+					? "bg-accent/10"
+					: "bg-background active:scale-[0.98] active:opacity-90"
+			}`}
 			style={{
 				shadowColor: foreground,
 				shadowOpacity: 0.06,
@@ -114,14 +133,20 @@ export function JournalEntryRow({
 		>
 			<View className="flex-row items-stretch">
 				<View className="flex-1 py-4 pr-3">
-					<Text
-						className="font-semibold text-base text-foreground"
-						numberOfLines={1}
-					>
-						{title}
-					</Text>
+					<View className="flex-row items-center gap-1.5">
+						<Text
+							className="shrink font-semibold text-base text-foreground"
+							numberOfLines={1}
+						>
+							{title}
+						</Text>
+						{locked ? (
+							<Ionicons name="lock-closed" size={14} color={foreground} />
+						) : null}
+					</View>
 					<Text className="mt-0.5 text-muted-foreground text-sm">
 						{formatDateLong(dateMs)}
+						{byline ? `, ${byline}` : ""}
 					</Text>
 				</View>
 

@@ -10,12 +10,11 @@ import { DeskHeroCard } from "@/components/journal/dashboard/DeskHeroCard";
 import { DeskRecentJournal } from "@/components/journal/dashboard/DeskRecentJournal";
 import { AddJournalEntryPanel } from "@/components/journal/library/AddJournalEntryPanel";
 import { JournalDetailSheet } from "@/components/journal/library/JournalDetailSheet";
-import type { StoryTab } from "@/lib/journal/journalTypes";
 
 export function DashboardDeskPage() {
 	const { user } = useUser();
 	const { convexUser } = useCurrentUser();
-	const { guardJournalAction } = useJournalPaywall();
+	const { guardJournalActionFor } = useJournalPaywall();
 
 	const [selectedJournalId, setSelectedJournalId] =
 		useState<Id<"journals"> | null>(null);
@@ -35,25 +34,25 @@ export function DashboardDeskPage() {
 	const hasCustomPhoto = Boolean(convexUser?.profilePictureId);
 
 	const handleOpenJournal = useCallback(
-		(journalId: Id<"journals">, _tab: StoryTab) => {
-			guardJournalAction(() => {
+		(journalId: Id<"journals">, ownerId: string) => {
+			guardJournalActionFor(ownerId, () => {
 				setEntryPanelOpen(false);
 				setEntryPanelJournalId(null);
 				setSelectedJournalId(journalId);
 			});
 		},
-		[guardJournalAction],
+		[guardJournalActionFor],
 	);
 
 	const handleAddEntry = useCallback(
-		(journalId: Id<"journals">, _tab: StoryTab) => {
-			guardJournalAction(() => {
+		(journalId: Id<"journals">, ownerId: string) => {
+			guardJournalActionFor(ownerId, () => {
 				setSelectedJournalId(null);
 				setEntryPanelJournalId(journalId);
 				setEntryPanelOpen(true);
 			});
 		},
-		[guardJournalAction],
+		[guardJournalActionFor],
 	);
 
 	const handleEntryPanelOpenChange = useCallback((next: boolean) => {

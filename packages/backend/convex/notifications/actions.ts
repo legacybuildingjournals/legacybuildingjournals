@@ -214,3 +214,38 @@ export const sendTestPush = internalAction({
 		return { sent: messages.length };
 	},
 });
+
+/**
+ * One-off push to every device of one user (e.g. "your share invite was
+ * accepted"). Best effort: no tokens or a failed send is just logged.
+ */
+export const sendPushToUser = internalAction({
+	args: {
+		clerkUserId: v.string(),
+		title: v.string(),
+		body: v.string(),
+		url: v.string(),
+	},
+	handler: async (ctx, args): Promise<{ sent: number }> => {
+		const tokens: string[] = await ctx.runQuery(
+			internal.notifications.queries.getPushTokensForUser,
+			{ clerkUserId: args.clerkUserId },
+		);
+		if (tokens.length === 0) return { sent: 0 };
+		const messages: ExpoPushMessage[] = tokens.map((token) => ({
+			to: token,
+			title: args.title,
+			body: args.body,
+			sound: "default",
+			data: { type: "share", url: args.url },
+		}));
+		const { invalidTokens } = await sendExpoPush(messages);
+		if (invalidTokens.length > 0) {
+			await ctx.runMutation(
+				internal.notifications.mutations.removeTokensByValue,
+				{ tokens: invalidTokens },
+			);
+		}
+		return { sent: messages.length };
+	},
+});

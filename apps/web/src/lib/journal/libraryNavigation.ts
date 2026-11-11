@@ -1,10 +1,10 @@
 import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
 
-import type { StoryTab } from "@/lib/journal/journalTypes";
+import type { LibraryTab } from "@/lib/journal/journalTypes";
 
 export type LibraryLocationState = {
 	journalId?: Id<"journals">;
-	storyTab?: StoryTab;
+	storyTab?: LibraryTab;
 	openAddEntry?: boolean;
 };
 

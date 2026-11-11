@@ -33,6 +33,7 @@ import { EntrySortMenu } from "@/components/library/entry-sort-menu";
 import { JournalActionsMenu } from "@/components/library/journal-actions-menu";
 import { JournalColorSheet } from "@/components/library/journal-color-sheet";
 import { JournalEntryRow } from "@/components/library/journal-entry-row";
+import { JournalPeopleRow } from "@/components/sharing/journal-people-row";
 import { formatDateLong } from "@/lib/journal/formatDate";
 import {
 	pickBackgroundImage,
@@ -51,7 +52,7 @@ export default function JournalDetailScreen() {
 		"field-foreground",
 	]);
 	const mutationToast = useMutationToast();
-	const { guardJournalAction } = useJournalPaywall();
+	const { guardJournalAction: guardOwnAccess } = useJournalPaywall();
 
 	const journal = useQuery(
 		api.journal.queries.getById,
@@ -61,6 +62,13 @@ export default function JournalDetailScreen() {
 		api.journal.entries.queries.listByJournal,
 		journalId ? { journalId } : "skip",
 	);
+	const sharing = useQuery(
+		api.sharing.queries.getForJournal,
+		journalId ? { journalId } : "skip",
+	);
+	const removeMember = useMutation(api.sharing.mutations.removeMember);
+	const cancelInvite = useMutation(api.sharing.mutations.cancelInvite);
+	const leaveJournal = useMutation(api.sharing.mutations.leaveJournal);
 	const removeJournal = useMutation(api.journal.mutations.remove);
 	const setAppearance = useMutation(api.journal.mutations.setAppearance);
 	const generateUploadUrl = useMutation(
@@ -82,6 +90,13 @@ export default function JournalDetailScreen() {
 	const [previewColor, setPreviewColor] = useState<string | null>(null);
 	const [savingAppearance, setSavingAppearance] = useState(false);
 
+	// Members of a shared journal never need their own subscription: inside it,
+	// access follows the author's and is enforced on the server (spec #26).
+	const isMember = journal?.viewerRole === "member";
+	const isShared = journal?.isShared === true;
+	const guardJournalAction = (action: () => void) =>
+		isMember ? action() : guardOwnAccess(action);
+
 	const isLoading = journal === undefined || entries === undefined;
 	const backgroundColor = previewColor ?? journal?.backgroundColor ?? null;
 	const backgroundImageUrl = journal?.backgroundImageUrl ?? null;
@@ -101,7 +116,11 @@ export default function JournalDetailScreen() {
 
 	// Recording entries are exportable too — the template gives their audio a
 	// dedicated "scan to hear" QR page.
-	const exportableEntries = useMemo(() => entries ?? [], [entries]);
+	// ...except someone else's hidden entries in a shared journal.
+	const exportableEntries = useMemo(
+		() => (entries ?? []).filter((entry) => !entry.locked),
+		[entries],
+	);
 	const exportableCount = exportableEntries.length;
 	const resolvedSelectedIds = useMemo(() => {
 		const valid = new Set(exportableEntries.map((e) => e._id));
@@ -261,6 +280,79 @@ export default function JournalDetailScreen() {
 					onPress: () => void doDelete(),
 				},
 			],
+		);
+	};
+
+	const confirmSharingAction = (
+		title: string,
+		message: string,
+		actionLabel: string,
+		run: () => Promise<unknown>,
+		successMessage: string,
+		after?: () => void,
+	) => {
+		Alert.alert(title, message, [
+			{ text: "Cancel", style: "cancel" },
+			{
+				text: actionLabel,
+				style: "destructive",
+				onPress: () =>
+					void run()
+						.then(() => {
+							mutationToast.success(successMessage);
+							after?.();
+						})
+						.catch((err: unknown) =>
+							mutationToast.error(
+								err,
+								"Something went wrong. Please try again.",
+							),
+						),
+			},
+		]);
+	};
+
+	const handleShare = () => {
+		if (!journalId) return;
+		guardJournalAction(() =>
+			router.push({
+				pathname: "/journal/[journalId]/share",
+				params: { journalId },
+			}),
+		);
+	};
+
+	const handleRemoveMember = () => {
+		if (!journalId) return;
+		confirmSharingAction(
+			"Remove member?",
+			"They'll lose access to this journal, and the entries they added will be deleted.",
+			"Remove",
+			() => removeMember({ journalId }),
+			"Member removed.",
+		);
+	};
+
+	const handleCancelInvite = () => {
+		if (!journalId) return;
+		confirmSharingAction(
+			"Cancel invite?",
+			"The invite will stop working. You can invite someone again later.",
+			"Cancel invite",
+			() => cancelInvite({ journalId }),
+			"Invite cancelled.",
+		);
+	};
+
+	const handleLeave = () => {
+		if (!journalId) return;
+		confirmSharingAction(
+			"Leave this journal?",
+			"You'll lose access to it, and the entries you added will be deleted.",
+			"Leave",
+			() => leaveJournal({ journalId }),
+			"You left the journal.",
+			() => router.back(),
 		);
 	};
 
@@ -466,6 +558,26 @@ export default function JournalDetailScreen() {
 											}
 											appearanceBusy={savingAppearance}
 											hasBackgroundImage={backgroundImageUrl !== null}
+											role={isMember ? "member" : "author"}
+											onShareJournal={
+												!isMember &&
+												sharing &&
+												!sharing.member &&
+												!sharing.pendingInvite
+													? handleShare
+													: undefined
+											}
+											onCancelInvite={
+												!isMember && sharing?.pendingInvite
+													? handleCancelInvite
+													: undefined
+											}
+											onRemoveMember={
+												!isMember && sharing?.member
+													? handleRemoveMember
+													: undefined
+											}
+											onLeaveJournal={isMember ? handleLeave : undefined}
 										/>
 										<Pressable
 											onPress={startExportSelection}
@@ -477,19 +589,21 @@ export default function JournalDetailScreen() {
 										>
 											<Ionicons name="share-outline" size={18} color={accent} />
 										</Pressable>
-										<Pressable
-											onPress={confirmDelete}
-											accessibilityRole="button"
-											accessibilityLabel="Delete journal"
-											className="size-10 items-center justify-center rounded-full bg-destructive/10 active:opacity-70"
-											hitSlop={6}
-										>
-											<Ionicons
-												name="trash-outline"
-												size={18}
-												color={fieldForeground}
-											/>
-										</Pressable>
+										{isMember ? null : (
+											<Pressable
+												onPress={confirmDelete}
+												accessibilityRole="button"
+												accessibilityLabel="Delete journal"
+												className="size-10 items-center justify-center rounded-full bg-destructive/10 active:opacity-70"
+												hitSlop={6}
+											>
+												<Ionicons
+													name="trash-outline"
+													size={18}
+													color={fieldForeground}
+												/>
+											</Pressable>
+										)}
 									</View>
 								) : null}
 							</View>
@@ -516,6 +630,14 @@ export default function JournalDetailScreen() {
 									export.
 								</Text>
 							) : null}
+							{sharing && !selectionMode ? (
+								<JournalPeopleRow
+									author={sharing.author}
+									member={sharing.member}
+									pendingInviteEmail={sharing.pendingInvite?.email ?? null}
+									canAddEntries={sharing.canAddEntries}
+								/>
+							) : null}
 						</View>
 
 						{entries && entries.length > 0 && !selectionMode ? (
@@ -538,6 +660,16 @@ export default function JournalDetailScreen() {
 											mode={entry.mode}
 											selectable={selectionMode}
 											selected={selectedIds.has(entry._id)}
+											locked={entry.locked}
+											byline={
+												isShared
+													? entry.isMine
+														? "By You"
+														: entry.createdByName
+															? `By ${entry.createdByName}`
+															: null
+													: null
+											}
 											onPress={() =>
 												selectionMode
 													? toggleSelected(entry._id)
@@ -597,23 +729,25 @@ export default function JournalDetailScreen() {
 							</Text>
 						</Pressable>
 
-						<Pressable
-							onPress={handleOrderBook}
-							disabled={selectedCount === 0 || ordering || exporting}
-							accessibilityRole="button"
-							accessibilityLabel="Order printed book"
-							className="h-14 w-full flex-row items-center justify-center gap-2 rounded-full border border-primary bg-background active:opacity-90 disabled:opacity-50"
-							style={shadow}
-						>
-							{ordering ? (
-								<ActivityIndicator color={accent} />
-							) : (
-								<Ionicons name="book-outline" size={20} color={accent} />
-							)}
-							<Text className="font-semibold text-base text-primary">
-								{ordering ? "Starting order…" : "Order Book"}
-							</Text>
-						</Pressable>
+						{isMember ? null : (
+							<Pressable
+								onPress={handleOrderBook}
+								disabled={selectedCount === 0 || ordering || exporting}
+								accessibilityRole="button"
+								accessibilityLabel="Order printed book"
+								className="h-14 w-full flex-row items-center justify-center gap-2 rounded-full border border-primary bg-background active:opacity-90 disabled:opacity-50"
+								style={shadow}
+							>
+								{ordering ? (
+									<ActivityIndicator color={accent} />
+								) : (
+									<Ionicons name="book-outline" size={20} color={accent} />
+								)}
+								<Text className="font-semibold text-base text-primary">
+									{ordering ? "Starting order…" : "Order Book"}
+								</Text>
+							</Pressable>
+						)}
 					</View>
 				) : (
 					<Pressable

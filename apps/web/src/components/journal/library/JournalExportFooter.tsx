@@ -27,14 +27,16 @@ export function JournalExportFooter({
 			>
 				{exporting ? "Exporting…" : "Export selected entries"}
 			</Button>
-			<Button
-				type="button"
-				disabled={disabled || busy}
-				onClick={onOrderBook}
-				className="min-h-11 w-full rounded-xl px-5 font-medium text-sm leading-[1.4] hover:opacity-95"
-			>
-				{ordering ? "Preparing checkout…" : "Order book"}
-			</Button>
+			{onOrderBook ? (
+				<Button
+					type="button"
+					disabled={disabled || busy}
+					onClick={onOrderBook}
+					className="min-h-11 w-full rounded-xl px-5 font-medium text-sm leading-[1.4] hover:opacity-95"
+				>
+					{ordering ? "Preparing checkout…" : "Order book"}
+				</Button>
+			) : null}
 		</div>
 	);
 }

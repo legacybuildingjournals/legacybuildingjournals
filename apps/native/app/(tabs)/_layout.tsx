@@ -5,6 +5,7 @@ import { useThemeColor } from "heroui-native/hooks";
 import { useEffect, useMemo, useRef } from "react";
 
 import { LoadingScreen } from "@/components/loading-screen";
+import { ShareInvitePopup } from "@/components/sharing/share-invite-popup";
 import { useNativeCurrentUser } from "@/hooks/use-native-current-user";
 
 export default function TabLayout() {
@@ -61,43 +62,51 @@ export default function TabLayout() {
 	}
 
 	return (
-		<Tabs screenOptions={screenOptions}>
-			<Tabs.Screen
-				name="index"
-				options={{
-					title: "Desk",
-					tabBarIcon: ({ color, size }) => (
-						<Ionicons name="desktop-outline" size={size} color={color} />
-					),
-				}}
-			/>
-			<Tabs.Screen
-				name="library"
-				options={{
-					title: "Library",
-					tabBarIcon: ({ color, size }) => (
-						<Ionicons name="library-outline" size={size} color={color} />
-					),
-				}}
-			/>
-			<Tabs.Screen
-				name="community"
-				options={{
-					title: "Community",
-					tabBarIcon: ({ color, size }) => (
-						<Ionicons name="people-outline" size={size} color={color} />
-					),
-				}}
-			/>
-			<Tabs.Screen
-				name="account"
-				options={{
-					title: "Account",
-					tabBarIcon: ({ color, size }) => (
-						<Ionicons name="person-circle-outline" size={size} color={color} />
-					),
-				}}
-			/>
-		</Tabs>
+		<>
+			<Tabs screenOptions={screenOptions}>
+				<Tabs.Screen
+					name="index"
+					options={{
+						title: "Desk",
+						tabBarIcon: ({ color, size }) => (
+							<Ionicons name="desktop-outline" size={size} color={color} />
+						),
+					}}
+				/>
+				<Tabs.Screen
+					name="library"
+					options={{
+						title: "Library",
+						tabBarIcon: ({ color, size }) => (
+							<Ionicons name="library-outline" size={size} color={color} />
+						),
+					}}
+				/>
+				<Tabs.Screen
+					name="community"
+					options={{
+						title: "Community",
+						tabBarIcon: ({ color, size }) => (
+							<Ionicons name="people-outline" size={size} color={color} />
+						),
+					}}
+				/>
+				<Tabs.Screen
+					name="account"
+					options={{
+						title: "Account",
+						tabBarIcon: ({ color, size }) => (
+							<Ionicons
+								name="person-circle-outline"
+								size={size}
+								color={color}
+							/>
+						),
+					}}
+				/>
+			</Tabs>
+			{/* Pending share invites for this account (spec #10). */}
+			<ShareInvitePopup />
+		</>
 	);
 }

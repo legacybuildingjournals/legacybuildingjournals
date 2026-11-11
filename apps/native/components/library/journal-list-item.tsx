@@ -10,6 +10,8 @@ type JournalListItemProps = {
 	coverImageUrl?: string | null;
 	onPress?: () => void;
 	onAddEntry?: () => void;
+	/** Figma: green "Shared Journal" pill on the cover. */
+	isShared?: boolean;
 };
 
 /**
@@ -24,6 +26,7 @@ export function JournalListItem({
 	coverImageUrl,
 	onPress,
 	onAddEntry,
+	isShared = false,
 }: JournalListItemProps) {
 	const primary = useThemeColor("accent");
 	const hasImage = Boolean(coverImageUrl);
@@ -35,6 +38,13 @@ export function JournalListItem({
 			accessibilityLabel={`Open journal ${title}`}
 			className="overflow-hidden rounded-2xl bg-primary active:opacity-95"
 		>
+			{isShared ? (
+				<View className="absolute top-3 right-3 z-10 rounded-full bg-green-50 px-2.5 py-0.5">
+					<Text className="font-medium text-green-800 text-xs">
+						Shared Journal
+					</Text>
+				</View>
+			) : null}
 			{hasImage ? (
 				<View className="border border-[#d4d4d4] bg-[#e8e8e8] p-3">
 					<View className="overflow-hidden rounded-xl bg-[#e8e8e8]">

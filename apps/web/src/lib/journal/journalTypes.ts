@@ -25,3 +25,11 @@ export const DEFAULT_STORY_TAB: StoryTab = "my_story";
 
 /** Journal `type` field — same values as story tabs */
 export type JournalStoryType = StoryTab;
+
+/** Library tabs: the two story types plus "Our Story" (shared journals). */
+export type LibraryTab = StoryTab | "our_story";
+
+export const LIBRARY_TABS: { id: LibraryTab; label: string }[] = [
+	...STORY_TABS.map(({ id, label }) => ({ id, label })),
+	{ id: "our_story", label: "Our Story" },
+];

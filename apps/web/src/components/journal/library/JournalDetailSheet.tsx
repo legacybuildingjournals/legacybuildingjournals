@@ -37,6 +37,8 @@ import {
 } from "@/components/journal/library/libraryFormStyles";
 import { Button } from "@/components/journal/ui/button";
 import { Checkbox } from "@/components/journal/ui/checkbox";
+import { JournalSharingPanel } from "@/components/sharing/JournalSharingPanel";
+import { ShareJournalDialog } from "@/components/sharing/ShareJournalDialog";
 import { downloadJournalPdf } from "@/lib/journal/exportJournalPdf";
 import { formatDate } from "@/lib/journal/formatDate";
 import type { EnrichedJournalEntry } from "@/lib/journal/journalEntryTypes";
@@ -88,6 +90,7 @@ export function JournalDetailSheet({
 	onDeleted,
 }: JournalDetailSheetProps) {
 	const [deleteOpen, setDeleteOpen] = useState(false);
+	const [shareOpen, setShareOpen] = useState(false);
 	const [journalEditing, setJournalEditing] = useState(false);
 	const [selectedEntryId, setSelectedEntryId] =
 		useState<Id<"journalEntries"> | null>(null);
@@ -123,8 +126,12 @@ export function JournalDetailSheet({
 	);
 
 	// Recording entries render as a "scan to listen" QR in the PDF, so every
-	// entry is exportable regardless of mode.
-	const exportableEntries = useMemo(() => enrichedEntries, [enrichedEntries]);
+	// entry is exportable regardless of mode, except someone else's hidden
+	// entries in a shared journal.
+	const exportableEntries = useMemo(
+		() => enrichedEntries.filter((entry) => !entry.locked),
+		[enrichedEntries],
+	);
 
 	const allExportableSelected =
 		exportableEntries.length > 0 &&
@@ -339,6 +346,10 @@ export function JournalDetailSheet({
 
 	const isLoading = open && journal === undefined;
 	const loadedJournal = journal ?? null;
+	// Members can read, add and export, but not edit/delete the journal or
+	// order a book (spec #22/#23).
+	const isMember = loadedJournal?.viewerRole === "member";
+	const isShared = loadedJournal?.isShared === true;
 
 	return (
 		<>
@@ -452,16 +463,18 @@ export function JournalDetailSheet({
 																				strokeWidth={2}
 																			/>
 																		</SidebarIconButton>
-																		<SidebarIconButton
-																			ariaLabel="Delete journal"
-																			onClick={() => setDeleteOpen(true)}
-																		>
-																			<Trash2
-																				className="size-5"
-																				style={{ color: brand.destructive }}
-																				strokeWidth={2}
-																			/>
-																		</SidebarIconButton>
+																		{isMember ? null : (
+																			<SidebarIconButton
+																				ariaLabel="Delete journal"
+																				onClick={() => setDeleteOpen(true)}
+																			>
+																				<Trash2
+																					className="size-5"
+																					style={{ color: brand.destructive }}
+																					strokeWidth={2}
+																				/>
+																			</SidebarIconButton>
+																		)}
 																	</>
 																) : (
 																	<>
@@ -475,26 +488,32 @@ export function JournalDetailSheet({
 																				strokeWidth={2}
 																			/>
 																		</SidebarIconButton>
-																		<SidebarIconButton
-																			ariaLabel="Edit journal"
-																			onClick={() => setJournalEditing(true)}
-																		>
-																			<Pencil
-																				className="size-5"
-																				style={{ color: brand.primary }}
-																				strokeWidth={2}
-																			/>
-																		</SidebarIconButton>
-																		<SidebarIconButton
-																			ariaLabel="Delete journal"
-																			onClick={() => setDeleteOpen(true)}
-																		>
-																			<Trash2
-																				className="size-5"
-																				style={{ color: brand.destructive }}
-																				strokeWidth={2}
-																			/>
-																		</SidebarIconButton>
+																		{isMember ? null : (
+																			<>
+																				<SidebarIconButton
+																					ariaLabel="Edit journal"
+																					onClick={() =>
+																						setJournalEditing(true)
+																					}
+																				>
+																					<Pencil
+																						className="size-5"
+																						style={{ color: brand.primary }}
+																						strokeWidth={2}
+																					/>
+																				</SidebarIconButton>
+																				<SidebarIconButton
+																					ariaLabel="Delete journal"
+																					onClick={() => setDeleteOpen(true)}
+																				>
+																					<Trash2
+																						className="size-5"
+																						style={{ color: brand.destructive }}
+																						strokeWidth={2}
+																					/>
+																				</SidebarIconButton>
+																			</>
+																		)}
 																	</>
 																)}
 															</div>
@@ -524,6 +543,14 @@ export function JournalDetailSheet({
 														</>
 													) : null}
 												</div>
+
+												{loadedJournal && journalId && !exportMode ? (
+													<JournalSharingPanel
+														journalId={journalId}
+														onShare={() => setShareOpen(true)}
+														onLeft={handleClose}
+													/>
+												) : null}
 
 												{entriesToShow.length > 0 ? (
 													<div className="mt-4 flex items-center justify-between gap-2 px-3">
@@ -556,6 +583,7 @@ export function JournalDetailSheet({
 																		toggleEntrySelection(entry._id)
 																	}
 																	onOpen={() => setSelectedEntryId(entry._id)}
+																	showAuthor={isShared}
 																/>
 															))}
 														</div>
@@ -579,7 +607,9 @@ export function JournalDetailSheet({
 												ordering={ordering}
 												disabled={!canExport}
 												onExport={() => void handleExportPdf()}
-												onOrderBook={() => void handleOrderBook()}
+												onOrderBook={
+													isMember ? undefined : () => void handleOrderBook()
+												}
 											/>
 										) : null}
 									</div>
@@ -604,6 +634,12 @@ export function JournalDetailSheet({
 				journal={loadedJournal}
 				open={journalEditing && loadedJournal !== null}
 				onOpenChange={setJournalEditing}
+			/>
+
+			<ShareJournalDialog
+				journalId={journalId}
+				open={shareOpen}
+				onOpenChange={setShareOpen}
 			/>
 
 			<DeleteJournalDialog

@@ -25,10 +25,13 @@ import { useMutation } from "convex/react";
 import { GripVertical } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { JournalCard } from "@/components/journal/library/JournalCard";
-import type { StoryTab } from "@/lib/journal/journalTypes";
+import type { LibraryTab } from "@/lib/journal/journalTypes";
 import { toastMutationError } from "@/lib/journal/toast";
 
-type EnrichedJournal = Doc<"journals"> & { coverImageUrl?: string };
+type EnrichedJournal = Doc<"journals"> & {
+	coverImageUrl?: string;
+	isShared?: boolean;
+};
 
 /**
  * Bookshelf rhythm. Every card is locked to CARD_HEIGHT and every grid row to
@@ -53,7 +56,7 @@ const SHELF_LEDGE = `linear-gradient(to bottom,
 	rgba(0,0,0,0) ${SHELF_PITCH}px)`;
 
 type LibraryJournalGridProps = {
-	storyTab: StoryTab;
+	storyTab: LibraryTab;
 	journals: EnrichedJournal[];
 	onOpenJournal: (journal: Doc<"journals">) => void;
 	onAddEntry: (journal: Doc<"journals">) => void;
@@ -146,6 +149,9 @@ export function LibraryJournalGrid({
 		const newIndex = orderedIds.indexOf(over.id as Id<"journals">);
 		if (oldIndex < 0 || newIndex < 0) return;
 
+		// Our Story mixes your journals with ones shared with you; its order is
+		// not user-editable (the grid below doesn't render handles there).
+		if (storyTab === "our_story") return;
 		const nextOrder = arrayMove(orderedIds, oldIndex, newIndex);
 		const previousOrder = orderedIds;
 		setOrderedIds(nextOrder);
@@ -158,6 +164,31 @@ export function LibraryJournalGrid({
 
 	if (sortedJournals.length === 0) {
 		return null;
+	}
+
+	const gridStyle = {
+		gridAutoRows: `${CARD_HEIGHT}px`,
+		rowGap: `${ROW_GAP}px`,
+		backgroundImage: SHELF_LEDGE,
+		backgroundSize: `100% ${SHELF_PITCH}px`,
+		backgroundRepeat: "repeat-y" as const,
+	};
+	const gridClass =
+		"grid w-full grid-cols-1 gap-x-5 pb-16 sm:grid-cols-2 lg:grid-cols-3";
+
+	if (storyTab === "our_story") {
+		return (
+			<div className={gridClass} style={gridStyle}>
+				{sortedJournals.map((journal) => (
+					<JournalCard
+						key={journal._id}
+						journal={journal}
+						onOpen={() => onOpenJournal(journal)}
+						onAddEntry={() => onAddEntry(journal)}
+					/>
+				))}
+			</div>
+		);
 	}
 
 	return (

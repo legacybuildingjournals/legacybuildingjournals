@@ -3,12 +3,12 @@ import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
 import { cn } from "@legacy-building/ui/lib/utils";
 import { useQuery } from "convex/react";
 import { RecentJournalCard } from "@/components/journal/dashboard/RecentJournalCard";
-import type { StoryTab } from "@/lib/journal/journalTypes";
 
 type DeskRecentJournalProps = {
 	className?: string;
-	onOpenJournal: (journalId: Id<"journals">, storyTab: StoryTab) => void;
-	onAddEntry: (journalId: Id<"journals">, storyTab: StoryTab) => void;
+	/** `ownerId` is the journal author's Clerk id (shared journals differ from you). */
+	onOpenJournal: (journalId: Id<"journals">, ownerId: string) => void;
+	onAddEntry: (journalId: Id<"journals">, ownerId: string) => void;
 };
 
 export function DeskRecentJournal({
@@ -41,8 +41,8 @@ export function DeskRecentJournal({
 			title={journal.title}
 			dateMs={postedAtMs}
 			slideImageUrls={slideImageUrls}
-			onOpenJournal={() => onOpenJournal(journal._id, journal.type as StoryTab)}
-			onAddEntry={() => onAddEntry(journal._id, journal.type as StoryTab)}
+			onOpenJournal={() => onOpenJournal(journal._id, journal.userId)}
+			onAddEntry={() => onAddEntry(journal._id, journal.userId)}
 		/>
 	);
 }

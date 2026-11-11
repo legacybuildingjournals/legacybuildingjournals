@@ -21,6 +21,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as ShareTokenRouteImport } from './routes/share.$token'
 import { Route as MEntryIdRouteImport } from './routes/m.$entryId'
 import { Route as LoginContinueRouteImport } from './routes/login.continue'
 import { Route as InviteCodeRouteImport } from './routes/invite.$code'
@@ -99,6 +100,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DashboardRouteRoute,
+} as any)
+const ShareTokenRoute = ShareTokenRouteImport.update({
+  id: '/share/$token',
+  path: '/share/$token',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const MEntryIdRoute = MEntryIdRouteImport.update({
   id: '/m/$entryId',
@@ -214,6 +220,7 @@ export interface FileRoutesByFullPath {
   '/invite/$code': typeof InviteCodeRoute
   '/login/continue': typeof LoginContinueRoute
   '/m/$entryId': typeof MEntryIdRoute
+  '/share/$token': typeof ShareTokenRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/billing/checkout': typeof DashboardBillingCheckoutRoute
   '/dashboard/billing/compare': typeof DashboardBillingCompareRoute
@@ -243,6 +250,7 @@ export interface FileRoutesByTo {
   '/invite/$code': typeof InviteCodeRoute
   '/login/continue': typeof LoginContinueRoute
   '/m/$entryId': typeof MEntryIdRoute
+  '/share/$token': typeof ShareTokenRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/billing/checkout': typeof DashboardBillingCheckoutRoute
   '/dashboard/billing/compare': typeof DashboardBillingCompareRoute
@@ -276,6 +284,7 @@ export interface FileRoutesById {
   '/invite/$code': typeof InviteCodeRoute
   '/login/continue': typeof LoginContinueRoute
   '/m/$entryId': typeof MEntryIdRoute
+  '/share/$token': typeof ShareTokenRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/billing/checkout': typeof DashboardBillingCheckoutRoute
   '/dashboard/billing/compare': typeof DashboardBillingCompareRoute
@@ -310,6 +319,7 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/login/continue'
     | '/m/$entryId'
+    | '/share/$token'
     | '/dashboard/'
     | '/dashboard/billing/checkout'
     | '/dashboard/billing/compare'
@@ -339,6 +349,7 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/login/continue'
     | '/m/$entryId'
+    | '/share/$token'
     | '/dashboard'
     | '/dashboard/billing/checkout'
     | '/dashboard/billing/compare'
@@ -371,6 +382,7 @@ export interface FileRouteTypes {
     | '/invite/$code'
     | '/login/continue'
     | '/m/$entryId'
+    | '/share/$token'
     | '/dashboard/'
     | '/dashboard/billing/checkout'
     | '/dashboard/billing/compare'
@@ -397,6 +409,7 @@ export interface RootRouteChildren {
   GiftTokenRoute: typeof GiftTokenRoute
   InviteCodeRoute: typeof InviteCodeRoute
   MEntryIdRoute: typeof MEntryIdRoute
+  ShareTokenRoute: typeof ShareTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -484,6 +497,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/'
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
+    }
+    '/share/$token': {
+      id: '/share/$token'
+      path: '/share/$token'
+      fullPath: '/share/$token'
+      preLoaderRoute: typeof ShareTokenRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/m/$entryId': {
       id: '/m/$entryId'
@@ -698,6 +718,7 @@ const rootRouteChildren: RootRouteChildren = {
   GiftTokenRoute: GiftTokenRoute,
   InviteCodeRoute: InviteCodeRoute,
   MEntryIdRoute: MEntryIdRoute,
+  ShareTokenRoute: ShareTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

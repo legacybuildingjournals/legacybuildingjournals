@@ -22,6 +22,8 @@ export const ROUTES = {
 	dashboardGiftSuccess: "/dashboard/gift/success",
 	/** Public gift redeem page; append the token: `${ROUTES.giftRedeem}/<token>`. */
 	giftRedeem: "/gift",
+	/** Public share-invite claim page; append the token: `${ROUTES.shareClaim}/<token>`. */
+	shareClaim: "/share",
 	welcome: "/welcome",
 	/** Invite landing; append the code: `${ROUTES.invite}/ABCD1234`. */
 	invite: "/invite",
