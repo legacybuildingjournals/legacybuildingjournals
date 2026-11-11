@@ -25,7 +25,12 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 
 import { adminPrimaryButtonClass } from "@/lib/admin-theme";
-import { type SignInFormValues, signInSchema } from "@/lib/auth/schemas";
+import {
+	type SignInCodeFormValues,
+	type SignInFormValues,
+	signInCodeSchema,
+	signInSchema,
+} from "@/lib/auth/schemas";
 import { ROUTES } from "@/lib/routes";
 
 const authFieldClass =
@@ -41,11 +46,59 @@ export function AdminSignInForm() {
 	const navigate = useNavigate();
 
 	const [verifyingAdmin, setVerifyingAdmin] = useState(false);
+	/** Clerk "client trust": an unrecognised browser must enter an emailed code. */
+	const [needsEmailCode, setNeedsEmailCode] = useState(false);
+	const [resendingCode, setResendingCode] = useState(false);
 
 	const form = useForm<SignInFormValues>({
 		resolver: zodResolver(signInSchema),
 		defaultValues: { email: "", password: "" },
 	});
+
+	const codeForm = useForm<SignInCodeFormValues>({
+		resolver: zodResolver(signInCodeSchema),
+		defaultValues: { code: "" },
+	});
+
+	/** The sign-in attempt is complete: activate the session only for admins. */
+	const finishAdminSignIn = async (
+		email: string,
+		onError: (message: string) => void,
+	) => {
+		if (!signIn) return;
+		if (!signIn.createdSessionId) {
+			const msg = "Sign-in finished but no session was created.";
+			onError(msg);
+			toast.error(msg);
+			return;
+		}
+
+		setVerifyingAdmin(true);
+		try {
+			const isAdmin = await convex.query(api.user.queries.isAdminByEmail, {
+				email: email.trim(),
+			});
+
+			if (!isAdmin) {
+				await signIn.reset();
+				setNeedsEmailCode(false);
+				form.setError("root", { message: NOT_ADMIN_MESSAGE });
+				toast.error(NOT_ADMIN_MESSAGE);
+				return;
+			}
+
+			await clerk.setActive({ session: signIn.createdSessionId });
+			toast.success("Welcome back.");
+			navigate({ to: ROUTES.dashboard });
+		} catch (err) {
+			await signIn.reset().catch(console.error);
+			const msg = firstClerkErrorMessage(err) ?? "Could not complete sign in.";
+			onError(msg);
+			toast.error(msg);
+		} finally {
+			setVerifyingAdmin(false);
+		}
+	};
 
 	const redirectIfAdmin = async (email: string) => {
 		const isAdmin = await convex.query(api.user.queries.isAdminByEmail, {
@@ -133,38 +186,9 @@ export function AdminSignInForm() {
 		}
 
 		if (signIn.status === "complete") {
-			if (!signIn.createdSessionId) {
-				const msg = "Sign-in finished but no session was created.";
-				form.setError("root", { message: msg });
-				toast.error(msg);
-				return;
-			}
-
-			setVerifyingAdmin(true);
-			try {
-				const isAdmin = await convex.query(api.user.queries.isAdminByEmail, {
-					email: email.trim(),
-				});
-
-				if (!isAdmin) {
-					await signIn.reset();
-					form.setError("root", { message: NOT_ADMIN_MESSAGE });
-					toast.error(NOT_ADMIN_MESSAGE);
-					return;
-				}
-
-				await clerk.setActive({ session: signIn.createdSessionId });
-				toast.success("Welcome back.");
-				navigate({ to: ROUTES.dashboard });
-			} catch (err) {
-				await signIn.reset().catch(console.error);
-				const msg =
-					firstClerkErrorMessage(err) ?? "Could not complete sign in.";
-				form.setError("root", { message: msg });
-				toast.error(msg);
-			} finally {
-				setVerifyingAdmin(false);
-			}
+			await finishAdminSignIn(email, (message) =>
+				form.setError("root", { message }),
+			);
 			return;
 		}
 
@@ -176,10 +200,169 @@ export function AdminSignInForm() {
 			return;
 		}
 
+		if (signIn.status === "needs_client_trust") {
+			const canEmailCode = signIn.supportedSecondFactors.some(
+				(factor) => factor.strategy === "email_code",
+			);
+			if (canEmailCode) {
+				const { error: sendError } = await signIn.mfa.sendEmailCode();
+				if (sendError) {
+					const msg =
+						firstClerkErrorMessage(sendError) ??
+						"Could not send the verification code.";
+					form.setError("root", { message: msg });
+					toast.error(msg);
+					return;
+				}
+				codeForm.reset();
+				setNeedsEmailCode(true);
+				toast.success(`We emailed a verification code to ${email.trim()}.`);
+				return;
+			}
+			const msg = "Additional verification is required.";
+			form.setError("root", { message: msg });
+			toast.error(msg);
+			return;
+		}
+
+		console.error("Admin sign-in attempt not complete:", signIn.status);
 		const fallback = "Sign-in could not be completed. Try again.";
 		form.setError("root", { message: fallback });
 		toast.error(fallback);
 	});
+
+	const onCodeSubmit = codeForm.handleSubmit(async ({ code }) => {
+		codeForm.clearErrors("root");
+		if (!signIn) return;
+		const { error } = await signIn.mfa.verifyEmailCode({ code });
+		if (error) {
+			const msg =
+				firstClerkErrorMessage(error) ?? "That code didn't work. Try again.";
+			codeForm.setError("code", { message: msg });
+			return;
+		}
+		if (signIn.status === "complete") {
+			await finishAdminSignIn(form.getValues("email"), (message) =>
+				codeForm.setError("root", { message }),
+			);
+			return;
+		}
+		console.error("Admin sign-in attempt not complete:", signIn.status);
+		codeForm.setError("root", {
+			message: "Sign-in could not be completed. Try again.",
+		});
+	});
+
+	const resendCode = async () => {
+		if (!signIn) return;
+		setResendingCode(true);
+		try {
+			const { error } = await signIn.mfa.sendEmailCode();
+			if (error) {
+				toast.error(
+					firstClerkErrorMessage(error) ?? "Could not resend the code.",
+				);
+				return;
+			}
+			toast.success("A new code is on its way.");
+		} finally {
+			setResendingCode(false);
+		}
+	};
+
+	const backToPassword = async () => {
+		await signIn?.reset().catch(console.error);
+		codeForm.reset();
+		setNeedsEmailCode(false);
+	};
+
+	if (needsEmailCode) {
+		const codeRootError = codeForm.formState.errors.root;
+		const codeBusy =
+			fetchStatus === "fetching" ||
+			codeForm.formState.isSubmitting ||
+			verifyingAdmin;
+		return (
+			<form
+				onSubmit={onCodeSubmit}
+				className="fade-in-50 slide-in-from-bottom-2 flex animate-in flex-col gap-4 duration-300"
+				noValidate
+			>
+				<p className="text-center text-muted-foreground text-sm">
+					Enter the code we emailed to{" "}
+					<span className="font-medium text-foreground">
+						{form.getValues("email")}
+					</span>
+					.
+				</p>
+				<Controller
+					name="code"
+					control={codeForm.control}
+					render={({ field, fieldState }) => (
+						<Field data-invalid={fieldState.invalid}>
+							<FieldLabel htmlFor="admin-sign-in-code" className="sr-only">
+								Verification code
+							</FieldLabel>
+							<Input
+								{...field}
+								id="admin-sign-in-code"
+								inputMode="numeric"
+								autoComplete="one-time-code"
+								placeholder="Verification code"
+								className={authFieldClass}
+								disabled={codeBusy}
+								aria-invalid={fieldState.invalid}
+							/>
+							{fieldState.invalid ? (
+								<FieldError errors={[fieldState.error]} />
+							) : null}
+						</Field>
+					)}
+				/>
+				{codeRootError ? (
+					<FieldError errors={[codeRootError]} className="text-sm" />
+				) : null}
+				<Button
+					type="submit"
+					variant="default"
+					disabled={codeBusy}
+					className={`mt-1 h-12 w-full rounded-full font-semibold text-base transition-transform active:scale-[0.98] ${adminPrimaryButtonClass}`}
+				>
+					{verifyingAdmin ? (
+						<>
+							<ShieldCheck className="size-4 animate-pulse" aria-hidden />
+							Verifying admin access…
+						</>
+					) : codeBusy ? (
+						<>
+							<Loader2 className="size-4 animate-spin" aria-hidden />
+							Verifying code…
+						</>
+					) : (
+						"Verify and sign in"
+					)}
+				</Button>
+				<div className="flex items-center justify-between gap-2 text-sm">
+					<button
+						type="button"
+						onClick={() => void backToPassword()}
+						disabled={codeBusy}
+						className="rounded-full px-2 py-1 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] disabled:opacity-50"
+					>
+						Use a different account
+					</button>
+					<button
+						type="button"
+						onClick={() => void resendCode()}
+						disabled={codeBusy || resendingCode}
+						className="rounded-full px-2 py-1 font-medium text-primary transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.98] disabled:opacity-50"
+					>
+						{resendingCode ? "Sending…" : "Resend code"}
+					</button>
+				</div>
+			</form>
+		);
+	}
 
 	const rootError = form.formState.errors.root;
 	const isSubmitting =
