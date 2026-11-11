@@ -29,7 +29,7 @@ export function LibraryStoryTabs({
 		>
 			<TabsList
 				variant="line"
-				className="grid h-auto w-full grid-cols-3 gap-0 overflow-hidden rounded-xl border border-primary/15 bg-background p-0 shadow-sm group-data-horizontal/tabs:h-auto sm:w-[480px] lg:w-[540px]"
+				className="grid h-auto w-full grid-cols-3 gap-0 overflow-hidden rounded-full border border-primary/15 bg-background p-0 shadow-sm group-data-horizontal/tabs:h-auto sm:w-[480px] lg:w-[540px]"
 			>
 				{LIBRARY_TABS.map((tab) => (
 					<TabsTrigger

@@ -18,7 +18,8 @@ export function LegalDocumentPage({
 	termlyId,
 }: LegalDocumentPageProps) {
 	const bodyClassName = cn(
-		"mt-6 text-[#595959] text-sm leading-relaxed",
+		"text-[#595959] text-sm leading-relaxed",
+		termlyId ? null : "mt-6",
 		termlyId ? "legal-termly-content" : "space-y-4",
 	);
 
@@ -30,15 +31,16 @@ export function LegalDocumentPage({
 			<LegalPageNavbar />
 
 			<div
-				className="flex flex-1 flex-col items-center px-4 pb-10 sm:px-6"
+				className="flex flex-1 flex-col items-center px-4 pb-8 sm:px-6"
 				style={{
-					paddingTop: dashboardLayout.contentMarginTop + 24,
+					paddingTop: dashboardLayout.contentMarginTop + 16,
 				}}
 			>
+				{/* Termly's iframe brings its own padding, so the card stays slim. */}
 				<article
 					className={cn(
-						"w-full max-w-3xl rounded-2xl border bg-white shadow-sm",
-						"border-[#e6e6e6] p-6 sm:p-8 md:p-10",
+						"w-full max-w-2xl rounded-2xl border bg-white shadow-sm",
+						"border-[#e6e6e6] p-4 sm:p-5 md:p-6",
 					)}
 				>
 					{termlyId ? null : (
