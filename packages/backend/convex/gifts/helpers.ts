@@ -29,7 +29,8 @@ export const GIFT_VALIDITY_MS = 365 * 24 * 60 * 60 * 1000;
 export const GIFT_LIMITS = {
 	nameMax: 80,
 	titleMax: 120,
-	messageMax: 500,
+	/** Sized so the message fits the gift card's 4 lines (`giftCard.ts`). */
+	messageMax: 150,
 } as const;
 
 /** Where the QR code and Claim My Gift link point. Always the web app. */

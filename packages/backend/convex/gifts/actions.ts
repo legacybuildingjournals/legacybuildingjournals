@@ -321,12 +321,10 @@ function escapeHtml(value: string): string {
 function cardInput(gift: Doc<"gifts">, redeemUrl: string) {
 	return {
 		recipientName: gift.recipientName,
-		recipientEmail: gift.recipientEmail,
 		purchaserName: gift.purchaserName,
 		title: gift.title,
 		message: gift.message,
 		redeemUrl,
-		expiresAt: gift.expiresAt,
 	};
 }
 

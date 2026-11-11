@@ -2,6 +2,7 @@ import { api } from "@legacy-building/backend/convex/_generated/api";
 import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
 import { cn } from "@legacy-building/ui/lib/utils";
 import { useQuery } from "convex/react";
+import { BookOpen } from "lucide-react";
 import { useState } from "react";
 
 import { uploadedImageFitClass } from "@/components/journal/library/libraryFormStyles";
@@ -43,8 +44,14 @@ export function JournalCoverImage({
 	const loadError = failedSrc === src;
 
 	if (!src || loadError) {
+		// Display-only placeholder: this spot isn't an upload target (covers are
+		// set in Create / Edit Journal), so it must not read like one. Centred
+		// and full-size so overlay controls (close button, pills) never sit on it.
 		return (
-			<span className="text-[#8a8a8a] text-sm">Click to upload an image</span>
+			<span className="flex size-full flex-col items-center justify-center gap-2 text-muted-foreground">
+				<BookOpen aria-hidden className="size-8 opacity-60" strokeWidth={1.5} />
+				<span className="text-sm">No cover image</span>
+			</span>
 		);
 	}
 

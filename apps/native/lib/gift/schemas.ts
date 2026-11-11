@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /** Mirrors apps/web/src/lib/gift/schemas.ts; the server re-validates. */
-export const GIFT_MESSAGE_MAX = 500;
+export const GIFT_MESSAGE_MAX = 150;
 
 export const giftDetailsSchema = z.object({
 	recipientName: z

@@ -62,6 +62,7 @@ export default function GiftSubscriptionScreen() {
 	const resendEmail = useAction(api.gifts.actions.resendPurchaserEmail);
 	const toast = useMutationToast();
 	const [resendingId, setResendingId] = useState<Id<"gifts"> | null>(null);
+	const [historyOpen, setHistoryOpen] = useState(false);
 
 	const handleResend = async (giftId: Id<"gifts">) => {
 		setResendingId(giftId);
@@ -151,10 +152,24 @@ export default function GiftSubscriptionScreen() {
 
 				{history && history.length > 0 ? (
 					<View className="mt-2 gap-2">
-						<Text className="font-semibold text-foreground text-lg">
-							Your gifts
-						</Text>
-						{history.map((gift) => (
+						{/* Collapsed by default (same as the web Account page). */}
+						<Pressable
+							onPress={() => setHistoryOpen((open) => !open)}
+							accessibilityRole="button"
+							accessibilityState={{ expanded: historyOpen }}
+							className="flex-row items-center justify-between rounded-xl border border-border px-4 py-3 active:opacity-70"
+						>
+							<Text className="font-semibold text-base text-foreground">
+								{historyOpen ? "Hide gift history" : "View gift history"} (
+								{history.length})
+							</Text>
+							<Ionicons
+								name={historyOpen ? "chevron-up" : "chevron-down"}
+								size={18}
+								color={accent}
+							/>
+						</Pressable>
+						{(historyOpen ? history : []).map((gift) => (
 							<View
 								key={gift._id}
 								className="flex-row items-center justify-between gap-3 rounded-xl border border-border p-3"

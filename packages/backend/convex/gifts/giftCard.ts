@@ -16,23 +16,22 @@ import {
 
 /**
  * SST-5 gift card: the client's template (4x6 in at 300 dpi = 1200x1800 px)
- * with the recipient, purchaser, title, message, lifetime copy, redemption
- * instructions, QR code and claim link drawn on top.
+ * with the recipient, purchaser, title, message and the claim QR code drawn
+ * on top. The claim link, recipient email and claim-by date live in the
+ * purchaser email, not on the card (client design).
  *
  * Layout coordinates are in template pixels. The two coloured bands in the
- * template are the "To" and "From" fields; the QR panel sits on the table
- * under the "Your story starts here" arrow.
+ * template are the "To" and "From" fields; the QR tile sits centred under the
+ * "Your story starts here" arrow.
  */
 
 export type GiftCardInput = {
 	recipientName: string;
-	recipientEmail: string;
 	purchaserName: string;
 	title: string;
 	message: string;
+	/** Encoded in the QR code. */
 	redeemUrl: string;
-	/** Unix ms; printed as "Claim by …". */
-	expiresAt?: number;
 };
 
 const W = GIFT_CARD_TEMPLATE_WIDTH;
@@ -48,7 +47,18 @@ const COLUMN = { left: 130, right: 830 } as const;
 const COLUMN_CENTER = (COLUMN.left + COLUMN.right) / 2;
 const COLUMN_WIDTH = COLUMN.right - COLUMN.left;
 
-const PANEL = { x: 498, y: 1498, width: 672, height: 292 } as const;
+/** Message font size and line cap (fits GIFT_LIMITS.messageMax characters). */
+const MESSAGE_SIZE = 27;
+const MESSAGE_MAX_LINES = 4;
+
+/** White tile holding the QR code, centred on the card under the arrow. */
+const QR_SIZE = 236;
+const QR_PADDING = 18;
+const QR_TILE = {
+	size: QR_SIZE + QR_PADDING * 2,
+	x: (W - (QR_SIZE + QR_PADDING * 2)) / 2,
+	y: 1478,
+} as const;
 
 function escapeXml(value: string): string {
 	return value
@@ -176,123 +186,72 @@ function ensureFontFiles(): string[] {
 	return fontFiles;
 }
 
-function formatDate(ms: number): string {
-	return new Date(ms).toLocaleDateString("en-US", {
-		year: "numeric",
-		month: "long",
-		day: "numeric",
-	});
-}
-
-/** Display form of the claim link (no scheme) so it can be typed from a print. */
-function displayUrl(url: string): string {
-	return url.replace(/^https?:\/\//, "");
-}
-
 export function buildGiftCardSvg(input: GiftCardInput, qr: string): string {
 	const parts: string[] = [];
 	parts.push(
 		`<image href="${giftCardTemplateDataUrl}" x="0" y="0" width="${W}" height="${H}" preserveAspectRatio="none"/>`,
 	);
 
-	// "To" band (peach) and "From" band (mint): small label + name on the line.
-	const to = fitText(input.recipientName, COLUMN_WIDTH - 40, 46, 28, true);
+	// "To" band (peach) and "From" band (mint): small label, then the name
+	// left-aligned on the line under it (matches the client's design).
+	const nameX = COLUMN.left + 46;
+	const nameWidth = COLUMN.right - 46 - nameX;
+	const to = fitText(input.recipientName, nameWidth, 46, 28, true);
 	parts.push(
-		text(COLUMN.left + 46, 718, "TO", 22, { weight: 700, color: LABEL }),
+		text(nameX, 718, "Especially for:", 24, { weight: 700, color: LABEL }),
 	);
+	parts.push(text(nameX, 768, to.text, to.size, { weight: 700 }));
+	const from = fitText(input.purchaserName, nameWidth, 46, 28, true);
 	parts.push(
-		text(COLUMN_CENTER, 768, to.text, to.size, {
-			weight: 700,
-			anchor: "middle",
-		}),
+		text(nameX, 878, "With love from:", 24, { weight: 700, color: LABEL }),
 	);
-	const from = fitText(input.purchaserName, COLUMN_WIDTH - 40, 46, 28, true);
-	parts.push(
-		text(COLUMN.left + 46, 878, "FROM", 22, { weight: 700, color: LABEL }),
-	);
-	parts.push(
-		text(COLUMN_CENTER, 928, from.text, from.size, {
-			weight: 700,
-			anchor: "middle",
-		}),
-	);
+	parts.push(text(nameX, 928, from.text, from.size, { weight: 700 }));
 
 	// Gift title + personal message between the bands and the heart divider.
+	// The message is capped at GIFT_LIMITS.messageMax characters so it always
+	// fits MESSAGE_MAX_LINES; wrap() still ellipsises older, longer messages.
 	const title = fitText(input.title, COLUMN_WIDTH, 34, 24, true);
 	parts.push(
-		text(COLUMN_CENTER, 1024, title.text, title.size, {
+		text(COLUMN_CENTER, 1020, title.text, title.size, {
 			weight: 700,
 			color: TEAL,
 			anchor: "middle",
 		}),
 	);
 	const messageLines = input.message.trim()
-		? wrap(`“${input.message.trim()}”`, COLUMN_WIDTH, 24, 4)
+		? wrap(
+				`“${input.message.trim()}”`,
+				COLUMN_WIDTH,
+				MESSAGE_SIZE,
+				MESSAGE_MAX_LINES,
+			)
 		: ["A lifetime membership to Legacy Building Journals."];
 	messageLines.forEach((line, index) => {
 		parts.push(
-			text(COLUMN_CENTER, 1064 + index * 32, line, 24, {
+			text(COLUMN_CENTER, 1060 + index * 34, line, MESSAGE_SIZE, {
 				color: MUTED,
 				anchor: "middle",
 			}),
 		);
 	});
 
-	// QR panel on the table, under the "Your story starts here" arrow.
+	// QR only, in a white rounded tile centred under "Your story starts here".
 	parts.push(
-		`<rect x="${PANEL.x}" y="${PANEL.y}" width="${PANEL.width}" height="${PANEL.height}" rx="26" fill="#ffffff" fill-opacity="0.94" stroke="#e7dccb" stroke-width="2"/>`,
+		`<rect x="${QR_TILE.x}" y="${QR_TILE.y}" width="${QR_TILE.size}" height="${QR_TILE.size}" rx="28" fill="#ffffff" stroke="${TEAL}" stroke-opacity="0.35" stroke-width="3"/>`,
 	);
 	parts.push(qr);
-	const tx = PANEL.x + 262;
-	const textRight = PANEL.width - 262 - 22;
-	parts.push(
-		text(tx, PANEL.y + 56, "Scan to claim your gift", 27, {
-			weight: 700,
-			color: TEAL,
-		}),
-	);
-	parts.push(text(tx, PANEL.y + 92, "Lifetime access to", 20, { color: INK }));
-	parts.push(
-		text(tx, PANEL.y + 118, "Legacy Building Journals", 20, {
-			weight: 700,
-			color: INK,
-		}),
-	);
-	parts.push(
-		text(tx, PANEL.y + 154, "Sign in or sign up with", 17, { color: MUTED }),
-	);
-	const email = fitText(input.recipientEmail, textRight, 17, 13, true);
-	parts.push(
-		text(tx, PANEL.y + 177, email.text, email.size, {
-			weight: 700,
-			color: MUTED,
-		}),
-	);
-	if (input.expiresAt) {
-		parts.push(
-			text(tx, PANEL.y + 210, `Claim by ${formatDate(input.expiresAt)}`, 17, {
-				color: MUTED,
-			}),
-		);
-	}
-	const link = fitText(displayUrl(input.redeemUrl), PANEL.width - 44, 16, 11);
-	parts.push(
-		text(
-			PANEL.x + PANEL.width / 2,
-			PANEL.y + PANEL.height - 20,
-			link.text,
-			link.size,
-			{ color: TEAL, anchor: "middle" },
-		),
-	);
 
 	return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${parts.join("")}</svg>`;
 }
 
 /** Render the personalised gift card as a print-ready PNG (1200x1800, 300 dpi). */
 export async function renderGiftCardPng(input: GiftCardInput): Promise<Buffer> {
-	const qrSize = 222;
-	const qr = await qrSvg(input.redeemUrl, PANEL.x + 22, PANEL.y + 18, qrSize);
+	const qr = await qrSvg(
+		input.redeemUrl,
+		QR_TILE.x + QR_PADDING,
+		QR_TILE.y + QR_PADDING,
+		QR_SIZE,
+	);
 	const svg = buildGiftCardSvg(input, qr);
 	const resvg = new Resvg(svg, {
 		fitTo: { mode: "original" },

@@ -150,14 +150,17 @@ export function DashboardLibraryPage() {
 			/>
 
 			<main className="relative z-10 mx-auto mt-20 flex w-full max-w-[1200px] flex-1 flex-col gap-5 px-4 py-4 sm:px-6 md:px-10 md:py-5">
-				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+				{/* Tabs centred on the row; Add Journal sits in the right column
+				    (full width under the tabs on phones). */}
+				<div className="flex flex-col gap-3 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center">
+					<span aria-hidden className="hidden md:block" />
 					<LibraryStoryTabs value={storyTab} onChange={handleStoryTabChange} />
 					{/* Journals reach Our Story only by being shared (spec #2). */}
 					{storyTab !== "our_story" ? (
 						<Button
 							type="button"
 							onClick={openCreate}
-							className="min-h-[44px] shrink-0 rounded-xl px-5 font-medium text-sm leading-[1.4] hover:opacity-95"
+							className="min-h-[44px] shrink-0 rounded-xl px-5 font-medium text-sm leading-[1.4] transition-colors hover:opacity-95 active:scale-[0.98] md:justify-self-end"
 						>
 							Add Journal
 						</Button>

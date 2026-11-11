@@ -2,6 +2,7 @@ import { useUser } from "@clerk/react";
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import { PageLoader } from "@legacy-building/ui/components/page-loader";
 import { useCurrentUser } from "@legacy-building/ui/hooks/use-current-user";
+import { cn } from "@legacy-building/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "convex/react";
 import { Info, User, X } from "lucide-react";
@@ -14,7 +15,6 @@ import {
 	accountCardClass,
 	accountDangerButtonClass,
 	accountDangerZoneBodyClass,
-	accountDangerZoneHeaderClass,
 	accountPageClass,
 	accountPrimaryButtonClass,
 	accountSecondaryButtonClass,
@@ -259,12 +259,14 @@ export function DashboardAccountPage() {
 						</div>
 					</section>
 
-					<section className="flex flex-col gap-0 overflow-hidden rounded-2xl shadow-sm">
-						<div className={accountDangerZoneHeaderClass}>
-							<h2 className="font-semibold text-destructive text-lg">
+					{/* Heading sits on the page background like the other sections;
+					    only the delete action is boxed. */}
+					<section className="flex flex-col gap-4">
+						<div className="flex flex-col gap-1">
+							<h2 className={cn(accountSectionTitleClass, "text-destructive")}>
 								Danger Zone
 							</h2>
-							<p className="text-destructive/80 text-sm">
+							<p className={accountSectionSubtitleClass}>
 								Irreversible and destructive actions.
 							</p>
 						</div>

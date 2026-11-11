@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /** Limits mirror `convex/gifts/helpers.ts#GIFT_LIMITS`; the server re-validates. */
-export const GIFT_MESSAGE_MAX = 500;
+export const GIFT_MESSAGE_MAX = 150;
 
 export const giftDetailsSchema = z.object({
 	recipientName: z
