@@ -283,6 +283,10 @@ export function AdminSignInForm() {
 		const codeBusy = codeForm.formState.isSubmitting || verifyingAdmin;
 		return (
 			<form
+				// Distinct keys on the two forms: without them React reuses the
+				// password form's <Controller> fibers here, and the code input stays
+				// wired to the "password" field (typing never reaches `code`).
+				key="code-form"
 				onSubmit={onCodeSubmit}
 				className="fade-in-50 slide-in-from-bottom-2 flex animate-in flex-col gap-4 duration-300"
 				noValidate
@@ -370,6 +374,7 @@ export function AdminSignInForm() {
 
 	return (
 		<form
+			key="password-form"
 			onSubmit={onSubmit}
 			className="fade-in-50 slide-in-from-bottom-2 flex animate-in flex-col gap-4 duration-300"
 			noValidate
