@@ -278,10 +278,9 @@ export function AdminSignInForm() {
 
 	if (needsEmailCode) {
 		const codeRootError = codeForm.formState.errors.root;
-		const codeBusy =
-			fetchStatus === "fetching" ||
-			codeForm.formState.isSubmitting ||
-			verifyingAdmin;
+		// Only our own submit state: Clerk's `fetchStatus` can still read
+		// "fetching" after the code email is sent, which locked this screen.
+		const codeBusy = codeForm.formState.isSubmitting || verifyingAdmin;
 		return (
 			<form
 				onSubmit={onCodeSubmit}
@@ -306,11 +305,11 @@ export function AdminSignInForm() {
 							<Input
 								{...field}
 								id="admin-sign-in-code"
+								type="text"
 								inputMode="numeric"
 								autoComplete="one-time-code"
 								placeholder="Verification code"
 								className={authFieldClass}
-								disabled={codeBusy}
 								aria-invalid={fieldState.invalid}
 							/>
 							{fieldState.invalid ? (
