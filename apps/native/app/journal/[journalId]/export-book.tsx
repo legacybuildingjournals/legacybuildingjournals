@@ -14,6 +14,7 @@ import {
 	Pressable,
 	ScrollView,
 	Text,
+	useWindowDimensions,
 	View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -46,6 +47,11 @@ const STEPS = [
  */
 export default function ExportBookScreen() {
 	const insets = useSafeAreaInsets();
+	const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+	// Explicit size: a percentage width let the bundled image fall back to its
+	// full 683x884 size, so only half of it fit on screen. Capped by height
+	// too, so the title and checklist stay visible on short phones.
+	const sampleWidth = Math.min(screenWidth * 0.5, screenHeight * 0.28, 220);
 	const params = useLocalSearchParams<{
 		journalId?: string;
 		entryIds?: string;
@@ -127,12 +133,12 @@ export default function ExportBookScreen() {
 
 			{step === "intro" ? (
 				<ScrollView contentContainerClassName="items-center px-6 pt-6 pb-32">
-					<View className="w-[62%] max-w-[240px] -rotate-3">
+					<View className="-rotate-3">
 						<Image
 							source={SAMPLE}
 							resizeMode="contain"
-							className="w-full rounded-md"
-							style={{ aspectRatio: 683 / 884 }}
+							className="rounded-md"
+							style={{ width: sampleWidth, height: (sampleWidth * 884) / 683 }}
 							accessibilityLabel="Example back cover with a family photo"
 						/>
 					</View>
