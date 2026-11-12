@@ -17,7 +17,7 @@ import {
 
 import { AccountScreenHeader } from "@/components/account/account-screen-header";
 import {
-	GiftHero,
+	GiftHeroCard,
 	GiftHowItWorks,
 	GiftPrimaryButton,
 } from "@/components/gift/gift-parts";
@@ -103,42 +103,45 @@ export default function GiftSubscriptionScreen() {
 				className="flex-1"
 				contentContainerClassName="gap-4 px-4 pt-4 pb-10"
 			>
-				<GiftHero />
-
-				<View className="rounded-2xl border border-border bg-background p-5">
-					<Text className="font-semibold text-[11px] text-primary uppercase tracking-widest">
-						Lifetime subscription access
-					</Text>
-					<View className="mt-3 flex-row items-baseline gap-2 border-border border-b pb-4">
-						{priceLabel === undefined || storePrice === undefined ? (
-							<Skeleton className="h-10 w-24 rounded-lg" />
-						) : (
-							<Text className="font-semibold text-4xl text-foreground">
-								{priceLabel}
-							</Text>
-						)}
-						<Text className="text-muted-foreground text-sm">
-							one-time payment
+				<GiftHeroCard>
+					<View className="rounded-2xl border border-border bg-background p-5">
+						<Text className="font-semibold text-[11px] text-primary uppercase tracking-widest">
+							Lifetime subscription access
 						</Text>
-					</View>
-					<View className="mt-4 gap-4">
-						{BENEFITS.map((benefit) => (
-							<View key={benefit.title} className="flex-row items-start gap-3">
-								<View className="size-9 items-center justify-center rounded-full bg-accent/10">
-									<Ionicons name={benefit.icon} size={16} color={accent} />
+						<View className="mt-3 flex-row items-baseline gap-2 border-border border-b pb-4">
+							{priceLabel === undefined || storePrice === undefined ? (
+								<Skeleton className="h-10 w-24 rounded-lg" />
+							) : (
+								<Text className="font-semibold text-4xl text-foreground">
+									{priceLabel}
+								</Text>
+							)}
+							<Text className="text-muted-foreground text-sm">
+								one-time payment
+							</Text>
+						</View>
+						<View className="mt-4 gap-4">
+							{BENEFITS.map((benefit) => (
+								<View
+									key={benefit.title}
+									className="flex-row items-start gap-3"
+								>
+									<View className="size-9 items-center justify-center rounded-full bg-accent/10">
+										<Ionicons name={benefit.icon} size={16} color={accent} />
+									</View>
+									<View className="flex-1">
+										<Text className="font-semibold text-foreground text-sm">
+											{benefit.title}
+										</Text>
+										<Text className="text-muted-foreground text-xs">
+											{benefit.body}
+										</Text>
+									</View>
 								</View>
-								<View className="flex-1">
-									<Text className="font-semibold text-foreground text-sm">
-										{benefit.title}
-									</Text>
-									<Text className="text-muted-foreground text-xs">
-										{benefit.body}
-									</Text>
-								</View>
-							</View>
-						))}
+							))}
+						</View>
 					</View>
-				</View>
+				</GiftHeroCard>
 
 				<GiftHowItWorks>
 					Recipient would get lifetime subscription access when gift is

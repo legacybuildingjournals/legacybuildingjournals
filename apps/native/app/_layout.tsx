@@ -80,6 +80,10 @@ function StackLayout() {
 				name="journal/[journalId]/share"
 				options={{ headerShown: false }}
 			/>
+			<Stack.Screen
+				name="journal/[journalId]/export-book"
+				options={{ headerShown: false }}
+			/>
 			<Stack.Screen name="share/[token]" options={{ headerShown: false }} />
 			<Stack.Screen name="gift/index" options={{ headerShown: false }} />
 			<Stack.Screen name="gift/details" options={{ headerShown: false }} />

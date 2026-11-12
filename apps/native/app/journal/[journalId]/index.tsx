@@ -74,7 +74,6 @@ export default function JournalDetailScreen() {
 	const generateUploadUrl = useMutation(
 		api.journal.mutations.generateUploadUrl,
 	);
-	const exportJournal = useAction(api.journal.actions.exportJournal);
 	const createBookOrderCheckout = useAction(
 		api.journal.actions.createBookOrderCheckout,
 	);
@@ -82,7 +81,6 @@ export default function JournalDetailScreen() {
 	const [selectedIds, setSelectedIds] = useState<Set<Id<"journalEntries">>>(
 		new Set(),
 	);
-	const [exporting, setExporting] = useState(false);
 	const [ordering, setOrdering] = useState(false);
 	const [colorSheetOpen, setColorSheetOpen] = useState(false);
 	// Set while dragging in the picker so the screen repaints live, before
@@ -144,20 +142,6 @@ export default function JournalDetailScreen() {
 		}
 		// Use the system browser — WebBrowser reuses the OAuth/legal tab (often localhost:3001).
 		await Linking.openURL(url);
-	};
-
-	const runExport = async (entryIds?: Id<"journalEntries">[]) => {
-		if (!journalId || exporting) return;
-		setExporting(true);
-		try {
-			const { url } = await exportJournal({ journalId, entryIds });
-			mutationToast.success("Export ready.");
-			await openExportedUrl(url);
-		} catch (err) {
-			mutationToast.error(err, "Could not export. Please try again.");
-		} finally {
-			setExporting(false);
-		}
 	};
 
 	const applyAppearance = async (
@@ -389,9 +373,15 @@ export default function JournalDetailScreen() {
 
 	const handleExportSelected = () => {
 		if (resolvedSelectedIds.length === 0) return;
-		// PDF export is a paid feature — gate before generating the download.
+		// PDF export is a paid feature — gate before the Export Book flow, which
+		// collects the back cover and then renders the PDF.
 		guardJournalAction(() => {
-			void runExport(resolvedSelectedIds).then(exitSelection);
+			if (!journalId) return;
+			router.push({
+				pathname: "/journal/[journalId]/export-book",
+				params: { journalId, entryIds: resolvedSelectedIds.join(",") },
+			});
+			exitSelection();
 		});
 	};
 
@@ -707,32 +697,26 @@ export default function JournalDetailScreen() {
 					<View className="w-full max-w-sm gap-3">
 						<Pressable
 							onPress={() => void handleExportSelected()}
-							disabled={selectedCount === 0 || exporting || ordering}
+							disabled={selectedCount === 0 || ordering}
 							accessibilityRole="button"
 							accessibilityLabel="Export selected entries"
 							className="h-14 w-full flex-row items-center justify-center gap-2 rounded-full bg-primary active:opacity-90 disabled:opacity-50"
 							style={shadow}
 						>
-							{exporting ? (
-								<ActivityIndicator color={accentForeground} />
-							) : (
-								<Ionicons
-									name="download-outline"
-									size={20}
-									color={accentForeground}
-								/>
-							)}
+							<Ionicons
+								name="download-outline"
+								size={20}
+								color={accentForeground}
+							/>
 							<Text className="font-semibold text-base text-primary-foreground">
-								{exporting
-									? "Exporting…"
-									: `Export ${selectedCount} ${selectedCount === 1 ? "entry" : "entries"}`}
+								{`Export ${selectedCount} ${selectedCount === 1 ? "entry" : "entries"}`}
 							</Text>
 						</Pressable>
 
 						{isMember ? null : (
 							<Pressable
 								onPress={handleOrderBook}
-								disabled={selectedCount === 0 || ordering || exporting}
+								disabled={selectedCount === 0 || ordering}
 								accessibilityRole="button"
 								accessibilityLabel="Order printed book"
 								className="h-14 w-full flex-row items-center justify-center gap-2 rounded-full border border-primary bg-background active:opacity-90 disabled:opacity-50"
@@ -752,23 +736,19 @@ export default function JournalDetailScreen() {
 				) : (
 					<Pressable
 						onPress={goToCreateEntry}
-						disabled={!journalId || journal === null || exporting}
+						disabled={!journalId || journal === null}
 						accessibilityRole="button"
 						accessibilityLabel="Create journal entry"
 						className="h-14 w-full max-w-sm flex-row items-center justify-center gap-2 rounded-full bg-primary active:opacity-90 disabled:opacity-50"
 						style={shadow}
 					>
-						{exporting ? (
-							<ActivityIndicator color={accentForeground} />
-						) : (
-							<Ionicons
-								name="create-outline"
-								size={20}
-								color={accentForeground}
-							/>
-						)}
+						<Ionicons
+							name="create-outline"
+							size={20}
+							color={accentForeground}
+						/>
 						<Text className="font-semibold text-base text-primary-foreground">
-							{exporting ? "Exporting…" : "Create Journal Entry"}
+							Create Journal Entry
 						</Text>
 					</Pressable>
 				)}

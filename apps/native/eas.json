@@ -46,6 +46,10 @@
 				"EXPO_PUBLIC_WEB_APP_URL": "https://app.legacybuildingjournals.com"
 			}
 		},
+		"staging": {
+			"extends": "preview",
+			"distribution": "store"
+		},
 		"production": {
 			"autoIncrement": true,
 			"prebuildCommand": "npx expo prebuild --no-install",

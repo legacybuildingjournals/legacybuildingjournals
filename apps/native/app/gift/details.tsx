@@ -18,7 +18,7 @@ import {
 
 import { AccountScreenHeader } from "@/components/account/account-screen-header";
 import {
-	GiftHero,
+	GiftHeroCard,
 	GiftHowItWorks,
 	GiftPrimaryButton,
 } from "@/components/gift/gift-parts";
@@ -136,107 +136,104 @@ export default function GiftDetailsScreen() {
 					contentContainerClassName="gap-4 px-4 pt-4 pb-10"
 					keyboardShouldPersistTaps="handled"
 				>
-					<GiftHero />
-
-					<View className="gap-4 rounded-2xl border border-border bg-background p-5">
-						<Controller
-							control={form.control}
-							name="recipientName"
-							render={({ field }) => (
-								<View className="gap-1.5">
-									<FieldLabel>Recipient's Name</FieldLabel>
-									<TextInput
-										value={field.value}
-										onChangeText={field.onChange}
-										onBlur={field.onBlur}
-										placeholder="Enter full name"
-										placeholderTextColor={placeholderColor}
-										className={inputClass}
-										accessibilityLabel="Recipient's name"
-									/>
-									<FieldError message={errors.recipientName?.message} />
-								</View>
-							)}
-						/>
-						<Controller
-							control={form.control}
-							name="recipientEmail"
-							render={({ field }) => (
-								<View className="gap-1.5">
-									<FieldLabel>Recipient's Email</FieldLabel>
-									<TextInput
-										value={field.value}
-										onChangeText={field.onChange}
-										onBlur={field.onBlur}
-										placeholder="Enter email address"
-										placeholderTextColor={placeholderColor}
-										keyboardType="email-address"
-										autoCapitalize="none"
-										autoCorrect={false}
-										className={inputClass}
-										accessibilityLabel="Recipient's email"
-									/>
-									<FieldError message={errors.recipientEmail?.message} />
-								</View>
-							)}
-						/>
-						<Controller
-							control={form.control}
-							name="title"
-							render={({ field }) => (
-								<View className="gap-1.5">
-									<FieldLabel>Heartfelt Title (Email Subject)</FieldLabel>
-									<TextInput
-										value={field.value}
-										onChangeText={field.onChange}
-										onBlur={field.onBlur}
-										placeholder="e.g. A special gift for you"
-										placeholderTextColor={placeholderColor}
-										className={inputClass}
-										accessibilityLabel="Gift title"
-									/>
-									<FieldError message={errors.title?.message} />
-								</View>
-							)}
-						/>
-						<Controller
-							control={form.control}
-							name="message"
-							render={({ field }) => (
-								<View className="gap-1.5">
-									<FieldLabel>Personal Message</FieldLabel>
-									<TextInput
-										value={field.value}
-										onChangeText={field.onChange}
-										onBlur={field.onBlur}
-										placeholder="Write a short message..."
-										placeholderTextColor={placeholderColor}
-										multiline
-										maxLength={GIFT_MESSAGE_MAX}
-										textAlignVertical="top"
-										className="min-h-28 rounded-xl border border-border bg-background px-3 py-2 text-base text-foreground"
-										accessibilityLabel="Personal message"
-									/>
-									<Text className="self-end text-muted-foreground text-xs">
-										{messageLength}/{GIFT_MESSAGE_MAX}
-									</Text>
-									<FieldError message={errors.message?.message} />
-								</View>
-							)}
-						/>
-						{offer?.purchaser ? (
-							<Text className="text-muted-foreground text-xs">
-								From {offer.purchaser.name} ({offer.purchaser.email}). Your
-								receipt and the gift card are emailed to you to share whenever
-								you like.
-							</Text>
-						) : null}
-					</View>
+					<GiftHeroCard>
+						<View className="gap-4 rounded-2xl border border-border bg-background p-5">
+							<Controller
+								control={form.control}
+								name="recipientName"
+								render={({ field }) => (
+									<View className="gap-1.5">
+										<FieldLabel>Recipient's Name</FieldLabel>
+										<TextInput
+											value={field.value}
+											onChangeText={field.onChange}
+											onBlur={field.onBlur}
+											placeholder="Enter full name"
+											placeholderTextColor={placeholderColor}
+											className={inputClass}
+											accessibilityLabel="Recipient's name"
+										/>
+										<FieldError message={errors.recipientName?.message} />
+									</View>
+								)}
+							/>
+							<Controller
+								control={form.control}
+								name="recipientEmail"
+								render={({ field }) => (
+									<View className="gap-1.5">
+										<FieldLabel>Recipient's Email</FieldLabel>
+										<TextInput
+											value={field.value}
+											onChangeText={field.onChange}
+											onBlur={field.onBlur}
+											placeholder="Enter email address"
+											placeholderTextColor={placeholderColor}
+											keyboardType="email-address"
+											autoCapitalize="none"
+											autoCorrect={false}
+											className={inputClass}
+											accessibilityLabel="Recipient's email"
+										/>
+										<FieldError message={errors.recipientEmail?.message} />
+									</View>
+								)}
+							/>
+							<Controller
+								control={form.control}
+								name="title"
+								render={({ field }) => (
+									<View className="gap-1.5">
+										<FieldLabel>Heartfelt Title (Email Subject)</FieldLabel>
+										<TextInput
+											value={field.value}
+											onChangeText={field.onChange}
+											onBlur={field.onBlur}
+											placeholder="e.g. A special gift for you"
+											placeholderTextColor={placeholderColor}
+											className={inputClass}
+											accessibilityLabel="Gift title"
+										/>
+										<FieldError message={errors.title?.message} />
+									</View>
+								)}
+							/>
+							<Controller
+								control={form.control}
+								name="message"
+								render={({ field }) => (
+									<View className="gap-1.5">
+										<FieldLabel>Personal Message</FieldLabel>
+										<TextInput
+											value={field.value}
+											onChangeText={field.onChange}
+											onBlur={field.onBlur}
+											placeholder="Write a short message..."
+											placeholderTextColor={placeholderColor}
+											multiline
+											maxLength={GIFT_MESSAGE_MAX}
+											textAlignVertical="top"
+											className="min-h-28 rounded-xl border border-border bg-background px-3 py-2 text-base text-foreground"
+											accessibilityLabel="Personal message"
+										/>
+										<Text className="self-end text-muted-foreground text-xs">
+											{messageLength}/{GIFT_MESSAGE_MAX}
+										</Text>
+										<FieldError message={errors.message?.message} />
+									</View>
+								)}
+							/>
+							{offer?.purchaser ? (
+								<Text className="text-muted-foreground text-xs">
+									From {offer.purchaser.name} ({offer.purchaser.email}).
+								</Text>
+							) : null}
+						</View>
+					</GiftHeroCard>
 
 					<GiftHowItWorks>
-						An account will automatically be created for the recipient using
-						their email address, so they can start journaling simply by opening
-						the app.
+						After purchase, you'll receive a gift card via email, ready to share
+						with your loved one so they can redeem their access.
 					</GiftHowItWorks>
 
 					<GiftPrimaryButton

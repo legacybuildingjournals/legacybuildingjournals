@@ -11,13 +11,19 @@ import type { ReactNode } from "react";
  */
 export function GiftPageChrome({
 	title,
+	desktopTitle,
 	backTo,
 	backLabel = "Back",
+	wide = false,
 	children,
 }: {
 	title: string;
+	/** Heading on desktop when it differs from the mobile title bar. */
+	desktopTitle?: string;
 	backTo: string;
 	backLabel?: string;
+	/** Desktop two-column layout (offer card beside the recipient form). */
+	wide?: boolean;
 	children: ReactNode;
 }) {
 	return (
@@ -33,7 +39,12 @@ export function GiftPageChrome({
 					</Link>
 					<h1 className="font-semibold text-base">{title}</h1>
 				</div>
-				<div className="mx-auto flex w-full max-w-[560px] flex-col gap-4 px-4 py-4 md:max-w-[640px] md:gap-6 md:px-6 md:py-10">
+				<div
+					className={cn(
+						"mx-auto flex w-full max-w-[560px] flex-col gap-4 px-4 py-4 md:gap-6 md:px-6 md:py-10",
+						wide ? "md:max-w-[1160px]" : "md:max-w-[640px]",
+					)}
+				>
 					<header className="hidden flex-col gap-2 md:flex">
 						<Link
 							to={backTo}
@@ -41,7 +52,9 @@ export function GiftPageChrome({
 						>
 							← {backLabel}
 						</Link>
-						<h1 className="font-semibold text-3xl text-foreground">{title}</h1>
+						<h1 className="font-semibold text-3xl text-foreground">
+							{desktopTitle ?? title}
+						</h1>
 					</header>
 					{children}
 				</div>
@@ -69,14 +82,18 @@ const HERO = {
  */
 export function GiftHero({
 	variant = "gift",
+	joined = false,
 }: {
 	variant?: keyof typeof HERO;
+	/** Top of a card: square bottom edge, no shadow of its own. */
+	joined?: boolean;
 }) {
 	const hero = HERO[variant];
 	return (
 		<div
 			className={cn(
-				"overflow-hidden rounded-2xl bg-secondary shadow-sm",
+				"overflow-hidden bg-secondary",
+				joined ? "rounded-t-2xl" : "rounded-2xl shadow-sm",
 				hero.aspect,
 			)}
 		>
@@ -113,6 +130,37 @@ export const giftPrimaryButtonClass = cn(
 	"transition-colors hover:bg-primary/90 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60",
 	"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
 );
+
+/**
+ * Card whose top is the gift hero (Figma: the artwork and the panel below it
+ * are one piece). The panel overlaps the artwork slightly with rounded top
+ * corners on phones, and meets it edge to edge on desktop.
+ */
+export function GiftHeroCard({
+	children,
+	className,
+}: {
+	children: ReactNode;
+	className?: string;
+}) {
+	return (
+		<section
+			className={cn(
+				"flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm",
+				className,
+			)}
+		>
+			<GiftHero joined />
+			<div className="relative -mt-4 flex flex-col rounded-t-2xl bg-card p-5 md:mt-0 md:rounded-none md:p-6">
+				{children}
+			</div>
+		</section>
+	);
+}
+
+/** Copy for the "How it works?" box next to the recipient form. */
+export const GIFT_DETAILS_HOW_IT_WORKS =
+	"After purchase, you'll receive a gift card via email, ready to share with your loved one so they can redeem their access.";
 
 export const giftCardClass =
 	"rounded-2xl border border-border bg-card p-5 shadow-sm md:p-6";

@@ -32,6 +32,20 @@ export function GiftHero() {
 	);
 }
 
+/**
+ * The hero with the next card tucked into it (Figma fix): a panel with rounded
+ * top corners overlaps the bottom of the artwork, so image and card read as
+ * one piece instead of two separate blocks.
+ */
+export function GiftHeroCard({ children }: { children: ReactNode }) {
+	return (
+		<View>
+			<GiftHero />
+			<View className="-mt-5 rounded-t-3xl bg-background pt-4">{children}</View>
+		</View>
+	);
+}
+
 export function GiftHowItWorks({ children }: { children: ReactNode }) {
 	const accent = useThemeColor("accent");
 	return (

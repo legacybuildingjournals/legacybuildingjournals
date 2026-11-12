@@ -9,6 +9,10 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+	/* Export Book back cover: gold foil and cream photo mat on the teal leather
+	   artwork. Same in both themes because they sit on the artwork. */
+	--cover-gold: #d9ad62;
+	--cover-cream: #f6ecdc;
 	--background: oklch(1 0 0);
 	--foreground: oklch(0.148 0.004 228.8);
 	--card: oklch(1 0 0);
@@ -98,6 +102,10 @@
 }
 
 .dark {
+	/* Export Book back cover: gold foil and cream photo mat on the teal leather
+	   artwork. Same in both themes because they sit on the artwork. */
+	--cover-gold: #d9ad62;
+	--cover-cream: #f6ecdc;
 	--background: oklch(0.148 0.004 228.8);
 	--foreground: oklch(0.987 0.002 197.1);
 	--card: oklch(0.218 0.008 223.9);
@@ -132,6 +140,8 @@
 }
 
 @theme inline {
+	--color-cover-gold: var(--cover-gold);
+	--color-cover-cream: var(--cover-cream);
 	--font-sans: "Inter Variable", sans-serif;
 	/* Onboarding only: Nunito for text, Plus Jakarta Sans for buttons and pill labels. */
 	--font-onb: "Nunito Variable", ui-sans-serif, system-ui, sans-serif;

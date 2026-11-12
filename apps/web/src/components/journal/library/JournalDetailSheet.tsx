@@ -25,6 +25,7 @@ import { createPortal } from "react-dom";
 import { DeleteJournalDialog } from "@/components/journal/library/DeleteJournalDialog";
 import { EditJournalDialog } from "@/components/journal/library/EditJournalDialog";
 import { EntrySortMenu } from "@/components/journal/library/EntrySortMenu";
+import { ExportBookDialog } from "@/components/journal/library/ExportBookDialog";
 import { JournalCoverImage } from "@/components/journal/library/JournalCoverImage";
 import { JournalEntryDetailView } from "@/components/journal/library/JournalEntryDetailView";
 import { JournalEntryRow } from "@/components/journal/library/JournalEntryRow";
@@ -39,14 +40,9 @@ import { Button } from "@/components/journal/ui/button";
 import { Checkbox } from "@/components/journal/ui/checkbox";
 import { JournalSharingPanel } from "@/components/sharing/JournalSharingPanel";
 import { ShareJournalDialog } from "@/components/sharing/ShareJournalDialog";
-import { downloadJournalPdf } from "@/lib/journal/exportJournalPdf";
 import { formatDate } from "@/lib/journal/formatDate";
 import type { EnrichedJournalEntry } from "@/lib/journal/journalEntryTypes";
-import {
-	toastBubbleMessage,
-	toastMutationError,
-	toastMutationSuccess,
-} from "@/lib/journal/toast";
+import { toastBubbleMessage, toastMutationError } from "@/lib/journal/toast";
 
 type JournalDetailSheetProps = {
 	journalId: Id<"journals"> | null;
@@ -98,13 +94,12 @@ export function JournalDetailSheet({
 	const [selectedEntryIds, setSelectedEntryIds] = useState<
 		Set<Id<"journalEntries">>
 	>(() => new Set());
-	const [exporting, setExporting] = useState(false);
+	const [exportBookOpen, setExportBookOpen] = useState(false);
 	const [ordering, setOrdering] = useState(false);
 	const [exportError, setExportError] = useState<string | null>(null);
 	const createBookOrderCheckout = useAction(
 		api.journal.actions.createBookOrderCheckout,
 	);
-	const exportJournal = useAction(api.journal.actions.exportJournal);
 	const [mounted, setMounted] = useState(false);
 
 	const journal = useQuery(
@@ -139,15 +134,17 @@ export function JournalDetailSheet({
 
 	const entriesToShow = exportMode ? exportableEntries : enrichedEntries;
 
-	const isExportBusy = exporting || ordering;
+	// The PDF export itself runs in the Export Book dialog, which has its own
+	// loading state; only the book order blocks the sidebar.
+	const isExportBusy = ordering;
 	const isExportBusyRef = useRef(isExportBusy);
 	isExportBusyRef.current = isExportBusy;
 	const scrollRef = useRef<HTMLDivElement>(null);
 
 	const handleClose = useCallback(() => {
-		if (exporting || ordering) return;
+		if (ordering) return;
 		onOpenChange(false);
-	}, [onOpenChange, exporting, ordering]);
+	}, [onOpenChange, ordering]);
 
 	const exitExportMode = useCallback(() => {
 		setExportMode(false);
@@ -216,43 +213,23 @@ export function JournalDetailSheet({
 
 	const canExport = allExportableSelected || selectedEntryIds.size > 0;
 
-	const handleExportPdf = useCallback(async () => {
+	// Entries passed to the export: none means the whole journal (the action
+	// adds the cover and dedication when everything is included either way).
+	const exportEntryIds = useMemo(
+		() =>
+			allExportableSelected
+				? undefined
+				: exportableEntries
+						.filter((entry) => selectedEntryIds.has(entry._id))
+						.map((entry) => entry._id),
+		[allExportableSelected, exportableEntries, selectedEntryIds],
+	);
+
+	const handleExportPdf = useCallback(() => {
 		if (!journal || !canExport) return;
-
-		const selectedEntries = exportableEntries.filter((entry) =>
-			selectedEntryIds.has(entry._id),
-		);
-
-		setExporting(true);
 		setExportError(null);
-		try {
-			const { url } = await exportJournal({
-				journalId: journal._id,
-				// Either form gets the cover and dedication when everything is
-				// selected — the action decides from what it ends up including.
-				entryIds: allExportableSelected
-					? undefined
-					: selectedEntries.map((entry) => entry._id),
-			});
-			await downloadJournalPdf({ url, journalTitle: journal.title });
-			toastMutationSuccess("PDF downloaded.");
-			exitExportMode();
-		} catch (err) {
-			const message = "Could not export PDF. Please try again.";
-			setExportError(message);
-			toastMutationError(err, message);
-		} finally {
-			setExporting(false);
-		}
-	}, [
-		journal,
-		canExport,
-		exportableEntries,
-		selectedEntryIds,
-		allExportableSelected,
-		exitExportMode,
-		exportJournal,
-	]);
+		setExportBookOpen(true);
+	}, [journal, canExport]);
 
 	const handleOrderBook = useCallback(async () => {
 		if (!journalId || !journal || !canExport) return;
@@ -603,7 +580,6 @@ export function JournalDetailSheet({
 
 										{exportMode ? (
 											<JournalExportFooter
-												exporting={exporting}
 												ordering={ordering}
 												disabled={!canExport}
 												onExport={() => void handleExportPdf()}
@@ -617,13 +593,7 @@ export function JournalDetailSheet({
 							)
 						) : null}
 						{isExportBusy ? (
-							<JournalSidebarWaitOverlay
-								message={
-									exporting
-										? "Preparing your PDF. Please wait…"
-										: "Preparing checkout. Please wait…"
-								}
-							/>
+							<JournalSidebarWaitOverlay message="Preparing checkout. Please wait…" />
 						) : null}
 					</aside>
 				</>,
@@ -635,6 +605,17 @@ export function JournalDetailSheet({
 				open={journalEditing && loadedJournal !== null}
 				onOpenChange={setJournalEditing}
 			/>
+
+			{journal ? (
+				<ExportBookDialog
+					open={exportBookOpen}
+					onOpenChange={setExportBookOpen}
+					journalId={journal._id}
+					journalTitle={journal.title}
+					entryIds={exportEntryIds}
+					onExported={exitExportMode}
+				/>
+			) : null}
 
 			<ShareJournalDialog
 				journalId={journalId}

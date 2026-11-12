@@ -13,7 +13,9 @@ type LibraryStoryTabsProps = {
  * full width on phones, fixed-width segments from `sm` up. The tabs list base
  * styles pin the height to 32px (`group-data-horizontal/tabs:h-8`), which
  * clipped the 48px segments and produced an inner scrollbar, so it is reset
- * to `h-auto` here.
+ * to `h-auto` here. The line variant also squares the corners with a
+ * `data-[variant=line]:rounded-none` rule, which a plain `rounded-full` can't
+ * beat, so the pill shape is restated under the same selector.
  */
 export function LibraryStoryTabs({
 	value,
@@ -29,7 +31,7 @@ export function LibraryStoryTabs({
 		>
 			<TabsList
 				variant="line"
-				className="grid h-auto w-full grid-cols-3 gap-0 overflow-hidden rounded-full border border-primary/15 bg-background p-0 shadow-sm group-data-horizontal/tabs:h-auto sm:w-[480px] lg:w-[540px]"
+				className="grid h-auto w-full grid-cols-3 gap-0 overflow-hidden rounded-full border border-primary/15 bg-background p-0 shadow-sm data-[variant=line]:rounded-full group-data-horizontal/tabs:h-auto sm:w-[480px] lg:w-[540px]"
 			>
 				{LIBRARY_TABS.map((tab) => (
 					<TabsTrigger

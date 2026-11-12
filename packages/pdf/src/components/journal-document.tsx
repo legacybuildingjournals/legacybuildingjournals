@@ -3,6 +3,7 @@ import { Fragment } from "react";
 
 import { registerPdfFonts } from "../fonts";
 import type { JournalPdfDocumentProps } from "../types";
+import { BackCoverPage } from "./back-cover";
 import { EntryMemoryPage, EntryWritingPage } from "./entry-pages";
 import { CoverPage, DedicationPage } from "./front-matter";
 
@@ -16,6 +17,7 @@ export function JournalDocument({
 	entries,
 	dedication,
 	includeFrontMatter,
+	backCover,
 }: JournalPdfDocumentProps) {
 	registerPdfFonts();
 
@@ -59,6 +61,7 @@ export function JournalDocument({
 					</Fragment>
 				);
 			})}
+			{backCover ? <BackCoverPage {...backCover} /> : null}
 		</Document>
 	);
 }

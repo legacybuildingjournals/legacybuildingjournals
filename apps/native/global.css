@@ -18,6 +18,9 @@
 @layer theme {
 	:root {
 		@variant light {
+			/* Export Book back cover artwork (same in both themes). */
+			--color-cover-gold: #d9ad62;
+			--color-cover-cream: #f6ecdc;
 			--color-background: oklch(1 0 0);
 			--color-foreground: oklch(0.148 0.004 228.8);
 			--color-card: oklch(1 0 0);
@@ -101,6 +104,9 @@
 		}
 
 		@variant dark {
+			/* Export Book back cover artwork (same in both themes). */
+			--color-cover-gold: #d9ad62;
+			--color-cover-cream: #f6ecdc;
 			--color-background: oklch(0.148 0.004 228.8);
 			--color-foreground: oklch(0.987 0.002 197.1);
 			--color-card: oklch(0.218 0.008 223.9);

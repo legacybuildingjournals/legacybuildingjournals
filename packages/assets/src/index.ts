@@ -1,4 +1,6 @@
 import authPanelBackground from "../images/auth-panel-background.jpg";
+import backCoverBlank from "../images/back-cover-blank.jpg";
+import backCoverTemplate from "../images/back-cover-template.jpg";
 import communityHero from "../images/community-hero.webp";
 import communityHeroMobile from "../images/community-hero-mobile.webp";
 import communityMemories from "../images/community-memories.jpeg";
@@ -6,6 +8,7 @@ import communityQrExport from "../images/community-qr-export.jpeg";
 import defaultAvatar from "../images/default-avatar.jpg";
 import deskHeroBackground from "../images/desk-hero-background.jpeg";
 import digLogo from "../images/dig-logo.png";
+import exportBookSample from "../images/export-book-sample.jpg";
 import favicon from "../images/favicon.png";
 import giftHero from "../images/gift-hero.jpg";
 import giftRedeemHero from "../images/gift-redeem-hero.jpg";
@@ -68,6 +71,15 @@ export const imageAssets = {
 	giftHero,
 	/** Top of the gift card artwork ("A Gift for Your Story"), for the redeem page. */
 	giftRedeemHero,
+	/**
+	 * Export Book flow (journal export). The template is the empty back cover
+	 * with its placeholder photo and "TITLE"; the blank one is the same leather
+	 * without them, so the user's own photo, title and message are drawn on top.
+	 * The sample is a finished back cover for the intro screen.
+	 */
+	backCoverTemplate,
+	backCoverBlank,
+	exportBookSample,
 } as const;
 
 /**
