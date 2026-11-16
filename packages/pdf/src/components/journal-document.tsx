@@ -5,6 +5,7 @@ import { registerPdfFonts } from "../fonts";
 import type { JournalPdfDocumentProps } from "../types";
 import { BackCoverPage } from "./back-cover";
 import { EntryMemoryPage, EntryWritingPage } from "./entry-pages";
+import { FrontCoverPage } from "./front-cover";
 import { CoverPage, DedicationPage } from "./front-matter";
 
 /**
@@ -17,18 +18,23 @@ export function JournalDocument({
 	entries,
 	dedication,
 	includeFrontMatter,
+	frontCover = false,
 	backCover,
 }: JournalPdfDocumentProps) {
 	registerPdfFonts();
 
 	const dedicationLine = dedication?.trim() ?? "";
 	const showDedication = includeFrontMatter && dedicationLine.length > 0;
+	// The fixed Legacy Building cover replaces the text "My/Their Story" cover
+	// page; the dedication page still follows it for whole-journal exports.
+	const showTextCover = includeFrontMatter && !frontCover;
 	const frontMatterPages =
-		(includeFrontMatter ? 1 : 0) + (showDedication ? 1 : 0);
+		(frontCover ? 1 : 0) + (showTextCover ? 1 : 0) + (showDedication ? 1 : 0);
 
 	return (
 		<Document title={journalName}>
-			{includeFrontMatter ? (
+			{frontCover ? <FrontCoverPage /> : null}
+			{showTextCover ? (
 				<CoverPage journalName={journalName} storyType={storyType} />
 			) : null}
 			{showDedication ? <DedicationPage dedication={dedicationLine} /> : null}

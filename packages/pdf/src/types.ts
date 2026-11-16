@@ -38,6 +38,11 @@ export type JournalPdfDocumentProps = {
 	dedication?: string;
 	/** Cover + dedication pages. Omitted when exporting a subset of entries. */
 	includeFrontMatter: boolean;
+	/**
+	 * Fixed Legacy Building cover as the first page (exports). Replaces the
+	 * text cover page; printed orders leave it off and keep the text cover.
+	 */
+	frontCover?: boolean;
 	/** Appended as the last page when present (Export Book flow). */
 	backCover?: JournalBackCover;
 };

@@ -41,6 +41,7 @@ async function renderAndStore(
 		journal: RenderableJournal;
 		entries: RenderableEntry[];
 		includeFrontMatter: boolean;
+		frontCover?: boolean;
 		backCover?: Parameters<typeof renderJournalPdf>[0]["backCover"];
 	},
 ): Promise<StoredPdf> {
@@ -166,6 +167,8 @@ export const exportJournal = action({
 				journal,
 				entries,
 				includeFrontMatter: entries.length === allEntries.length,
+				// Every export opens with the fixed Legacy Building cover.
+				frontCover: true,
 				backCover: backCover
 					? {
 							imageUrl: backCoverImageUrl ?? undefined,

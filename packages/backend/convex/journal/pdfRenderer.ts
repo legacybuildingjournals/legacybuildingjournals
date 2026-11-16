@@ -124,11 +124,14 @@ export async function renderJournalPdf({
 	journal,
 	entries,
 	includeFrontMatter,
+	frontCover = false,
 	backCover,
 }: {
 	journal: RenderableJournal;
 	entries: RenderableEntry[];
 	includeFrontMatter: boolean;
+	/** Fixed Legacy Building cover as the first page (exports only). */
+	frontCover?: boolean;
 	/** Closing page from the Export Book flow; omitted for printed orders. */
 	backCover?: JournalBackCover;
 }): Promise<RenderedPdf> {
@@ -148,6 +151,7 @@ export async function renderJournalPdf({
 		dedication: journal.dedication,
 		entries: pdfEntries,
 		includeFrontMatter,
+		frontCover,
 		backCover,
 	}) as unknown as ReactElement<DocumentProps>;
 
