@@ -89,9 +89,11 @@ export default function GiftDetailsScreen() {
 
 			const product = await getGiftProduct();
 			if (!product) {
+				// No error object: the toast shows its own text whenever the error
+				// has a message, which surfaced a bare "unavailable" to users.
 				toast.error(
-					new Error("unavailable"),
-					"Gift purchases aren't available in this build yet. Your details are saved.",
+					null,
+					"Gift purchases aren't available right now. Your details are saved, so please try again later.",
 				);
 				return;
 			}
@@ -99,10 +101,7 @@ export default function GiftDetailsScreen() {
 			await startStoreCheckout({ giftId: savedId });
 			const result = await purchaseGift(product);
 			if (result.status === "cancelled") {
-				toast.error(
-					new Error("cancelled"),
-					"Payment cancelled. Your gift details are saved.",
-				);
+				toast.error(null, "Payment cancelled. Your gift details are saved.");
 				return;
 			}
 

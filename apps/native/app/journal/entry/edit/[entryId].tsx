@@ -107,7 +107,7 @@ export default function EditEntryScreen() {
 	const titleInvalid = !title.trim();
 	const dateInvalid = dateMs === null;
 	const bodyInvalid = isWriting && !body.trim();
-	const imageInvalid = !previewUri;
+	// A photo is optional, as when creating an entry and on web.
 
 	const handlePickFromLibrary = async () => {
 		const picked = await pickEntryImageFromLibrary();
@@ -196,7 +196,7 @@ export default function EditEntryScreen() {
 
 	const handleSave = () => {
 		setShowErrors(true);
-		if (titleInvalid || dateInvalid || bodyInvalid || imageInvalid) return;
+		if (titleInvalid || dateInvalid || bodyInvalid) return;
 		// Editing is a paid journal feature (the server enforces it too).
 		if (isMember) {
 			void runSave();
@@ -353,15 +353,9 @@ export default function EditEntryScreen() {
 						{/* Photo — the cover frame for a video entry */}
 						<View className="gap-1.5">
 							<Text className="font-semibold text-base text-foreground">
-								{isVideo ? "Thumbnail" : "Photo"}
+								{isVideo ? "Thumbnail (optional)" : "Photo (optional)"}
 							</Text>
-							<View
-								className={`gap-3 rounded-2xl border bg-secondary/20 p-3 ${
-									showErrors && imageInvalid
-										? "border-destructive"
-										: "border-border/60"
-								}`}
-							>
+							<View className="gap-3 rounded-2xl border border-border/60 bg-secondary/20 p-3">
 								{previewUri ? (
 									<View className="overflow-hidden rounded-xl">
 										<Image
@@ -404,11 +398,6 @@ export default function EditEntryScreen() {
 									</Text>
 								</Pressable>
 							</View>
-							{showErrors && imageInvalid ? (
-								<Text className="text-destructive text-xs">
-									A photo is required.
-								</Text>
-							) : null}
 						</View>
 						{isSharedJournal ? (
 							<EntryVisibilityField
