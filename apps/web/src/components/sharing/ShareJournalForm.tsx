@@ -31,9 +31,8 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 }
 
 /**
- * Figma "Share Journal" → "Invite a Member" card: the recipient's name and
- * email. People who already have an account see the invite in the app;
- * others get an email greeting them by name.
+ * Figma "Share Journal" → "Invite a Member" card. People who already have an
+ * account see the invite in the app; others get an email.
  */
 export function ShareJournalForm({
 	journalId,
@@ -51,10 +50,12 @@ export function ShareJournalForm({
 	});
 	const { errors, isSubmitting } = form.formState;
 
-	const onSubmit = form.handleSubmit(async ({ recipientName, email }) => {
+	// The name is optional and stays on this page: the invite only needs the
+	// email (the mobile app has no name field).
+	const onSubmit = form.handleSubmit(async ({ email }) => {
 		form.clearErrors("root");
 		try {
-			const result = await sendInvite({ journalId, email, recipientName });
+			const result = await sendInvite({ journalId, email });
 			toastMutationSuccess(
 				result.hasAccount
 					? "Invite sent. They'll see it next time they open Legacy Building."
@@ -92,7 +93,10 @@ export function ShareJournalForm({
 			<div className="mt-6 flex flex-col gap-5">
 				<div className="flex flex-col gap-1.5">
 					<label htmlFor="share-name" className={labelClass}>
-						Recipient&apos;s Name
+						Recipient&apos;s Name{" "}
+						<span className="font-normal text-muted-foreground">
+							(optional)
+						</span>
 					</label>
 					<Input
 						id="share-name"
