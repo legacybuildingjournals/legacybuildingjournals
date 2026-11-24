@@ -20,6 +20,8 @@ export const ROUTES = {
 	dashboardGiftDetails: "/dashboard/gift/details",
 	dashboardGiftCheckout: "/dashboard/gift/checkout",
 	dashboardGiftSuccess: "/dashboard/gift/success",
+	/** Share Journal invite page for one journal (`params: { journalId }`). */
+	dashboardShareJournal: "/dashboard/share/$journalId",
 	/** Public gift redeem page; append the token: `${ROUTES.giftRedeem}/<token>`. */
 	giftRedeem: "/gift",
 	/** Public share-invite claim page; append the token: `${ROUTES.shareClaim}/<token>`. */

@@ -80,6 +80,13 @@ export function DashboardHeader() {
 				</nav>
 
 				<div className="flex shrink-0 items-center justify-end gap-3 md:min-w-[200px]">
+					<div className="md:hidden">
+						<DashboardHeaderProfileMenu avatarUrl={avatarUrl} mode="mobile" />
+					</div>
+					<div className="hidden md:block">
+						<DashboardHeaderProfileMenu avatarUrl={avatarUrl} mode="desktop" />
+					</div>
+					{/* Gift sits to the right of the profile picture. */}
 					{showGift ? (
 						<Link
 							to={ROUTES.dashboardGift}
@@ -90,12 +97,6 @@ export function DashboardHeader() {
 							<Gift className="size-6" aria-hidden />
 						</Link>
 					) : null}
-					<div className="md:hidden">
-						<DashboardHeaderProfileMenu avatarUrl={avatarUrl} mode="mobile" />
-					</div>
-					<div className="hidden md:block">
-						<DashboardHeaderProfileMenu avatarUrl={avatarUrl} mode="desktop" />
-					</div>
 				</div>
 			</div>
 		</header>

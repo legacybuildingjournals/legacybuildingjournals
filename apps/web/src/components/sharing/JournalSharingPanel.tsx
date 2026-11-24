@@ -1,7 +1,7 @@
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { Loader2, UserPlus } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -68,16 +68,15 @@ const CONFIRM_COPY: Record<
 
 /**
  * Sharing block in the journal sheet: "Shared Journal" pill, author/member
- * people row (initials, as designed), pending invite, and the share / remove
- * / cancel / leave actions for whoever is allowed to use them.
+ * people row (initials, as designed), pending invite, and the remove /
+ * cancel / leave actions for whoever is allowed to use them. Sharing itself
+ * starts from the add-person icon beside Export in the sheet header.
  */
 export function JournalSharingPanel({
 	journalId,
-	onShare,
 	onLeft,
 }: {
 	journalId: Id<"journals">;
-	onShare: () => void;
 	onLeft: () => void;
 }) {
 	const sharing = useQuery(api.sharing.queries.getForJournal, { journalId });
@@ -144,16 +143,6 @@ export function JournalSharingPanel({
 				</p>
 			) : null}
 			<div className="flex flex-wrap gap-2">
-				{isAuthor && !isShared && !sharing.pendingInvite ? (
-					<button
-						type="button"
-						onClick={onShare}
-						className="inline-flex h-9 items-center gap-2 rounded-full border border-primary px-4 font-medium text-primary text-sm transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary active:scale-[0.98]"
-					>
-						<UserPlus className="size-4" aria-hidden />
-						Share Journal
-					</button>
-				) : null}
 				{isAuthor && sharing.pendingInvite ? (
 					<button
 						type="button"

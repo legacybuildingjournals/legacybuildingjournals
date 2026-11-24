@@ -11,8 +11,9 @@ import {
 } from "@legacy-building/backend/convex/journal/sort";
 import { brand } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
+import { useNavigate } from "@tanstack/react-router";
 import { useAction, useQuery } from "convex/react";
-import { Pencil, Share, Trash2, X } from "lucide-react";
+import { Pencil, Share, Trash2, UserPlus, X } from "lucide-react";
 import {
 	type ReactNode,
 	useCallback,
@@ -39,10 +40,10 @@ import {
 import { Button } from "@/components/journal/ui/button";
 import { Checkbox } from "@/components/journal/ui/checkbox";
 import { JournalSharingPanel } from "@/components/sharing/JournalSharingPanel";
-import { ShareJournalDialog } from "@/components/sharing/ShareJournalDialog";
 import { formatDate } from "@/lib/journal/formatDate";
 import type { EnrichedJournalEntry } from "@/lib/journal/journalEntryTypes";
 import { toastBubbleMessage, toastMutationError } from "@/lib/journal/toast";
+import { ROUTES } from "@/lib/routes";
 
 type JournalDetailSheetProps = {
 	journalId: Id<"journals"> | null;
@@ -86,7 +87,6 @@ export function JournalDetailSheet({
 	onDeleted,
 }: JournalDetailSheetProps) {
 	const [deleteOpen, setDeleteOpen] = useState(false);
-	const [shareOpen, setShareOpen] = useState(false);
 	const [journalEditing, setJournalEditing] = useState(false);
 	const [selectedEntryId, setSelectedEntryId] =
 		useState<Id<"journalEntries"> | null>(null);
@@ -101,6 +101,7 @@ export function JournalDetailSheet({
 		api.journal.actions.createBookOrderCheckout,
 	);
 	const [mounted, setMounted] = useState(false);
+	const navigate = useNavigate();
 
 	const journal = useQuery(
 		api.journal.queries.getById,
@@ -110,6 +111,15 @@ export function JournalDetailSheet({
 		api.journal.entries.queries.listByJournal,
 		open && journalId ? { journalId } : "skip",
 	);
+	// Same query the sharing panel reads (Convex shares the subscription).
+	const sharing = useQuery(
+		api.sharing.queries.getForJournal,
+		open && journalId ? { journalId } : "skip",
+	);
+	const canShare =
+		sharing?.viewerRole === "author" &&
+		sharing.member === null &&
+		sharing.pendingInvite === null;
 
 	// A view preference only. The export and the printed book are always bound
 	// oldest journal date first, whatever is chosen here.
@@ -455,6 +465,23 @@ export function JournalDetailSheet({
 																	</>
 																) : (
 																	<>
+																		{canShare && journalId ? (
+																			<SidebarIconButton
+																				ariaLabel="Share journal"
+																				onClick={() =>
+																					void navigate({
+																						to: ROUTES.dashboardShareJournal,
+																						params: { journalId },
+																					})
+																				}
+																			>
+																				<UserPlus
+																					className="size-5"
+																					style={{ color: brand.primary }}
+																					strokeWidth={2}
+																				/>
+																			</SidebarIconButton>
+																		) : null}
 																		<SidebarIconButton
 																			ariaLabel="Export journal to PDF"
 																			onClick={startExportMode}
@@ -524,7 +551,6 @@ export function JournalDetailSheet({
 												{loadedJournal && journalId && !exportMode ? (
 													<JournalSharingPanel
 														journalId={journalId}
-														onShare={() => setShareOpen(true)}
 														onLeft={handleClose}
 													/>
 												) : null}
@@ -616,12 +642,6 @@ export function JournalDetailSheet({
 					onExported={exitExportMode}
 				/>
 			) : null}
-
-			<ShareJournalDialog
-				journalId={journalId}
-				open={shareOpen}
-				onOpenChange={setShareOpen}
-			/>
 
 			<DeleteJournalDialog
 				journalId={journalId}

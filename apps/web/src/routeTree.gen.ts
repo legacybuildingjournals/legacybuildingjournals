@@ -34,6 +34,7 @@ import { Route as DashboardBillingRouteImport } from './routes/dashboard/billing
 import { Route as DashboardAccountRouteImport } from './routes/dashboard/account'
 import { Route as DashboardGiftIndexRouteImport } from './routes/dashboard/gift/index'
 import { Route as DashboardBillingIndexRouteImport } from './routes/dashboard/billing/index'
+import { Route as DashboardShareJournalIdRouteImport } from './routes/dashboard/share.$journalId'
 import { Route as DashboardGiftSuccessRouteImport } from './routes/dashboard/gift.success'
 import { Route as DashboardGiftDetailsRouteImport } from './routes/dashboard/gift.details'
 import { Route as DashboardGiftCheckoutRouteImport } from './routes/dashboard/gift.checkout'
@@ -166,6 +167,11 @@ const DashboardBillingIndexRoute = DashboardBillingIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardBillingRoute,
 } as any)
+const DashboardShareJournalIdRoute = DashboardShareJournalIdRouteImport.update({
+  id: '/share/$journalId',
+  path: '/share/$journalId',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardGiftSuccessRoute = DashboardGiftSuccessRouteImport.update({
   id: '/success',
   path: '/success',
@@ -228,6 +234,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/gift/checkout': typeof DashboardGiftCheckoutRoute
   '/dashboard/gift/details': typeof DashboardGiftDetailsRoute
   '/dashboard/gift/success': typeof DashboardGiftSuccessRoute
+  '/dashboard/share/$journalId': typeof DashboardShareJournalIdRoute
   '/dashboard/billing/': typeof DashboardBillingIndexRoute
   '/dashboard/gift/': typeof DashboardGiftIndexRoute
 }
@@ -258,6 +265,7 @@ export interface FileRoutesByTo {
   '/dashboard/gift/checkout': typeof DashboardGiftCheckoutRoute
   '/dashboard/gift/details': typeof DashboardGiftDetailsRoute
   '/dashboard/gift/success': typeof DashboardGiftSuccessRoute
+  '/dashboard/share/$journalId': typeof DashboardShareJournalIdRoute
   '/dashboard/billing': typeof DashboardBillingIndexRoute
   '/dashboard/gift': typeof DashboardGiftIndexRoute
 }
@@ -292,6 +300,7 @@ export interface FileRoutesById {
   '/dashboard/gift/checkout': typeof DashboardGiftCheckoutRoute
   '/dashboard/gift/details': typeof DashboardGiftDetailsRoute
   '/dashboard/gift/success': typeof DashboardGiftSuccessRoute
+  '/dashboard/share/$journalId': typeof DashboardShareJournalIdRoute
   '/dashboard/billing/': typeof DashboardBillingIndexRoute
   '/dashboard/gift/': typeof DashboardGiftIndexRoute
 }
@@ -327,6 +336,7 @@ export interface FileRouteTypes {
     | '/dashboard/gift/checkout'
     | '/dashboard/gift/details'
     | '/dashboard/gift/success'
+    | '/dashboard/share/$journalId'
     | '/dashboard/billing/'
     | '/dashboard/gift/'
   fileRoutesByTo: FileRoutesByTo
@@ -357,6 +367,7 @@ export interface FileRouteTypes {
     | '/dashboard/gift/checkout'
     | '/dashboard/gift/details'
     | '/dashboard/gift/success'
+    | '/dashboard/share/$journalId'
     | '/dashboard/billing'
     | '/dashboard/gift'
   id:
@@ -390,6 +401,7 @@ export interface FileRouteTypes {
     | '/dashboard/gift/checkout'
     | '/dashboard/gift/details'
     | '/dashboard/gift/success'
+    | '/dashboard/share/$journalId'
     | '/dashboard/billing/'
     | '/dashboard/gift/'
   fileRoutesById: FileRoutesById
@@ -589,6 +601,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardBillingIndexRouteImport
       parentRoute: typeof DashboardBillingRoute
     }
+    '/dashboard/share/$journalId': {
+      id: '/dashboard/share/$journalId'
+      path: '/share/$journalId'
+      fullPath: '/dashboard/share/$journalId'
+      preLoaderRoute: typeof DashboardShareJournalIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/gift/success': {
       id: '/dashboard/gift/success'
       path: '/success'
@@ -677,6 +696,7 @@ interface DashboardRouteRouteChildren {
   DashboardGiftRoute: typeof DashboardGiftRouteWithChildren
   DashboardLibraryRoute: typeof DashboardLibraryRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardShareJournalIdRoute: typeof DashboardShareJournalIdRoute
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
@@ -687,6 +707,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardGiftRoute: DashboardGiftRouteWithChildren,
   DashboardLibraryRoute: DashboardLibraryRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardShareJournalIdRoute: DashboardShareJournalIdRoute,
 }
 
 const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(

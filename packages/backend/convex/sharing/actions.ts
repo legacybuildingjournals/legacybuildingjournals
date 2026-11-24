@@ -17,17 +17,24 @@ function escapeHtml(value: string): string {
 		.replace(/"/g, "&quot;");
 }
 
+/** Longest recipient name we put in the email greeting. */
+const RECIPIENT_NAME_MAX = 80;
+
 function buildInviteEmailHtml(args: {
+	recipientName?: string;
 	authorName: string;
 	journalTitle: string;
 	claimUrl: string;
 }): string {
 	const author = escapeHtml(args.authorName);
 	const title = escapeHtml(args.journalTitle);
+	const greeting = args.recipientName
+		? `Hi ${escapeHtml(args.recipientName)},`
+		: "Hi,";
 	return `<!doctype html><html><body style="margin:0;background:#f6f4ef;font-family:Arial,Helvetica,sans-serif;color:#1a1a1a">
 <div style="max-width:560px;margin:0 auto;padding:24px">
   <div style="background:#ffffff;border-radius:16px;padding:28px">
-    <p style="margin:0 0 12px">Hi,</p>
+    <p style="margin:0 0 12px">${greeting}</p>
     <p style="margin:0 0 12px"><strong>${author} has invited you to share the journal &ldquo;${title}&rdquo; to build your journey together.</strong></p>
     <p style="margin:0 0 12px">In a shared journal you can add your own entries, view all shared entries, and build memories together.</p>
     <p style="margin:24px 0;text-align:center">
@@ -43,9 +50,15 @@ function buildInviteEmailHtml(args: {
  * Author: invite someone to a journal by email. People who already have an
  * account get no email; they see the invite popup in the app (spec #8).
  * People without an account get the invite email with the claim link.
+ * `recipientName` (web form) only personalises the email greeting; the
+ * native app doesn't send it.
  */
 export const sendInvite = action({
-	args: { journalId: v.id("journals"), email: v.string() },
+	args: {
+		journalId: v.id("journals"),
+		email: v.string(),
+		recipientName: v.optional(v.string()),
+	},
 	returns: v.object({ emailSent: v.boolean(), hasAccount: v.boolean() }),
 	handler: async (
 		ctx,
@@ -56,6 +69,13 @@ export const sendInvite = action({
 			throw new ConvexError({
 				code: "UNAUTHENTICATED",
 				message: "You must be signed in.",
+			});
+		}
+		const recipientName = args.recipientName?.trim() ?? "";
+		if (recipientName.length > RECIPIENT_NAME_MAX) {
+			throw new ConvexError({
+				code: "INVALID_NAME",
+				message: `Keep the name under ${RECIPIENT_NAME_MAX} characters.`,
 			});
 		}
 		const token = randomBytes(24).toString("base64url");
@@ -82,6 +102,7 @@ export const sendInvite = action({
 			to: [invite.inviteEmail],
 			subject: "Share Journal Invite",
 			html: buildInviteEmailHtml({
+				recipientName: recipientName || undefined,
 				authorName: invite.authorName,
 				journalTitle: invite.journalTitle,
 				claimUrl,

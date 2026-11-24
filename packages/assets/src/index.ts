@@ -36,6 +36,7 @@ import pillVideoIcon from "../images/onboarding/pill-video.svg";
 import pillVoiceIcon from "../images/onboarding/pill-voice.svg";
 import pillWriteIcon from "../images/onboarding/pill-write.svg";
 import shieldIcon from "../images/onboarding/shield.svg";
+import shareJournalHero from "../images/share-journal-hero.jpg";
 import whiteLogo from "../images/white-logo.png";
 
 /** Bundled brand images (Vite → URL string; Metro → numeric asset module). */
@@ -80,6 +81,8 @@ export const imageAssets = {
 	backCoverTemplate,
 	backCoverBlank,
 	exportBookSample,
+	/** "Share This Journal" artwork for the web Share Journal page (headline in the image). */
+	shareJournalHero,
 } as const;
 
 /**

@@ -4,6 +4,8 @@ import { Link } from "@tanstack/react-router";
 import { ChevronLeft, Send } from "lucide-react";
 import type { ReactNode } from "react";
 
+import type { LibraryLocationState } from "@/lib/journal/libraryNavigation";
+
 /**
  * Page frame for the gift screens. Mobile web mirrors the Figma native
  * screens (teal title bar with Back); desktop follows the billing pages'
@@ -14,6 +16,7 @@ export function GiftPageChrome({
 	desktopTitle,
 	backTo,
 	backLabel = "Back",
+	backState,
 	wide = false,
 	children,
 }: {
@@ -22,6 +25,8 @@ export function GiftPageChrome({
 	desktopTitle?: string;
 	backTo: string;
 	backLabel?: string;
+	/** History state for the back link (e.g. which journal to reopen). */
+	backState?: LibraryLocationState;
 	/** Desktop two-column layout (offer card beside the recipient form). */
 	wide?: boolean;
 	children: ReactNode;
@@ -32,6 +37,7 @@ export function GiftPageChrome({
 				<div className="sticky top-20 z-10 flex items-center gap-2 bg-primary px-4 py-3 text-primary-foreground md:hidden">
 					<Link
 						to={backTo}
+						state={backState}
 						className="inline-flex items-center gap-1 rounded-md text-sm transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/60 active:scale-[0.98]"
 					>
 						<ChevronLeft className="size-5" aria-hidden />
@@ -48,6 +54,7 @@ export function GiftPageChrome({
 					<header className="hidden items-center gap-3 md:flex">
 						<Link
 							to={backTo}
+							state={backState}
 							aria-label={backLabel}
 							title={backLabel}
 							className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-card text-primary shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-95"
