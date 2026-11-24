@@ -10,6 +10,7 @@ import deskHeroBackground from "../images/desk-hero-background.jpeg";
 import digLogo from "../images/dig-logo.png";
 import exportBookSample from "../images/export-book-sample.jpg";
 import favicon from "../images/favicon.png";
+import giftBox from "../images/gift-box.png";
 import giftHero from "../images/gift-hero.jpg";
 import giftRedeemHero from "../images/gift-redeem-hero.jpg";
 import googleLogo from "../images/google logo.jpeg";
@@ -70,6 +71,8 @@ export const imageAssets = {
 	 * headline is part of the artwork, so it isn't repeated in code.
 	 */
 	giftHero,
+	/** Wrapped gift box (transparent PNG) for the "Give the Gift of a Legacy" cards. */
+	giftBox,
 	/** Top of the gift card artwork ("A Gift for Your Story"), for the redeem page. */
 	giftRedeemHero,
 	/**

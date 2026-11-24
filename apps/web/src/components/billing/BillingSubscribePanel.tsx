@@ -190,6 +190,9 @@ export function BillingSubscribePanel() {
 							</PlanCard>
 						</>
 					)}
+					{/* Figma pricing page: "Give the Gift of a Legacy" sits under the
+					    plans and opens Gift Subscription. */}
+					<GiftLegacyCard className="mt-1.5" />
 				</div>
 
 				<div className="flex flex-col gap-5 lg:pt-1">
@@ -276,9 +279,6 @@ export function BillingSubscribePanel() {
 					<p>{BILLING_SUBSCRIBE_COPY.printedBooksNote}</p>
 				</div>
 			</div>
-
-			{/* Figma paywall: "Give the Gift of a Legacy" → Gift Subscription. */}
-			<GiftLegacyCard className="w-full bg-background" />
 
 			<div className="flex w-full flex-col items-center gap-3">
 				{!hasActiveSub ? (

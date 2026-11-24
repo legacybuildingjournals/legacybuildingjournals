@@ -1,21 +1,20 @@
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
 import { cn } from "@legacy-building/ui/lib/utils";
-import { Link } from "@tanstack/react-router";
+
 import { useAction, useQuery } from "convex/react";
-import { ChevronDown, Download, Gift, Loader2, Mail } from "lucide-react";
+import { ChevronDown, Download, Loader2, Mail } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 
 import {
 	accountCardClass,
-	accountPrimaryButtonClass,
 	accountSectionSubtitleClass,
 	accountSectionTitleClass,
 } from "@/components/account/accountFormStyles";
+import { GiftLegacyCard } from "@/components/gift/GiftLegacyCard";
 import { Skeleton } from "@/components/journal/ui/skeleton";
 import { toastMutationError, toastMutationSuccess } from "@/lib/journal/toast";
-import { ROUTES } from "@/lib/routes";
 
 const STATUS_LABEL = {
 	pending_payment: "Awaiting payment",
@@ -75,21 +74,10 @@ export function GiftHistorySection() {
 				</p>
 			</div>
 
-			<div className={cn(accountCardClass, "flex flex-col gap-5")}>
-				<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-					<div className="flex items-center gap-3">
-						<span className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-							<Gift className="size-5" aria-hidden />
-						</span>
-						<p className="text-foreground text-sm">
-							Give someone a lifetime of stories.
-						</p>
-					</div>
-					<Link to={ROUTES.dashboardGift} className={accountPrimaryButtonClass}>
-						Gift Lifetime Access
-					</Link>
-				</div>
+			{/* Figma: the wide "Give the Gift of a Legacy" banner starts a gift. */}
+			<GiftLegacyCard variant="wide" />
 
+			<div className={cn(accountCardClass, "flex flex-col gap-5")}>
 				{gifts === undefined ? (
 					<Skeleton className="h-9 w-48" />
 				) : gifts.length === 0 ? (
