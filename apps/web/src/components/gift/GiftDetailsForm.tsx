@@ -51,12 +51,14 @@ export function GiftDetailsForm({
 	idPrefix,
 	renderFields,
 	footerInside = false,
+	className,
 }: {
 	giftId?: string;
 	/** Keeps label/input ids unique when two layouts share a page. */
 	idPrefix: string;
 	renderFields: (content: ReactNode) => ReactNode;
 	footerInside?: boolean;
+	className?: string;
 }) {
 	const navigate = useNavigate();
 	const offer = useQuery(api.gifts.queries.getOffer);
@@ -186,7 +188,8 @@ export function GiftDetailsForm({
 					placeholder="Write a short message..."
 					rows={4}
 					maxLength={GIFT_MESSAGE_MAX}
-					className="min-h-28 rounded-xl border-border bg-background px-3 py-2 text-sm shadow-none"
+					// Fixed height: long messages scroll instead of growing the card.
+					className="field-sizing-fixed h-28 min-h-28 resize-none overflow-y-auto rounded-xl border-border bg-background px-3 py-2 text-sm shadow-none"
 					aria-invalid={Boolean(errors.message)}
 					aria-describedby={id("message-error")}
 				/>
@@ -211,7 +214,9 @@ export function GiftDetailsForm({
 	);
 
 	const footer = (
-		<div className={cn("flex flex-col gap-4", footerInside && "mt-6")}>
+		// mt-auto: on desktop the card is stretched to the offer card's height,
+		// so the button sits at the bottom instead of leaving a gap under it.
+		<div className={cn("flex flex-col gap-4", footerInside && "mt-auto pt-6")}>
 			<GiftHowItWorks>{GIFT_DETAILS_HOW_IT_WORKS}</GiftHowItWorks>
 
 			{errors.root?.message ? (
@@ -241,7 +246,11 @@ export function GiftDetailsForm({
 	);
 
 	return (
-		<form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
+		<form
+			onSubmit={onSubmit}
+			noValidate
+			className={cn("flex flex-col gap-4", className)}
+		>
 			{renderFields(
 				footerInside ? (
 					<>

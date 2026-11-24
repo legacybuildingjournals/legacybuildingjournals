@@ -140,56 +140,63 @@ export function DashboardLibraryPage() {
 
 	return (
 		<>
+			{/* Plain wall from the library shelf photo; the shelves themselves
+			    are drawn under each row of journals by LibraryJournalGrid. */}
 			<div
 				aria-hidden
-				className="pointer-events-none fixed inset-0 z-0 bg-center bg-cover"
+				className="pointer-events-none fixed inset-0 z-0 bg-[length:100%_auto] bg-repeat-y"
 				style={{
-					backgroundImage:
-						'url("/static/icon_libraries/JournalWallDesktop.webp")',
+					backgroundColor: brand.libraryWall,
+					backgroundImage: 'url("/static/icon_libraries/library-wall.webp")',
 				}}
 			/>
 
-			<main className="relative z-10 mx-auto mt-20 flex w-full max-w-[1200px] flex-1 flex-col gap-5 px-4 py-4 sm:px-6 md:px-10 md:py-5">
-				{/* Tabs centred on the row; Add Journal sits in the right column
-				    (full width under the tabs on phones). */}
-				<div className="flex flex-col gap-3 md:grid md:grid-cols-[1fr_auto_1fr] md:items-center">
-					<span aria-hidden className="hidden md:block" />
-					<LibraryStoryTabs value={storyTab} onChange={handleStoryTabChange} />
-					{/* Journals reach Our Story only by being shared (spec #2). */}
-					{storyTab !== "our_story" ? (
-						<Button
-							type="button"
-							onClick={openCreate}
-							className="min-h-[44px] shrink-0 rounded-xl px-5 font-medium text-sm leading-[1.4] transition-colors hover:opacity-95 active:scale-[0.98] md:justify-self-end"
-						>
-							Add Journal
-						</Button>
-					) : null}
-				</div>
+			{/* overflow-x-clip: the shelves span the whole window width. */}
+			<div className="relative z-10 flex w-full flex-1 flex-col overflow-x-clip">
+				<main className="mx-auto mt-20 flex w-full max-w-[1200px] flex-1 flex-col gap-5 px-4 py-4 sm:px-6 md:px-10 md:py-5">
+					{/* Tabs on the left, Add Journal on the right (full width under
+				    the tabs on phones). */}
+					<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+						<LibraryStoryTabs
+							value={storyTab}
+							onChange={handleStoryTabChange}
+						/>
+						{/* Journals reach Our Story only by being shared (spec #2). */}
+						{storyTab !== "our_story" ? (
+							<Button
+								type="button"
+								onClick={openCreate}
+								className="min-h-[44px] shrink-0 rounded-xl px-5 font-medium text-sm leading-[1.4] transition-colors hover:opacity-95 active:scale-[0.98] md:justify-self-end"
+							>
+								Add Journal
+							</Button>
+						) : null}
+					</div>
 
-				{isLoading ? (
-					<div
-						className="w-full animate-pulse rounded-[20px]"
-						style={{
-							backgroundColor: brand.libraryMint,
-							minHeight: 600,
-						}}
-					/>
-				) : isEmpty && storyTab === "our_story" ? (
-					<OurStoryEmptyState
-						onGoToMyStory={() => handleStoryTabChange("my_story")}
-					/>
-				) : isEmpty ? (
-					<LibraryEmptyState onBeginLegacy={openCreate} />
-				) : (
-					<LibraryJournalGrid
-						storyTab={storyTab}
-						journals={journals}
-						onOpenJournal={handleOpenJournal}
-						onAddEntry={handleAddEntry}
-					/>
-				)}
-			</main>
+					{isLoading ? (
+						<div
+							className="w-full animate-pulse rounded-[20px]"
+							style={{
+								backgroundColor: brand.libraryMint,
+								minHeight: 600,
+							}}
+						/>
+					) : isEmpty && storyTab === "our_story" ? (
+						<OurStoryEmptyState
+							onGoToMyStory={() => handleStoryTabChange("my_story")}
+						/>
+					) : isEmpty ? (
+						<LibraryEmptyState onBeginLegacy={openCreate} />
+					) : (
+						<LibraryJournalGrid
+							storyTab={storyTab}
+							journals={journals}
+							onOpenJournal={handleOpenJournal}
+							onAddEntry={handleAddEntry}
+						/>
+					)}
+				</main>
+			</div>
 
 			<div className="relative z-10">
 				<DashboardFooter />

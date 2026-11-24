@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 /**
  * Page frame for the gift screens. Mobile web mirrors the Figma native
  * screens (teal title bar with Back); desktop follows the billing pages'
- * back-link + heading convention.
+ * round back button beside the heading.
  */
 export function GiftPageChrome({
 	title,
@@ -45,12 +45,14 @@ export function GiftPageChrome({
 						wide ? "md:max-w-[1160px]" : "md:max-w-[640px]",
 					)}
 				>
-					<header className="hidden flex-col gap-2 md:flex">
+					<header className="hidden items-center gap-3 md:flex">
 						<Link
 							to={backTo}
-							className="w-fit rounded-sm text-primary text-sm transition-colors hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-[0.98]"
+							aria-label={backLabel}
+							title={backLabel}
+							className="flex size-10 shrink-0 items-center justify-center rounded-full border border-border bg-card text-primary shadow-sm transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-95"
 						>
-							← {backLabel}
+							<ChevronLeft className="size-5" aria-hidden />
 						</Link>
 						<h1 className="font-semibold text-3xl text-foreground">
 							{desktopTitle ?? title}

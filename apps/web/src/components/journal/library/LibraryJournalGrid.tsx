@@ -23,7 +23,7 @@ import type {
 import { cn } from "@legacy-building/ui/lib/utils";
 import { useMutation } from "convex/react";
 import { GripVertical } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { JournalCard } from "@/components/journal/library/JournalCard";
 import type { LibraryTab } from "@/lib/journal/journalTypes";
 import { toastMutationError } from "@/lib/journal/toast";
@@ -35,25 +35,50 @@ type EnrichedJournal = Doc<"journals"> & {
 
 /**
  * Bookshelf rhythm. Every card is locked to CARD_HEIGHT and every grid row to
- * CARD_HEIGHT + ROW_GAP, so a shelf ledge — drawn to match the painted-cream
- * shelves in the library background photo — can be repeated as the grid
- * background exactly under each row of cards, at any width or scroll position.
+ * CARD_HEIGHT + ROW_GAP, so the shelf (cut from the library photo, with its
+ * shadow) repeats exactly under each row of cards at any width, number of
+ * journals or scroll position. The shelf image is one pitch tall: the shelf
+ * is at its top and the rest is transparent.
  */
 const CARD_HEIGHT = 224;
 const ROW_GAP = 92;
 const SHELF_PITCH = CARD_HEIGHT + ROW_GAP;
-const SHELF_LEDGE = `linear-gradient(to bottom,
-	rgba(0,0,0,0) 0,
-	rgba(0,0,0,0) ${CARD_HEIGHT - 1}px,
-	rgba(255,255,255,0.75) ${CARD_HEIGHT}px,
-	#f4ede4 ${CARD_HEIGHT + 2}px,
-	#ede2d4 ${CARD_HEIGHT + 9}px,
-	#dfccb8 ${CARD_HEIGHT + 12}px,
-	#cdb79f ${CARD_HEIGHT + 20}px,
-	rgba(120,96,68,0.28) ${CARD_HEIGHT + 23}px,
-	rgba(120,96,68,0.12) ${CARD_HEIGHT + 34}px,
-	rgba(120,96,68,0) ${CARD_HEIGHT + 52}px,
-	rgba(0,0,0,0) ${SHELF_PITCH}px)`;
+/** Cards stand on the shelf's top surface, a few px below its back edge. */
+const SHELF_TOP = CARD_HEIGHT - 5;
+const SHELF_IMAGE = "/static/icon_libraries/library-shelf.webp";
+
+const shelfStyle = {
+	backgroundImage: `url("${SHELF_IMAGE}")`,
+	backgroundSize: `100% ${SHELF_PITCH}px`,
+	backgroundPosition: `0 ${SHELF_TOP}px`,
+	backgroundRepeat: "repeat-y",
+} as const;
+
+/**
+ * Cards in a grid with a shelf under every row. The shelves run the full
+ * width of the window, like the wall they hang on; the page clips the
+ * overflow so it never scrolls sideways.
+ */
+function ShelfGrid({ children }: { children: ReactNode }) {
+	return (
+		<div className="relative w-full">
+			<div
+				aria-hidden
+				className="pointer-events-none absolute inset-y-0 left-1/2 w-screen -translate-x-1/2"
+				style={shelfStyle}
+			/>
+			<div
+				className="relative grid w-full grid-cols-1 gap-x-5 pb-16 sm:grid-cols-2 lg:grid-cols-3"
+				style={{
+					gridAutoRows: `${CARD_HEIGHT}px`,
+					rowGap: `${ROW_GAP}px`,
+				}}
+			>
+				{children}
+			</div>
+		</div>
+	);
+}
 
 type LibraryJournalGridProps = {
 	storyTab: LibraryTab;
@@ -166,19 +191,9 @@ export function LibraryJournalGrid({
 		return null;
 	}
 
-	const gridStyle = {
-		gridAutoRows: `${CARD_HEIGHT}px`,
-		rowGap: `${ROW_GAP}px`,
-		backgroundImage: SHELF_LEDGE,
-		backgroundSize: `100% ${SHELF_PITCH}px`,
-		backgroundRepeat: "repeat-y" as const,
-	};
-	const gridClass =
-		"grid w-full grid-cols-1 gap-x-5 pb-16 sm:grid-cols-2 lg:grid-cols-3";
-
 	if (storyTab === "our_story") {
 		return (
-			<div className={gridClass} style={gridStyle}>
+			<ShelfGrid>
 				{sortedJournals.map((journal) => (
 					<JournalCard
 						key={journal._id}
@@ -187,7 +202,7 @@ export function LibraryJournalGrid({
 						onAddEntry={() => onAddEntry(journal)}
 					/>
 				))}
-			</div>
+			</ShelfGrid>
 		);
 	}
 
@@ -202,16 +217,7 @@ export function LibraryJournalGrid({
 				onDragEnd={handleDragEnd}
 			>
 				<SortableContext items={orderedIds} strategy={rectSortingStrategy}>
-					<div
-						className="grid w-full grid-cols-1 gap-x-5 pb-16 sm:grid-cols-2 lg:grid-cols-3"
-						style={{
-							gridAutoRows: `${CARD_HEIGHT}px`,
-							rowGap: `${ROW_GAP}px`,
-							backgroundImage: SHELF_LEDGE,
-							backgroundSize: `100% ${SHELF_PITCH}px`,
-							backgroundRepeat: "repeat-y",
-						}}
-					>
+					<ShelfGrid>
 						{sortedJournals.map((journal) => (
 							<SortableJournalCard
 								key={journal._id}
@@ -220,7 +226,7 @@ export function LibraryJournalGrid({
 								onAddEntry={() => onAddEntry(journal)}
 							/>
 						))}
-					</div>
+					</ShelfGrid>
 				</SortableContext>
 			</DndContext>
 		</div>

@@ -65,7 +65,8 @@ export function DashboardDeskPage() {
 	return (
 		<div className="relative flex min-h-svh w-full flex-col bg-white">
 			<div className="mt-20 flex min-h-[calc(100svh-5rem)] flex-1 flex-col md:px-10 md:py-5">
-				<DeskHeroCard className="min-h-0 flex-1 rounded-none md:rounded-[20px]">
+				{/* Square bottom: the image runs straight into the footer below. */}
+				<DeskHeroCard className="min-h-0 flex-1 rounded-none md:rounded-t-[20px] md:rounded-b-none">
 					<div className="relative flex w-full max-w-[1200px] flex-1 flex-col items-center gap-6 pb-6 lg:min-h-[420px] lg:justify-center lg:gap-0 lg:pb-0">
 						<div className="flex flex-col items-center gap-4 pt-2 sm:gap-6 sm:pt-4 lg:pt-0">
 							<ProfileAvatarEditor
