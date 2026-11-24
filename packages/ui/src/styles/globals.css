@@ -13,6 +13,8 @@
 	   artwork. Same in both themes because they sit on the artwork. */
 	--cover-gold: #d9ad62;
 	--cover-cream: #f6ecdc;
+	/* Solid green of the web app's top nav bar (light and dark). */
+	--nav-bar: #33766f;
 	--background: oklch(1 0 0);
 	--foreground: oklch(0.148 0.004 228.8);
 	--card: oklch(1 0 0);
@@ -106,6 +108,8 @@
 	   artwork. Same in both themes because they sit on the artwork. */
 	--cover-gold: #d9ad62;
 	--cover-cream: #f6ecdc;
+	/* Solid green of the web app's top nav bar (light and dark). */
+	--nav-bar: #33766f;
 	--background: oklch(0.148 0.004 228.8);
 	--foreground: oklch(0.987 0.002 197.1);
 	--card: oklch(0.218 0.008 223.9);
@@ -142,6 +146,7 @@
 @theme inline {
 	--color-cover-gold: var(--cover-gold);
 	--color-cover-cream: var(--cover-cream);
+	--color-nav-bar: var(--nav-bar);
 	--font-sans: "Inter Variable", sans-serif;
 	/* Onboarding only: Nunito for text, Plus Jakarta Sans for buttons and pill labels. */
 	--font-onb: "Nunito Variable", ui-sans-serif, system-ui, sans-serif;

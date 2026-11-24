@@ -32,12 +32,9 @@ export function LegalPageNavbar() {
 		<header
 			className={cn(
 				"fixed inset-x-0 top-0 z-[1504] flex min-h-[80px] items-center justify-center",
-				"bg-center bg-cover bg-no-repeat shadow-[0_2px_2px_0_#f7f7f7]",
+				"bg-nav-bar shadow-[0_2px_2px_0_#f7f7f7]",
 				"px-4 md:pr-10 md:pl-[29px]",
 			)}
-			style={{
-				backgroundImage: `url("${assets.headerBackground}")`,
-			}}
 		>
 			<div className="flex min-h-[80px] w-full max-w-[1200px] items-center justify-between gap-4">
 				<Link
