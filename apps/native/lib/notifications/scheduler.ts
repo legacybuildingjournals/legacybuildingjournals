@@ -5,8 +5,8 @@ import { Notifications } from "./expo-notifications";
 import {
 	DAILY_PROMPT_MESSAGES,
 	FIRST_ENTRY_MESSAGES,
+	type LocalMessage,
 	randomMessage,
-	shuffled,
 } from "./messages";
 
 /** Shape mirrored from `api.notifications.queries.getMyPreferences`. */
@@ -26,8 +26,58 @@ const CATEGORY = {
 } as const;
 
 const ANDROID_CHANNEL_ID = "default";
-/** How many upcoming daily prompts to keep queued (each with rotating copy). */
-const DAILY_SCHEDULE_DAYS = 14;
+/** Journaling prompts per calendar week (Monday to Sunday), on random days. */
+const PROMPTS_PER_WEEK = 2;
+/** How many weeks ahead to keep prompts queued (the queue is rebuilt on every launch). */
+const SCHEDULE_WEEKS = 4;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Small seeded PRNG (mulberry32), so a week's random picks are repeatable. */
+function seededRandom(seed: number): () => number {
+	let state = seed >>> 0;
+	return () => {
+		state = (state + 0x6d2b79f5) >>> 0;
+		let t = state;
+		t = Math.imul(t ^ (t >>> 15), t | 1);
+		t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+		return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+	};
+}
+
+/** Local midnight of the Monday that starts the week containing `date`. */
+function startOfWeek(date: Date): Date {
+	const monday = new Date(date);
+	monday.setHours(0, 0, 0, 0);
+	monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+	return monday;
+}
+
+/**
+ * The random days (0 = Monday … 6 = Sunday) and messages for one week. Seeded
+ * by the week itself, so rebuilding the queue on every app launch keeps the
+ * same picks and never adds a third prompt to a week. The two days are never
+ * back to back.
+ */
+function promptsForWeek(
+	monday: Date,
+): { dayOffset: number; messageIndex: number }[] {
+	const weekNumber = Math.round(
+		Date.UTC(monday.getFullYear(), monday.getMonth(), monday.getDate()) /
+			(7 * DAY_MS),
+	);
+	const random = seededRandom(weekNumber);
+	const days: number[] = [];
+	while (days.length < PROMPTS_PER_WEEK) {
+		const day = Math.floor(random() * 7);
+		if (days.every((picked) => Math.abs(picked - day) > 1)) days.push(day);
+	}
+	return days
+		.sort((a, b) => a - b)
+		.map((dayOffset) => ({
+			dayOffset,
+			messageIndex: Math.floor(random() * DAILY_PROMPT_MESSAGES.length),
+		}));
+}
 
 /**
  * Show notifications while the app is foregrounded too — a gentle banner is
@@ -107,10 +157,12 @@ async function cancelByCategory(category: string): Promise<void> {
 }
 
 /**
- * Rebuild the queue of daily journaling prompts. Cancels any previously
- * scheduled prompts, then (if enabled) schedules the next `DAILY_SCHEDULE_DAYS`
- * occurrences at the user's chosen local time, each with rotating copy.
- * Idempotent — safe to call on every launch and whenever preferences change.
+ * Rebuild the queue of journaling prompts: twice a week on random days, at the
+ * user's chosen local time, for the next `SCHEDULE_WEEKS` weeks. Cancels any
+ * previously scheduled prompts first. Idempotent (each week's picks are
+ * seeded), so it's safe to call on every launch and whenever preferences change.
+ * The name and the `dailyPrompts*` preference keys are kept from when these
+ * were daily, to avoid a backend change.
  */
 export async function rescheduleDailyPrompts(
 	prefs: Pick<
@@ -122,31 +174,44 @@ export async function rescheduleDailyPrompts(
 	await cancelByCategory(CATEGORY.dailyPrompt);
 	if (!prefs.dailyPrompts) return;
 
-	const pool = shuffled(DAILY_PROMPT_MESSAGES);
 	const now = Date.now();
+	const thisMonday = startOfWeek(new Date());
 
-	for (let i = 0; i < DAILY_SCHEDULE_DAYS; i++) {
-		const fireDate = new Date();
-		fireDate.setDate(fireDate.getDate() + i);
-		fireDate.setHours(prefs.dailyPromptHour, prefs.dailyPromptMinute, 0, 0);
-		// Skip today if the chosen time has already passed.
-		if (fireDate.getTime() <= now) continue;
+	for (let week = 0; week < SCHEDULE_WEEKS; week++) {
+		const monday = new Date(thisMonday);
+		monday.setDate(monday.getDate() + week * 7);
 
-		const message = pool[i % pool.length];
-		if (!message) continue;
-		await Notifications.scheduleNotificationAsync({
-			content: {
-				title: message.title,
-				body: message.body,
-				sound: "default",
-				data: { category: CATEGORY.dailyPrompt, url: "/(tabs)" },
-			},
-			trigger: {
-				type: Notifications.SchedulableTriggerInputTypes.DATE,
-				date: fireDate,
-			},
-		});
+		for (const { dayOffset, messageIndex } of promptsForWeek(monday)) {
+			const fireDate = new Date(monday);
+			fireDate.setDate(fireDate.getDate() + dayOffset);
+			fireDate.setHours(prefs.dailyPromptHour, prefs.dailyPromptMinute, 0, 0);
+			// This week's pick may already be in the past.
+			if (fireDate.getTime() <= now) continue;
+
+			const message = DAILY_PROMPT_MESSAGES[messageIndex];
+			if (!message) continue;
+			await schedulePrompt(message, fireDate);
+		}
 	}
+}
+
+async function schedulePrompt(
+	message: LocalMessage,
+	fireDate: Date,
+): Promise<void> {
+	if (!Notifications) return;
+	await Notifications.scheduleNotificationAsync({
+		content: {
+			title: message.title,
+			body: message.body,
+			sound: "default",
+			data: { category: CATEGORY.dailyPrompt, url: "/(tabs)" },
+		},
+		trigger: {
+			type: Notifications.SchedulableTriggerInputTypes.DATE,
+			date: fireDate,
+		},
+	});
 }
 
 /**

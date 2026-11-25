@@ -97,13 +97,3 @@ export function randomMessage(pool: LocalMessage[]): LocalMessage {
 		pool[0] ?? { title: "Legacy Building", body: "Open your journal." }
 	);
 }
-
-/** Return a shuffled copy of a pool (used to vary the daily prompt order). */
-export function shuffled<T>(items: T[]): T[] {
-	const copy = [...items];
-	for (let i = copy.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (i + 1));
-		[copy[i], copy[j]] = [copy[j] as T, copy[i] as T];
-	}
-	return copy;
-}
