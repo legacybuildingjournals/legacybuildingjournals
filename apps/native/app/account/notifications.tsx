@@ -164,8 +164,8 @@ export default function NotificationsScreen() {
 
 						<View className="mt-2">
 							<ToggleRow
-								title="Daily journaling prompt"
-								subtitle={`A gentle daily reminder at ${formatTime(hour, minute)}.`}
+								title="Journaling prompts"
+								subtitle={`A gentle reminder twice a week at ${formatTime(hour, minute)}.`}
 								value={preferences.dailyPrompts}
 								onValueChange={(next) => void updatePref("dailyPrompts", next)}
 								accent={accent}
@@ -191,9 +191,9 @@ export default function NotificationsScreen() {
 						</View>
 
 						<Text className="px-5 pt-6 text-muted-foreground text-xs leading-5">
-							Daily prompts are scheduled on this device. Inactivity and export
-							reminders are sent from the server, so they work across all your
-							devices.
+							Journaling prompts are scheduled on this device. Inactivity and
+							export reminders are sent from the server, so they work across all
+							your devices.
 						</Text>
 
 						{__DEV__ ? (
