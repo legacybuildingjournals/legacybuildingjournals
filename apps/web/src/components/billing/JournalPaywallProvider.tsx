@@ -1,3 +1,4 @@
+import { useUser } from "@clerk/react";
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import {
@@ -14,6 +15,12 @@ import { JournalPaywallDialog } from "@/components/billing/JournalPaywallDialog"
 type JournalPaywallContextValue = {
 	hasPaidAccess: boolean | undefined;
 	guardJournalAction: (action: () => void) => void;
+	/**
+	 * Like `guardJournalAction`, but a journal shared *with* you (someone
+	 * else's journal) never needs your own subscription: inside it, access
+	 * follows the author's (enforced on the server).
+	 */
+	guardJournalActionFor: (journalOwnerId: string, action: () => void) => void;
 };
 
 const JournalPaywallContext = createContext<JournalPaywallContextValue | null>(
@@ -36,9 +43,21 @@ export function JournalPaywallProvider({ children }: { children: ReactNode }) {
 		[hasPaidAccess],
 	);
 
+	const { user } = useUser();
+	const guardJournalActionFor = useCallback(
+		(journalOwnerId: string, action: () => void) => {
+			if (user?.id && journalOwnerId !== user.id) {
+				action();
+				return;
+			}
+			guardJournalAction(action);
+		},
+		[guardJournalAction, user?.id],
+	);
+
 	const value = useMemo(
-		() => ({ hasPaidAccess, guardJournalAction }),
-		[hasPaidAccess, guardJournalAction],
+		() => ({ hasPaidAccess, guardJournalAction, guardJournalActionFor }),
+		[hasPaidAccess, guardJournalAction, guardJournalActionFor],
 	);
 
 	return (

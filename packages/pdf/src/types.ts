@@ -23,6 +23,14 @@ export type JournalPdfEntry = {
 	memories: JournalMemory[];
 };
 
+/** User-designed closing page of an exported book. All parts optional. */
+export type JournalBackCover = {
+	/** Data URL or an https URL the renderer can fetch. */
+	imageUrl?: string;
+	title?: string;
+	message?: string;
+};
+
 export type JournalPdfDocumentProps = {
 	journalName: string;
 	storyType: JournalStoryType;
@@ -30,4 +38,11 @@ export type JournalPdfDocumentProps = {
 	dedication?: string;
 	/** Cover + dedication pages. Omitted when exporting a subset of entries. */
 	includeFrontMatter: boolean;
+	/**
+	 * Fixed Legacy Building cover as the first page (exports). Replaces the
+	 * text cover page; printed orders leave it off and keep the text cover.
+	 */
+	frontCover?: boolean;
+	/** Appended as the last page when present (Export Book flow). */
+	backCover?: JournalBackCover;
 };

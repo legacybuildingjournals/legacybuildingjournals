@@ -35,11 +35,8 @@ export const accountPrimaryButtonClass =
 export const accountSecondaryButtonClass =
 	"inline-flex h-10 items-center justify-center rounded-xl border border-border bg-card px-5 font-medium text-muted-foreground text-sm shadow-sm hover:bg-muted";
 
-export const accountDangerZoneHeaderClass =
-	"rounded-t-2xl border border-destructive/30 border-b-0 bg-destructive/5 px-5 py-4 sm:px-6";
-
 export const accountDangerZoneBodyClass =
-	"rounded-b-2xl border border-destructive/30 bg-card px-5 py-5 sm:px-6 sm:py-6";
+	"rounded-2xl border border-destructive/30 bg-card px-5 py-5 shadow-sm sm:px-6 sm:py-6";
 
 export const accountDangerButtonClass =
 	"h-10 rounded-xl border border-destructive/25 px-5 font-medium shadow-none";

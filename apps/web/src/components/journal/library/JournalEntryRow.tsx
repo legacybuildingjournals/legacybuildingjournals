@@ -1,4 +1,5 @@
-import { Download, Mic, Video as VideoIcon } from "lucide-react";
+import { cn } from "@legacy-building/ui/lib/utils";
+import { Download, Lock, Mic, Video as VideoIcon } from "lucide-react";
 
 const PHOSPHOR_SPRITE = "/static/icon_libraries/phosphor-2.1.0-regular.svg";
 
@@ -31,6 +32,8 @@ type JournalEntryRowProps = {
 	selectionMode?: boolean;
 	selected?: boolean;
 	onToggleSelect?: () => void;
+	/** Shared journals: show "By You" / "By <name>" under the date. */
+	showAuthor?: boolean;
 };
 
 async function downloadUrl(url: string, filename: string) {
@@ -54,6 +57,7 @@ export function JournalEntryRow({
 	selectionMode = false,
 	selected = false,
 	onToggleSelect,
+	showAuthor = false,
 }: JournalEntryRowProps) {
 	const accent = entryAccentColor(entry.mode);
 	const isRecording = entry.mode === "recording";
@@ -75,7 +79,18 @@ export function JournalEntryRow({
 		}
 	};
 
+	// Someone else's "Not viewable" entry: title only, can't be opened (spec #17).
+	const locked = entry.locked === true;
+	const byline = showAuthor
+		? entry.isMine
+			? "By You"
+			: entry.createdByName
+				? `By ${entry.createdByName}`
+				: null
+		: null;
+
 	const handleRowActivate = () => {
+		if (locked) return;
 		if (selectionMode) {
 			onToggleSelect?.();
 			return;
@@ -87,7 +102,8 @@ export function JournalEntryRow({
 		// biome-ignore lint/a11y/useSemanticElements: row contains nested buttons (download, checkbox)
 		<div
 			role="button"
-			tabIndex={0}
+			tabIndex={locked ? -1 : 0}
+			aria-disabled={locked || undefined}
 			onClick={handleRowActivate}
 			onKeyDown={(e) => {
 				if (e.key === "Enter" || e.key === " ") {
@@ -95,7 +111,12 @@ export function JournalEntryRow({
 					handleRowActivate();
 				}
 			}}
-			className="my-1.5 flex min-h-[68px] w-full cursor-pointer flex-row items-stretch rounded-2xl border border-[#eef0f0] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all hover:shadow-md active:scale-[0.99]"
+			className={cn(
+				"my-1.5 flex min-h-[68px] w-full flex-row items-stretch rounded-2xl border border-[#eef0f0] shadow-[0_1px_2px_rgba(0,0,0,0.05)] transition-all",
+				locked
+					? "cursor-default bg-primary/5"
+					: "cursor-pointer bg-white hover:shadow-md active:scale-[0.99]",
+			)}
 		>
 			{selectionMode ? (
 				<div className="flex items-center self-stretch py-3 pl-3">
@@ -109,14 +130,21 @@ export function JournalEntryRow({
 				</div>
 			) : null}
 			<div className="flex min-w-0 flex-1 flex-col justify-center gap-1 py-3 pl-3">
-				<span className="truncate text-left font-semibold text-[#1a1a1a] text-base leading-[1.4]">
-					{entry.title || "Untitled entry"}
+				<span className="flex min-w-0 items-center gap-1.5 text-left font-semibold text-[#1a1a1a] text-base leading-[1.4]">
+					<span className="truncate">{entry.title || "Untitled entry"}</span>
+					{locked ? (
+						<Lock
+							className="size-4 shrink-0 text-muted-foreground"
+							aria-label="Not viewable"
+						/>
+					) : null}
 				</span>
 				<span
 					className="text-left font-normal text-sm leading-none"
 					style={{ color: "#a6a6a6" }}
 				>
 					{formatDate(entry.dateMs)}
+					{byline ? `, ${byline}` : ""}
 				</span>
 			</div>
 			{showDownload ? (

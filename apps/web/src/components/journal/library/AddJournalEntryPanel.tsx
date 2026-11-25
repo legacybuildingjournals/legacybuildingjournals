@@ -43,6 +43,10 @@ import {
 	SelectValue,
 } from "@/components/journal/ui/select";
 import { Textarea } from "@/components/journal/ui/textarea";
+import {
+	type EntryVisibility,
+	EntryVisibilityField,
+} from "@/components/sharing/EntryVisibilityField";
 import { compressImageFile } from "@/lib/journal/compressImageFile";
 import { extractVideoFirstFrame } from "@/lib/journal/extractVideoFrame";
 import {
@@ -52,7 +56,10 @@ import {
 } from "@/lib/journal/toast";
 import { uploadToStorage } from "@/lib/journal/uploadToStorage";
 
-type JournalWithCover = Doc<"journals"> & { coverImageUrl?: string };
+type JournalWithCover = Doc<"journals"> & {
+	coverImageUrl?: string;
+	isShared?: boolean;
+};
 
 type AddJournalEntryPanelProps = {
 	journalId: Id<"journals"> | null;
@@ -76,13 +83,23 @@ export function AddJournalEntryPanel({
 		api.journal.queries.listByType,
 		open ? {} : "skip",
 	);
+	// Journals shared with you (as member) can take entries too.
+	const sharedJournals = useQuery(
+		api.journal.queries.listByType,
+		open ? { type: "our_story" } : "skip",
+	);
 	const preselectedJournal = useQuery(
 		api.journal.queries.getById,
 		open && journalId ? { id: journalId } : "skip",
 	);
 
 	const journalOptions = useMemo((): JournalWithCover[] => {
-		const list = (allJournals ?? []) as JournalWithCover[];
+		const list = [...(allJournals ?? [])] as JournalWithCover[];
+		for (const shared of (sharedJournals ?? []) as JournalWithCover[]) {
+			const index = list.findIndex((journal) => journal._id === shared._id);
+			if (index >= 0) list[index] = shared;
+			else list.push(shared);
+		}
 		if (
 			preselectedJournal &&
 			!list.some((journal) => journal._id === preselectedJournal._id)
@@ -90,7 +107,7 @@ export function AddJournalEntryPanel({
 			return [preselectedJournal as JournalWithCover, ...list];
 		}
 		return list;
-	}, [allJournals, preselectedJournal]);
+	}, [allJournals, sharedJournals, preselectedJournal]);
 
 	const [mounted, setMounted] = useState(false);
 	const [visible, setVisible] = useState(false);
@@ -108,6 +125,8 @@ export function AddJournalEntryPanel({
 	const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [showErrors, setShowErrors] = useState(false);
+	// Shared journals only: pre-set to visible (spec #18).
+	const [visibility, setVisibility] = useState<EntryVisibility>("visible");
 
 	const accent = accentForMode(mode);
 
@@ -117,6 +136,9 @@ export function AddJournalEntryPanel({
 	const audioInvalid = mode === "recording" && audioFile === null;
 	const videoInvalid = mode === "video" && videoFile === null;
 	const journalInvalid = selectedJournalId === null;
+	const selectedIsShared =
+		journalOptions.find((journal) => journal._id === selectedJournalId)
+			?.isShared === true;
 
 	const isValid =
 		!titleInvalid &&
@@ -143,6 +165,7 @@ export function AddJournalEntryPanel({
 		});
 		setError(null);
 		setShowErrors(false);
+		setVisibility("visible");
 	}, [journalId]);
 
 	const closeWithAnimation = useCallback(() => {
@@ -269,6 +292,7 @@ export function AddJournalEntryPanel({
 				imageId,
 				audioId,
 				videoId,
+				visibility: selectedIsShared ? visibility : undefined,
 			});
 
 			toastMutationSuccess("Entry added.");
@@ -486,6 +510,14 @@ export function AddJournalEntryPanel({
 								{imageUpload}
 							</>
 						)}
+
+						{selectedIsShared ? (
+							<EntryVisibilityField
+								value={visibility}
+								onChange={setVisibility}
+								idPrefix={formId}
+							/>
+						) : null}
 
 						{showErrors && !isValid ? (
 							<p className="text-[#b0200c] text-sm" role="alert">

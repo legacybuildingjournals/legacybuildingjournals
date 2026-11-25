@@ -1,4 +1,5 @@
 import { api } from "@legacy-building/backend/convex/_generated/api";
+import { RECIPIENT_INTRO_HEADING } from "@legacy-building/backend/convex/onboarding/copy";
 import {
 	type AnswerState,
 	applyAnswer,
@@ -7,7 +8,7 @@ import {
 	RECIPIENT_QUESTION,
 	type Recipient,
 } from "@legacy-building/backend/convex/onboarding/questions";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { PILL_PRIMARY } from "@/components/onboarding/onboarding-card";
 import { OnboardingCompletion } from "@/components/onboarding/onboarding-completion";
@@ -40,6 +41,10 @@ export function WelcomeOnboarding({
 	finishing,
 }: WelcomeOnboardingProps) {
 	const submitInApp = useMutation(api.onboarding.mutations.submitInApp);
+	const lifetime = useQuery(api.gifts.queries.myLifetimeStatus);
+	// People who arrived through a gift or a shared journal get the
+	// "Let's personalize your legacy build." intro (SST-8, spec #17).
+	const sharedMember = useQuery(api.sharing.queries.isSharedJournalMember);
 
 	const [phase, setPhase] = useState<Phase>("intro");
 	const [answerState, setAnswerState] =
@@ -93,7 +98,16 @@ export function WelcomeOnboarding({
 	};
 
 	if (phase === "intro") {
-		return <OnboardingIntro onStart={() => setPhase("questions")} />;
+		return (
+			<OnboardingIntro
+				onStart={() => setPhase("questions")}
+				heading={
+					lifetime?.hasLifetime || sharedMember
+						? RECIPIENT_INTRO_HEADING
+						: undefined
+				}
+			/>
+		);
 	}
 
 	if (phase === "result" && answerState.recipient) {

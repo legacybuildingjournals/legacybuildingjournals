@@ -11,6 +11,8 @@ export const brand = {
 	footerBg: "#f2f2f2",
 	white: "#ffffff",
 	libraryMint: "#ebf6f6",
+	/** Painted wall of the library shelf photo (behind the wall image). */
+	libraryWall: "#f1e7de",
 	librarySidebarBg: "#f7f7f7",
 	sidebarDateMuted: "#a6a6a6",
 	entryDetailPanelBg: "#ffffff",

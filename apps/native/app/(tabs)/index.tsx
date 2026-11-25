@@ -13,6 +13,8 @@ import {
 } from "react-native";
 import { DeskProfileAvatar } from "@/components/desk/desk-profile-avatar";
 import { DeskRecentJournal } from "@/components/desk/desk-recent-journal";
+import { GiftHeaderButton } from "@/components/gift/gift-header-button";
+import { LifetimeStoreNotice } from "@/components/gift/lifetime-store-notice";
 import { DashboardScreenHeader } from "@/components/navigation/dashboard-screen-header";
 import { useNativeCurrentUser } from "@/hooks/use-native-current-user";
 import {
@@ -102,7 +104,11 @@ export default function DeskScreen() {
 
 	return (
 		<View className="flex-1 bg-background">
-			<DashboardScreenHeader title={`${userName}'s Desk`} />
+			<DashboardScreenHeader
+				title={`${userName}'s Desk`}
+				right={<GiftHeaderButton />}
+			/>
+			<LifetimeStoreNotice />
 
 			<ImageBackground
 				source={{ uri: nativeAssets.deskHeroBackground }}

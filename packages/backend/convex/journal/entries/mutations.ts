@@ -2,10 +2,12 @@ import { ConvexError, v } from "convex/values";
 
 import { mutation } from "../../_generated/server";
 import { recordEntryCreated } from "../../notifications/helpers";
+import { entryVisibility } from "../../schema";
 import {
 	assertEntryOwner,
-	getOwnedJournal,
-	requirePaidJournalAccess,
+	getReadableJournal,
+	requireClerkUserId,
+	requireJournalWriteAccess,
 } from "../auth";
 import { deleteEntryStorageFiles, deleteStorageFile } from "../storage";
 
@@ -25,10 +27,18 @@ export const create = mutation({
 		audioDurationMs: v.optional(v.number()),
 		videoId: v.optional(v.id("_storage")),
 		videoDurationMs: v.optional(v.number()),
+		/** Shared journals: "hidden" = only the creator can see it. */
+		visibility: v.optional(entryVisibility),
 	},
 	handler: async (ctx, args) => {
-		const userId = await requirePaidJournalAccess(ctx);
-		await getOwnedJournal(ctx, args.journalId, userId);
+		const userId = await requireClerkUserId(ctx);
+		// Author or member; writes depend on the author's access (spec #26/#27).
+		const { journal, role } = await getReadableJournal(
+			ctx,
+			args.journalId,
+			userId,
+		);
+		await requireJournalWriteAccess(ctx, journal, role);
 
 		let imageUrl: string | undefined;
 		if (args.imageId) {
@@ -100,6 +110,7 @@ export const create = mutation({
 			videoId: args.videoId,
 			videoUrl,
 			videoDurationMs: args.mode === "video" ? args.videoDurationMs : undefined,
+			visibility: args.visibility,
 		});
 
 		await ctx.db.patch(args.journalId, { updatedAtMs: Date.now() });
@@ -125,9 +136,10 @@ export const update = mutation({
 		audioDurationMs: v.optional(v.number()),
 		videoId: v.optional(v.id("_storage")),
 		videoDurationMs: v.optional(v.number()),
+		visibility: v.optional(entryVisibility),
 	},
 	handler: async (ctx, args) => {
-		const userId = await requirePaidJournalAccess(ctx);
+		const userId = await requireClerkUserId(ctx);
 		const entry = await ctx.db.get(args.id);
 		if (!entry) {
 			throw new ConvexError({
@@ -135,12 +147,15 @@ export const update = mutation({
 				message: "Entry not found.",
 			});
 		}
+		// Only the person who wrote an entry can change it (spec #21).
 		assertEntryOwner(entry, userId);
-		await getOwnedJournal(ctx, entry.journalId, userId);
+		const current = await getReadableJournal(ctx, entry.journalId, userId);
+		await requireJournalWriteAccess(ctx, current.journal, current.role);
 
 		const nextJournalId = args.journalId ?? entry.journalId;
 		if (nextJournalId !== entry.journalId) {
-			await getOwnedJournal(ctx, nextJournalId, userId);
+			const target = await getReadableJournal(ctx, nextJournalId, userId);
+			await requireJournalWriteAccess(ctx, target.journal, target.role);
 		}
 
 		if (entry.mode === "writing" && !args.body?.trim()) {
@@ -228,6 +243,7 @@ export const update = mutation({
 			videoId,
 			videoUrl,
 			videoDurationMs,
+			...(args.visibility !== undefined ? { visibility: args.visibility } : {}),
 		});
 
 		const now = Date.now();
@@ -241,12 +257,17 @@ export const update = mutation({
 export const remove = mutation({
 	args: { id: v.id("journalEntries") },
 	handler: async (ctx, args) => {
-		const userId = await requirePaidJournalAccess(ctx);
+		const userId = await requireClerkUserId(ctx);
 		const entry = await ctx.db.get(args.id);
 		if (!entry) return;
 
 		assertEntryOwner(entry, userId);
-		await getOwnedJournal(ctx, entry.journalId, userId);
+		const { journal, role } = await getReadableJournal(
+			ctx,
+			entry.journalId,
+			userId,
+		);
+		await requireJournalWriteAccess(ctx, journal, role);
 
 		await deleteEntryStorageFiles(ctx, entry);
 		await ctx.db.delete(args.id);

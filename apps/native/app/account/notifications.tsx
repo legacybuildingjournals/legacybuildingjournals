@@ -1,6 +1,5 @@
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
-import * as Notifications from "expo-notifications";
 import { useThemeColor } from "heroui-native/hooks";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -14,6 +13,7 @@ import {
 } from "react-native";
 
 import { AccountScreenHeader } from "@/components/account/account-screen-header";
+import { Notifications } from "@/lib/notifications/expo-notifications";
 import {
 	ensureNotificationPermission,
 	sendTestNotification,
@@ -69,6 +69,11 @@ export default function NotificationsScreen() {
 	const [permissionGranted, setPermissionGranted] = useState(true);
 
 	const refreshPermission = useCallback(async () => {
+		if (!Notifications) {
+			// Expo Go on Android: notifications aren't available.
+			setPermissionGranted(false);
+			return;
+		}
 		const status = await Notifications.getPermissionsAsync();
 		setPermissionGranted(status.granted);
 	}, []);

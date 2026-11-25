@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { router, useLocalSearchParams } from "expo-router";
 import { useThemeColor } from "heroui-native/hooks";
 import { useCallback, useMemo, useState } from "react";
@@ -29,6 +29,10 @@ import {
 } from "@/components/library/entry-mode-tabs";
 import { MemoryExportNote } from "@/components/library/memory-export-note";
 import { VideoEntryField } from "@/components/library/video-entry-field";
+import {
+	type EntryVisibility,
+	EntryVisibilityField,
+} from "@/components/sharing/entry-visibility-field";
 import { parseMonthDayYear } from "@/lib/journal/parse-date";
 import {
 	type PickedEntryImage,
@@ -50,6 +54,13 @@ export default function NewEntryScreen() {
 	const journalId = params.journalId as Id<"journals"> | undefined;
 
 	const createEntry = useMutation(api.journal.entries.mutations.create);
+	const journal = useQuery(
+		api.journal.queries.getById,
+		journalId ? { id: journalId } : "skip",
+	);
+	// Shared journals only: pre-set to visible (spec #18/#19).
+	const isSharedJournal = journal?.isShared === true;
+	const [visibility, setVisibility] = useState<EntryVisibility>("visible");
 	const generateUploadUrl = useMutation(
 		api.journal.mutations.generateUploadUrl,
 	);
@@ -194,7 +205,9 @@ export default function NewEntryScreen() {
 
 		// Form is valid — gate here so free users fill out the entry first, then hit
 		// the paywall on "Create" (covers both writing and voice entries).
-		if (!hasPaidAccess) {
+		// A member of a shared journal never needs their own subscription:
+		// whether entries can be added depends on the author (server-enforced).
+		if (!hasPaidAccess && journal?.viewerRole !== "member") {
 			openPaywall();
 			return;
 		}
@@ -241,6 +254,7 @@ export default function NewEntryScreen() {
 				videoId,
 				videoDurationMs:
 					mode === "video" ? (video?.durationMs ?? undefined) : undefined,
+				visibility: isSharedJournal ? visibility : undefined,
 			});
 
 			mutationToast.success("Entry saved!");
@@ -268,12 +282,15 @@ export default function NewEntryScreen() {
 		generateUploadUrl,
 		hasPaidAccess,
 		image,
+		isSharedJournal,
+		journal?.viewerRole,
 		journalId,
 		mode,
 		mutationToast,
 		openPaywall,
 		title,
 		video,
+		visibility,
 	]);
 
 	const isRecordingMode = mode === "recording";
@@ -699,6 +716,10 @@ export default function NewEntryScreen() {
 							) : null}
 						</>
 					)}
+
+					{isSharedJournal ? (
+						<EntryVisibilityField value={visibility} onChange={setVisibility} />
+					) : null}
 
 					{showErrors &&
 					mode === "writing" &&

@@ -1,4 +1,6 @@
 import authPanelBackground from "../images/auth-panel-background.jpg";
+import backCoverBlank from "../images/back-cover-blank.jpg";
+import backCoverTemplate from "../images/back-cover-template.jpg";
 import communityHero from "../images/community-hero.webp";
 import communityHeroMobile from "../images/community-hero-mobile.webp";
 import communityMemories from "../images/community-memories.jpeg";
@@ -6,7 +8,11 @@ import communityQrExport from "../images/community-qr-export.jpeg";
 import defaultAvatar from "../images/default-avatar.jpg";
 import deskHeroBackground from "../images/desk-hero-background.jpeg";
 import digLogo from "../images/dig-logo.png";
+import exportBookSample from "../images/export-book-sample.jpg";
 import favicon from "../images/favicon.png";
+import giftBox from "../images/gift-box.png";
+import giftHero from "../images/gift-hero.jpg";
+import giftRedeemHero from "../images/gift-redeem-hero.jpg";
 import googleLogo from "../images/google logo.jpeg";
 import headerBackground from "../images/header-background.jpg";
 import heroBackground from "../images/hero-background.jpg";
@@ -31,6 +37,7 @@ import pillVideoIcon from "../images/onboarding/pill-video.svg";
 import pillVoiceIcon from "../images/onboarding/pill-voice.svg";
 import pillWriteIcon from "../images/onboarding/pill-write.svg";
 import shieldIcon from "../images/onboarding/shield.svg";
+import shareJournalHero from "../images/share-journal-hero.jpg";
 import whiteLogo from "../images/white-logo.png";
 
 /** Bundled brand images (Vite → URL string; Metro → numeric asset module). */
@@ -59,6 +66,26 @@ export const imageAssets = {
 	 */
 	communityHero,
 	communityHeroMobile,
+	/**
+	 * Gift Lifetime Access hero (Gift Subscription / Gift Invite screens). The
+	 * headline is part of the artwork, so it isn't repeated in code.
+	 */
+	giftHero,
+	/** Wrapped gift box (transparent PNG) for the "Give the Gift of a Legacy" cards. */
+	giftBox,
+	/** Top of the gift card artwork ("A Gift for Your Story"), for the redeem page. */
+	giftRedeemHero,
+	/**
+	 * Export Book flow (journal export). The template is the empty back cover
+	 * with its placeholder photo and "TITLE"; the blank one is the same leather
+	 * without them, so the user's own photo, title and message are drawn on top.
+	 * The sample is a finished back cover for the intro screen.
+	 */
+	backCoverTemplate,
+	backCoverBlank,
+	exportBookSample,
+	/** "Share This Journal" artwork for the web Share Journal page (headline in the image). */
+	shareJournalHero,
 } as const;
 
 /**

@@ -11,8 +11,9 @@ import {
 } from "@legacy-building/backend/convex/journal/sort";
 import { brand } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
+import { useNavigate } from "@tanstack/react-router";
 import { useAction, useQuery } from "convex/react";
-import { Pencil, Share, Trash2, X } from "lucide-react";
+import { Pencil, Share, Trash2, UserPlus, X } from "lucide-react";
 import {
 	type ReactNode,
 	useCallback,
@@ -25,6 +26,7 @@ import { createPortal } from "react-dom";
 import { DeleteJournalDialog } from "@/components/journal/library/DeleteJournalDialog";
 import { EditJournalDialog } from "@/components/journal/library/EditJournalDialog";
 import { EntrySortMenu } from "@/components/journal/library/EntrySortMenu";
+import { ExportBookDialog } from "@/components/journal/library/ExportBookDialog";
 import { JournalCoverImage } from "@/components/journal/library/JournalCoverImage";
 import { JournalEntryDetailView } from "@/components/journal/library/JournalEntryDetailView";
 import { JournalEntryRow } from "@/components/journal/library/JournalEntryRow";
@@ -37,14 +39,11 @@ import {
 } from "@/components/journal/library/libraryFormStyles";
 import { Button } from "@/components/journal/ui/button";
 import { Checkbox } from "@/components/journal/ui/checkbox";
-import { downloadJournalPdf } from "@/lib/journal/exportJournalPdf";
+import { JournalSharingPanel } from "@/components/sharing/JournalSharingPanel";
 import { formatDate } from "@/lib/journal/formatDate";
 import type { EnrichedJournalEntry } from "@/lib/journal/journalEntryTypes";
-import {
-	toastBubbleMessage,
-	toastMutationError,
-	toastMutationSuccess,
-} from "@/lib/journal/toast";
+import { toastBubbleMessage, toastMutationError } from "@/lib/journal/toast";
+import { ROUTES } from "@/lib/routes";
 
 type JournalDetailSheetProps = {
 	journalId: Id<"journals"> | null;
@@ -95,14 +94,14 @@ export function JournalDetailSheet({
 	const [selectedEntryIds, setSelectedEntryIds] = useState<
 		Set<Id<"journalEntries">>
 	>(() => new Set());
-	const [exporting, setExporting] = useState(false);
+	const [exportBookOpen, setExportBookOpen] = useState(false);
 	const [ordering, setOrdering] = useState(false);
 	const [exportError, setExportError] = useState<string | null>(null);
 	const createBookOrderCheckout = useAction(
 		api.journal.actions.createBookOrderCheckout,
 	);
-	const exportJournal = useAction(api.journal.actions.exportJournal);
 	const [mounted, setMounted] = useState(false);
+	const navigate = useNavigate();
 
 	const journal = useQuery(
 		api.journal.queries.getById,
@@ -112,6 +111,15 @@ export function JournalDetailSheet({
 		api.journal.entries.queries.listByJournal,
 		open && journalId ? { journalId } : "skip",
 	);
+	// Same query the sharing panel reads (Convex shares the subscription).
+	const sharing = useQuery(
+		api.sharing.queries.getForJournal,
+		open && journalId ? { journalId } : "skip",
+	);
+	const canShare =
+		sharing?.viewerRole === "author" &&
+		sharing.member === null &&
+		sharing.pendingInvite === null;
 
 	// A view preference only. The export and the printed book are always bound
 	// oldest journal date first, whatever is chosen here.
@@ -123,8 +131,12 @@ export function JournalDetailSheet({
 	);
 
 	// Recording entries render as a "scan to listen" QR in the PDF, so every
-	// entry is exportable regardless of mode.
-	const exportableEntries = useMemo(() => enrichedEntries, [enrichedEntries]);
+	// entry is exportable regardless of mode, except someone else's hidden
+	// entries in a shared journal.
+	const exportableEntries = useMemo(
+		() => enrichedEntries.filter((entry) => !entry.locked),
+		[enrichedEntries],
+	);
 
 	const allExportableSelected =
 		exportableEntries.length > 0 &&
@@ -132,15 +144,17 @@ export function JournalDetailSheet({
 
 	const entriesToShow = exportMode ? exportableEntries : enrichedEntries;
 
-	const isExportBusy = exporting || ordering;
+	// The PDF export itself runs in the Export Book dialog, which has its own
+	// loading state; only the book order blocks the sidebar.
+	const isExportBusy = ordering;
 	const isExportBusyRef = useRef(isExportBusy);
 	isExportBusyRef.current = isExportBusy;
 	const scrollRef = useRef<HTMLDivElement>(null);
 
 	const handleClose = useCallback(() => {
-		if (exporting || ordering) return;
+		if (ordering) return;
 		onOpenChange(false);
-	}, [onOpenChange, exporting, ordering]);
+	}, [onOpenChange, ordering]);
 
 	const exitExportMode = useCallback(() => {
 		setExportMode(false);
@@ -209,43 +223,23 @@ export function JournalDetailSheet({
 
 	const canExport = allExportableSelected || selectedEntryIds.size > 0;
 
-	const handleExportPdf = useCallback(async () => {
+	// Entries passed to the export: none means the whole journal (the action
+	// adds the cover and dedication when everything is included either way).
+	const exportEntryIds = useMemo(
+		() =>
+			allExportableSelected
+				? undefined
+				: exportableEntries
+						.filter((entry) => selectedEntryIds.has(entry._id))
+						.map((entry) => entry._id),
+		[allExportableSelected, exportableEntries, selectedEntryIds],
+	);
+
+	const handleExportPdf = useCallback(() => {
 		if (!journal || !canExport) return;
-
-		const selectedEntries = exportableEntries.filter((entry) =>
-			selectedEntryIds.has(entry._id),
-		);
-
-		setExporting(true);
 		setExportError(null);
-		try {
-			const { url } = await exportJournal({
-				journalId: journal._id,
-				// Either form gets the cover and dedication when everything is
-				// selected — the action decides from what it ends up including.
-				entryIds: allExportableSelected
-					? undefined
-					: selectedEntries.map((entry) => entry._id),
-			});
-			await downloadJournalPdf({ url, journalTitle: journal.title });
-			toastMutationSuccess("PDF downloaded.");
-			exitExportMode();
-		} catch (err) {
-			const message = "Could not export PDF. Please try again.";
-			setExportError(message);
-			toastMutationError(err, message);
-		} finally {
-			setExporting(false);
-		}
-	}, [
-		journal,
-		canExport,
-		exportableEntries,
-		selectedEntryIds,
-		allExportableSelected,
-		exitExportMode,
-		exportJournal,
-	]);
+		setExportBookOpen(true);
+	}, [journal, canExport]);
 
 	const handleOrderBook = useCallback(async () => {
 		if (!journalId || !journal || !canExport) return;
@@ -339,6 +333,10 @@ export function JournalDetailSheet({
 
 	const isLoading = open && journal === undefined;
 	const loadedJournal = journal ?? null;
+	// Members can read, add and export, but not edit/delete the journal or
+	// order a book (spec #22/#23).
+	const isMember = loadedJournal?.viewerRole === "member";
+	const isShared = loadedJournal?.isShared === true;
 
 	return (
 		<>
@@ -452,19 +450,38 @@ export function JournalDetailSheet({
 																				strokeWidth={2}
 																			/>
 																		</SidebarIconButton>
-																		<SidebarIconButton
-																			ariaLabel="Delete journal"
-																			onClick={() => setDeleteOpen(true)}
-																		>
-																			<Trash2
-																				className="size-5"
-																				style={{ color: brand.destructive }}
-																				strokeWidth={2}
-																			/>
-																		</SidebarIconButton>
+																		{isMember ? null : (
+																			<SidebarIconButton
+																				ariaLabel="Delete journal"
+																				onClick={() => setDeleteOpen(true)}
+																			>
+																				<Trash2
+																					className="size-5"
+																					style={{ color: brand.destructive }}
+																					strokeWidth={2}
+																				/>
+																			</SidebarIconButton>
+																		)}
 																	</>
 																) : (
 																	<>
+																		{canShare && journalId ? (
+																			<SidebarIconButton
+																				ariaLabel="Share journal"
+																				onClick={() =>
+																					void navigate({
+																						to: ROUTES.dashboardShareJournal,
+																						params: { journalId },
+																					})
+																				}
+																			>
+																				<UserPlus
+																					className="size-5"
+																					style={{ color: brand.primary }}
+																					strokeWidth={2}
+																				/>
+																			</SidebarIconButton>
+																		) : null}
 																		<SidebarIconButton
 																			ariaLabel="Export journal to PDF"
 																			onClick={startExportMode}
@@ -475,26 +492,32 @@ export function JournalDetailSheet({
 																				strokeWidth={2}
 																			/>
 																		</SidebarIconButton>
-																		<SidebarIconButton
-																			ariaLabel="Edit journal"
-																			onClick={() => setJournalEditing(true)}
-																		>
-																			<Pencil
-																				className="size-5"
-																				style={{ color: brand.primary }}
-																				strokeWidth={2}
-																			/>
-																		</SidebarIconButton>
-																		<SidebarIconButton
-																			ariaLabel="Delete journal"
-																			onClick={() => setDeleteOpen(true)}
-																		>
-																			<Trash2
-																				className="size-5"
-																				style={{ color: brand.destructive }}
-																				strokeWidth={2}
-																			/>
-																		</SidebarIconButton>
+																		{isMember ? null : (
+																			<>
+																				<SidebarIconButton
+																					ariaLabel="Edit journal"
+																					onClick={() =>
+																						setJournalEditing(true)
+																					}
+																				>
+																					<Pencil
+																						className="size-5"
+																						style={{ color: brand.primary }}
+																						strokeWidth={2}
+																					/>
+																				</SidebarIconButton>
+																				<SidebarIconButton
+																					ariaLabel="Delete journal"
+																					onClick={() => setDeleteOpen(true)}
+																				>
+																					<Trash2
+																						className="size-5"
+																						style={{ color: brand.destructive }}
+																						strokeWidth={2}
+																					/>
+																				</SidebarIconButton>
+																			</>
+																		)}
 																	</>
 																)}
 															</div>
@@ -524,6 +547,13 @@ export function JournalDetailSheet({
 														</>
 													) : null}
 												</div>
+
+												{loadedJournal && journalId && !exportMode ? (
+													<JournalSharingPanel
+														journalId={journalId}
+														onLeft={handleClose}
+													/>
+												) : null}
 
 												{entriesToShow.length > 0 ? (
 													<div className="mt-4 flex items-center justify-between gap-2 px-3">
@@ -556,6 +586,7 @@ export function JournalDetailSheet({
 																		toggleEntrySelection(entry._id)
 																	}
 																	onOpen={() => setSelectedEntryId(entry._id)}
+																	showAuthor={isShared}
 																/>
 															))}
 														</div>
@@ -575,11 +606,12 @@ export function JournalDetailSheet({
 
 										{exportMode ? (
 											<JournalExportFooter
-												exporting={exporting}
 												ordering={ordering}
 												disabled={!canExport}
 												onExport={() => void handleExportPdf()}
-												onOrderBook={() => void handleOrderBook()}
+												onOrderBook={
+													isMember ? undefined : () => void handleOrderBook()
+												}
 											/>
 										) : null}
 									</div>
@@ -587,13 +619,7 @@ export function JournalDetailSheet({
 							)
 						) : null}
 						{isExportBusy ? (
-							<JournalSidebarWaitOverlay
-								message={
-									exporting
-										? "Preparing your PDF. Please wait…"
-										: "Preparing checkout. Please wait…"
-								}
-							/>
+							<JournalSidebarWaitOverlay message="Preparing checkout. Please wait…" />
 						) : null}
 					</aside>
 				</>,
@@ -605,6 +631,17 @@ export function JournalDetailSheet({
 				open={journalEditing && loadedJournal !== null}
 				onOpenChange={setJournalEditing}
 			/>
+
+			{journal ? (
+				<ExportBookDialog
+					open={exportBookOpen}
+					onOpenChange={setExportBookOpen}
+					journalId={journal._id}
+					journalTitle={journal.title}
+					entryIds={exportEntryIds}
+					onExported={exitExportMode}
+				/>
+			) : null}
 
 			<DeleteJournalDialog
 				journalId={journalId}

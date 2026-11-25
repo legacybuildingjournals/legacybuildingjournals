@@ -8,7 +8,7 @@
 		},
 		"name": "Legacy Building",
 		"slug": "legacy-building",
-		"version": "1.0.19",
+		"version": "1.0.20",
 		"icon": "./assets/images/icon.png",
 		"plugins": [
 			"expo-font",
@@ -62,7 +62,11 @@
 				"foregroundImage": "./assets/images/android-icon-foreground.png",
 				"backgroundImage": "./assets/images/android-icon-background.png",
 				"monochromeImage": "./assets/images/android-icon-monochrome.png"
-			}
+			},
+			"permissions": [
+				"android.permission.RECORD_AUDIO",
+				"android.permission.MODIFY_AUDIO_SETTINGS"
+			]
 		},
 		"ios": {
 			"bundleIdentifier": "com.legacybuildingjournals.app",
@@ -72,11 +76,12 @@
 				"ITSAppUsesNonExemptEncryption": false
 			}
 		},
+		"owner": "sliding-scale",
 		"extra": {
+			"router": {},
 			"eas": {
 				"projectId": "beb8a12c-54c4-448e-a60f-411bafbeacef"
 			}
-		},
-		"owner": "sliding-scale"
+		}
 	}
 }

@@ -17,6 +17,13 @@ type JournalActionsMenuProps = {
 	appearanceBusy?: boolean;
 	/** Switches the image row's wording between adding and replacing. */
 	hasBackgroundImage: boolean;
+	/** Shared journals: a member only gets "Leave journal" (spec #22). */
+	role?: "author" | "member";
+	/** Sharing actions; each item appears only when its handler is given. */
+	onShareJournal?: () => void;
+	onCancelInvite?: () => void;
+	onRemoveMember?: () => void;
+	onLeaveJournal?: () => void;
 };
 
 type MenuItem = {
@@ -45,6 +52,11 @@ export function JournalActionsMenu({
 	onBackgroundColor,
 	appearanceBusy = false,
 	hasBackgroundImage,
+	role = "author",
+	onShareJournal,
+	onCancelInvite,
+	onRemoveMember,
+	onLeaveJournal,
 }: JournalActionsMenuProps) {
 	const triggerRef = useRef<View>(null);
 	const { width: windowWidth } = useWindowDimensions();
@@ -72,29 +84,72 @@ export function JournalActionsMenu({
 		action();
 	};
 
-	const items: MenuItem[] = [
-		{
-			id: "edit",
-			label: "Edit Journal",
-			icon: "pencil",
-			onPress: () => runAndClose(onEditJournal),
+	const sharingCandidates: (MenuItem | undefined)[] = [
+		onShareJournal && {
+			id: "share",
+			label: "Share Journal",
+			icon: "person-add-outline",
+			onPress: () => runAndClose(onShareJournal),
 			disabled: false,
 		},
-		{
-			id: "background-image",
-			label: hasBackgroundImage ? "Change background" : "Background image",
-			icon: "image-outline",
-			onPress: () => runAndClose(onBackgroundImage),
-			disabled: appearanceBusy,
+		onCancelInvite && {
+			id: "cancel-invite",
+			label: "Cancel invite",
+			icon: "close-circle-outline",
+			onPress: () => runAndClose(onCancelInvite),
+			disabled: false,
 		},
-		{
-			id: "background-color",
-			label: "Background color",
-			icon: "color-palette-outline",
-			onPress: () => runAndClose(onBackgroundColor),
-			disabled: appearanceBusy,
+		onRemoveMember && {
+			id: "remove-member",
+			label: "Remove member",
+			icon: "person-remove-outline",
+			onPress: () => runAndClose(onRemoveMember),
+			disabled: false,
 		},
 	];
+	const sharingItems = sharingCandidates.filter((item): item is MenuItem =>
+		Boolean(item),
+	);
+
+	const items: MenuItem[] =
+		role === "member"
+			? onLeaveJournal
+				? [
+						{
+							id: "leave",
+							label: "Leave journal",
+							icon: "exit-outline",
+							onPress: () => runAndClose(onLeaveJournal),
+							disabled: false,
+						},
+					]
+				: []
+			: [
+					{
+						id: "edit",
+						label: "Edit Journal",
+						icon: "pencil",
+						onPress: () => runAndClose(onEditJournal),
+						disabled: false,
+					},
+					...sharingItems,
+					{
+						id: "background-image",
+						label: hasBackgroundImage
+							? "Change background"
+							: "Background image",
+						icon: "image-outline",
+						onPress: () => runAndClose(onBackgroundImage),
+						disabled: appearanceBusy,
+					},
+					{
+						id: "background-color",
+						label: "Background color",
+						icon: "color-palette-outline",
+						onPress: () => runAndClose(onBackgroundColor),
+						disabled: appearanceBusy,
+					},
+				];
 
 	return (
 		<>

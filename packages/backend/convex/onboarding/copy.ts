@@ -21,6 +21,13 @@ export const WEB_INTRO_COPY = {
 		"Your answers stay private and can be saved to your account later.",
 } as const;
 
+/**
+ * Intro heading for people who arrive through a gift (and later a shared
+ * journal) — they already have access, so the quiz is purely about
+ * personalising (SST-8 copy).
+ */
+export const RECIPIENT_INTRO_HEADING = "Let’s personalize your\nlegacy build.";
+
 /** Native intro. The title's last word is rendered in the brand colour. */
 export const NATIVE_INTRO_COPY = {
 	titleLead: "Your Legacy Build",

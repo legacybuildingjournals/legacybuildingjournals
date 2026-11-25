@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import { useAction, useQuery } from "convex/react";
+import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useThemeColor } from "heroui-native/hooks";
 import { useEffect, useMemo, useState } from "react";
@@ -15,6 +16,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { GiftLegacyCard } from "@/components/gift/gift-legacy-card";
 import { useBilling } from "@/hooks/use-billing";
 import { useNativeSubscription } from "@/hooks/use-native-subscription";
 import {
@@ -468,6 +470,16 @@ export function PaywallModal({
 							)}
 						</View>
 					) : null}
+
+					{/* Figma: "Give the Gift of a Legacy" → Gift Subscription. */}
+					<View className="mt-6">
+						<GiftLegacyCard
+							onPress={() => {
+								onClose();
+								router.push("/gift");
+							}}
+						/>
+					</View>
 				</ScrollView>
 
 				<View

@@ -78,14 +78,6 @@ Start everything with Turborepo (single Turbo TUI; Ctrl+C stops all services):
 pnpm run dev
 ```
 
-To run each service in its **own IDE terminal tab** (Ctrl+C in a tab stops only that service), use the workspace task in Cursor or VS Code:
-
-1. **Ctrl+Shift+P** (Command Palette)
-2. **Tasks: Run Task**
-3. **Dev: All Services**
-
-That starts the Convex backend, web, admin, and native apps in four separate terminal tabs (switch tabs in the terminal panel to view one at a time). Task definitions live in `.vscode/tasks.json`.
-
 Or start one app/service at a time:
 
 ```bash
@@ -255,7 +247,6 @@ Local `pnpm ios` requires macOS with Xcode. Without a Mac, use EAS: `pnpm dlx ea
 ## Available Scripts
 
 - `pnpm run dev`: Start all apps/services in development mode (single Turbo TUI; Ctrl+C stops all)
-- **Dev: All Services** (`.vscode/tasks.json`): Start backend, web, admin, and native in separate IDE terminal tabs — **Ctrl+Shift+P** → **Tasks: Run Task** → **Dev: All Services**
 - `pnpm run dev:server`: Start the Convex backend
 - `pnpm run dev:web`: Start the web app
 - `pnpm run dev:admin`: Start the admin app

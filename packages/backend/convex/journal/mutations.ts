@@ -11,6 +11,7 @@ import {
 	getOwnedJournal,
 	requireClerkUserId,
 	requirePaidJournalAccess,
+	requireUploadAccess,
 } from "./auth";
 import { journalLibrarySortKey } from "./sort";
 import {
@@ -58,7 +59,8 @@ async function nextSortOrderForType(
 export const generateUploadUrl = mutation({
 	args: {},
 	handler: async (ctx) => {
-		await requirePaidJournalAccess(ctx);
+		// Members of a shared journal can upload without their own subscription.
+		await requireUploadAccess(ctx);
 		return await ctx.storage.generateUploadUrl();
 	},
 });
@@ -313,6 +315,15 @@ export const remove = mutation({
 		for (const entry of entries) {
 			await deleteEntryStorageFiles(ctx, entry);
 			await ctx.db.delete(entry._id);
+		}
+
+		// Sharing ends with the journal (the member loses access, spec #24).
+		const shares = await ctx.db
+			.query("journalShares")
+			.withIndex("by_journal", (q) => q.eq("journalId", args.id))
+			.collect();
+		for (const share of shares) {
+			await ctx.db.delete(share._id);
 		}
 
 		await deleteJournalCoverStorage(ctx, journal);

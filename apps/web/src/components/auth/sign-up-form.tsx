@@ -34,9 +34,14 @@ const submitButtonClass =
 type Props = {
 	/** Optional `?type=` search param (role metadata). */
 	signupType?: string;
+	/**
+	 * Pre-filled, read-only email (gift redemption): the account must be created
+	 * for the address the gift was sent to.
+	 */
+	lockedEmail?: string;
 };
 
-export function SignUpForm({ signupType }: Props) {
+export function SignUpForm({ signupType, lockedEmail }: Props) {
 	const { signUp, errors, fetchStatus } = useSignUp();
 	const navigate = useNavigate();
 
@@ -44,7 +49,7 @@ export function SignUpForm({ signupType }: Props) {
 		resolver: zodResolver(signUpSchema),
 		defaultValues: {
 			username: "",
-			email: "",
+			email: lockedEmail ?? "",
 			password: "",
 			confirmPassword: "",
 			acceptTerms: false as unknown as true,
@@ -164,7 +169,13 @@ export function SignUpForm({ signupType }: Props) {
 								id={field.name}
 								type="email"
 								autoComplete="email"
-								className={authFieldClass}
+								readOnly={Boolean(lockedEmail)}
+								aria-readonly={Boolean(lockedEmail)}
+								className={
+									lockedEmail
+										? `${authFieldClass} cursor-not-allowed bg-muted text-muted-foreground`
+										: authFieldClass
+								}
 								aria-invalid={invalid}
 							/>
 							{invalid ? (
