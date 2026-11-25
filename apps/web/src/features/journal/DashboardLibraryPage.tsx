@@ -20,16 +20,18 @@ import { JournalDetailSheet } from "@/components/journal/library/JournalDetailSh
 import { LibraryEmptyState } from "@/components/journal/library/LibraryEmptyState";
 import { LibraryJournalGrid } from "@/components/journal/library/LibraryJournalGrid";
 import { LibraryStoryTabs } from "@/components/journal/library/LibraryStoryTabs";
-import { DEFAULT_STORY_TAB, type StoryTab } from "@/lib/journal/journalTypes";
+import { OurStoryEmptyState } from "@/components/sharing/OurStoryEmptyState";
+import { DEFAULT_STORY_TAB, type LibraryTab } from "@/lib/journal/journalTypes";
 import { readLibraryLocationState } from "@/lib/journal/libraryNavigation";
 
 export function DashboardLibraryPage() {
 	const navigate = useNavigate();
-	const { guardJournalAction, hasPaidAccess } = useJournalPaywall();
+	const { guardJournalAction, guardJournalActionFor, hasPaidAccess } =
+		useJournalPaywall();
 	const locationState = useRouterState({
 		select: (s: RouterState) => s.location.state,
 	});
-	const [storyTab, setStoryTab] = useState<StoryTab>(DEFAULT_STORY_TAB);
+	const [storyTab, setStoryTab] = useState<LibraryTab>(DEFAULT_STORY_TAB);
 	const [createOpen, setCreateOpen] = useState(false);
 	const [selectedJournalId, setSelectedJournalId] =
 		useState<Id<"journals"> | null>(null);
@@ -50,15 +52,21 @@ export function DashboardLibraryPage() {
 		}
 
 		if (nav.journalId) {
+			// Shared journals (Our Story) follow the author's access, enforced on
+			// the server, so they never hit your own paywall here.
+			const guard =
+				nav.storyTab === "our_story"
+					? (action: () => void) => action()
+					: guardJournalAction;
 			if (nav.openAddEntry) {
-				guardJournalAction(() => {
+				guard(() => {
 					setSelectedJournalId(null);
 					setEntryPanelJournalId(nav.journalId ?? null);
 					setEntryPanelOpen(true);
 					void navigate({ replace: true, state: {} });
 				});
 			} else {
-				guardJournalAction(() => {
+				guard(() => {
 					setSelectedJournalId(nav.journalId ?? null);
 					void navigate({ replace: true, state: {} });
 				});
@@ -80,7 +88,7 @@ export function DashboardLibraryPage() {
 	}, []);
 
 	const handleStoryTabChange = useCallback(
-		(tab: StoryTab) => {
+		(tab: LibraryTab) => {
 			if (tab === storyTab) return;
 			resetOverlays();
 			setStoryTab(tab);
@@ -102,20 +110,22 @@ export function DashboardLibraryPage() {
 
 	const handleOpenJournal = useCallback(
 		(journal: Doc<"journals">) => {
-			guardJournalAction(() => setSelectedJournalId(journal._id));
+			guardJournalActionFor(journal.userId, () =>
+				setSelectedJournalId(journal._id),
+			);
 		},
-		[guardJournalAction],
+		[guardJournalActionFor],
 	);
 
 	const handleAddEntry = useCallback(
 		(journal: Doc<"journals">) => {
-			guardJournalAction(() => {
+			guardJournalActionFor(journal.userId, () => {
 				setSelectedJournalId(null);
 				setEntryPanelJournalId(journal._id);
 				setEntryPanelOpen(true);
 			});
 		},
-		[guardJournalAction],
+		[guardJournalActionFor],
 	);
 
 	const handleEntryPanelOpenChange = useCallback((next: boolean) => {
@@ -130,46 +140,63 @@ export function DashboardLibraryPage() {
 
 	return (
 		<>
+			{/* Plain wall from the library shelf photo; the shelves themselves
+			    are drawn under each row of journals by LibraryJournalGrid. */}
 			<div
 				aria-hidden
-				className="pointer-events-none fixed inset-0 z-0 bg-center bg-cover"
+				className="pointer-events-none fixed inset-0 z-0 bg-[length:100%_auto] bg-repeat-y"
 				style={{
-					backgroundImage:
-						'url("/static/icon_libraries/JournalWallDesktop.webp")',
+					backgroundColor: brand.libraryWall,
+					backgroundImage: 'url("/static/icon_libraries/library-wall.webp")',
 				}}
 			/>
 
-			<main className="relative z-10 mx-auto mt-20 flex w-full max-w-[1200px] flex-1 flex-col gap-5 px-4 py-4 sm:px-6 md:px-10 md:py-5">
-				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-					<LibraryStoryTabs value={storyTab} onChange={handleStoryTabChange} />
-					<Button
-						type="button"
-						onClick={openCreate}
-						className="min-h-[44px] shrink-0 rounded-xl px-5 font-medium text-sm leading-[1.4] hover:opacity-95"
-					>
-						Add Journal
-					</Button>
-				</div>
+			{/* overflow-x-clip: the shelves span the whole window width. */}
+			<div className="relative z-10 flex w-full flex-1 flex-col overflow-x-clip">
+				<main className="mx-auto mt-20 flex w-full max-w-[1200px] flex-1 flex-col gap-5 px-4 py-4 sm:px-6 md:px-10 md:py-5">
+					{/* Tabs on the left, Add Journal on the right (full width under
+				    the tabs on phones). */}
+					<div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+						<LibraryStoryTabs
+							value={storyTab}
+							onChange={handleStoryTabChange}
+						/>
+						{/* Journals reach Our Story only by being shared (spec #2). */}
+						{storyTab !== "our_story" ? (
+							<Button
+								type="button"
+								onClick={openCreate}
+								className="min-h-[44px] shrink-0 rounded-xl px-5 font-medium text-sm leading-[1.4] transition-colors hover:opacity-95 active:scale-[0.98] md:justify-self-end"
+							>
+								Add Journal
+							</Button>
+						) : null}
+					</div>
 
-				{isLoading ? (
-					<div
-						className="w-full animate-pulse rounded-[20px]"
-						style={{
-							backgroundColor: brand.libraryMint,
-							minHeight: 600,
-						}}
-					/>
-				) : isEmpty ? (
-					<LibraryEmptyState onBeginLegacy={openCreate} />
-				) : (
-					<LibraryJournalGrid
-						storyTab={storyTab}
-						journals={journals}
-						onOpenJournal={handleOpenJournal}
-						onAddEntry={handleAddEntry}
-					/>
-				)}
-			</main>
+					{isLoading ? (
+						<div
+							className="w-full animate-pulse rounded-[20px]"
+							style={{
+								backgroundColor: brand.libraryMint,
+								minHeight: 600,
+							}}
+						/>
+					) : isEmpty && storyTab === "our_story" ? (
+						<OurStoryEmptyState
+							onGoToMyStory={() => handleStoryTabChange("my_story")}
+						/>
+					) : isEmpty ? (
+						<LibraryEmptyState onBeginLegacy={openCreate} />
+					) : (
+						<LibraryJournalGrid
+							storyTab={storyTab}
+							journals={journals}
+							onOpenJournal={handleOpenJournal}
+							onAddEntry={handleAddEntry}
+						/>
+					)}
+				</main>
+			</div>
 
 			<div className="relative z-10">
 				<DashboardFooter />
@@ -178,7 +205,7 @@ export function DashboardLibraryPage() {
 			<CreateJournalDialog
 				open={createOpen}
 				onOpenChange={setCreateOpen}
-				defaultStoryType={storyTab}
+				defaultStoryType={storyTab === "our_story" ? "my_story" : storyTab}
 				onCreated={(type) => {
 					setStoryTab(type);
 					resetOverlays();

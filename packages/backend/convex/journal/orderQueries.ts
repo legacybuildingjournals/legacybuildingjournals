@@ -2,7 +2,7 @@ import { ConvexError, v } from "convex/values";
 
 import { internalQuery } from "../_generated/server";
 import { requirePaidFeatureAccess } from "../stripe/access";
-import { assertEntryOwner, assertJournalOwner } from "./auth";
+import { assertJournalOwner, canSeeEntry } from "./auth";
 import { enrichEntry, enrichJournal } from "./enrich";
 
 export const getBookOrderData = internalQuery({
@@ -35,7 +35,14 @@ export const getBookOrderData = internalQuery({
 						message: "One or more entries could not be found.",
 					});
 				}
-				assertEntryOwner(entry, args.clerkUserId);
+				// The author orders the book (spec #23); a member's entries are
+				// included unless the member hid them.
+				if (!canSeeEntry(entry, args.clerkUserId)) {
+					throw new ConvexError({
+						code: "FORBIDDEN",
+						message: "One or more entries can't be included.",
+					});
+				}
 				if (entry.journalId !== args.journalId) {
 					throw new ConvexError({
 						code: "INVALID_ENTRY",

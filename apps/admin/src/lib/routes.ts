@@ -1,9 +1,11 @@
+/** Admin route paths; use these instead of hard-coded strings. */
 export const ROUTES = {
 	home: "/",
 	signIn: "/sign-in",
 	dashboard: "/dashboard",
 	users: "/users",
 	subscriptions: "/subscriptions",
+	gifts: "/gifts",
 	settings: "/settings",
 } as const;
 

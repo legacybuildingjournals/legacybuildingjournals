@@ -7,6 +7,7 @@ import {
 } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
 import { Link, type RouterState, useRouterState } from "@tanstack/react-router";
+import { Gift } from "lucide-react";
 import { DashboardHeaderProfileMenu } from "@/components/journal/dashboard/DashboardHeaderProfileMenu";
 import {
 	dashboardNavItems,
@@ -25,17 +26,18 @@ export function DashboardHeader() {
 	const { convexUser } = useCurrentUser();
 	const avatarUrl =
 		convexUser?.profilePictureUrl ?? user?.imageUrl ?? assets.defaultAvatar;
+	// Figma: the gift entry point sits in the Desk and Library headers (SST-1).
+	const showGift =
+		pathname.startsWith(ROUTES.dashboardDesk) ||
+		pathname.startsWith(ROUTES.dashboardLibrary);
 
 	return (
 		<header
 			className={cn(
 				"fixed inset-x-0 top-0 z-[1504] flex min-h-[80px] items-center justify-center",
-				"bg-center bg-cover bg-no-repeat shadow-[0_2px_2px_0_#f7f7f7]",
+				"bg-nav-bar shadow-[0_2px_2px_0_#f7f7f7]",
 				"px-4 md:pr-10 md:pl-[29px]",
 			)}
-			style={{
-				backgroundImage: `url("${assets.headerBackground}")`,
-			}}
 		>
 			<div
 				className="flex w-full max-w-[1200px] items-center justify-between gap-2 md:gap-1.5"
@@ -77,13 +79,24 @@ export function DashboardHeader() {
 					})}
 				</nav>
 
-				<div className="flex shrink-0 items-center justify-end md:min-w-[200px]">
+				<div className="flex shrink-0 items-center justify-end gap-3 md:min-w-[200px]">
 					<div className="md:hidden">
 						<DashboardHeaderProfileMenu avatarUrl={avatarUrl} mode="mobile" />
 					</div>
 					<div className="hidden md:block">
 						<DashboardHeaderProfileMenu avatarUrl={avatarUrl} mode="desktop" />
 					</div>
+					{/* Gift sits to the right of the profile picture. */}
+					{showGift ? (
+						<Link
+							to={ROUTES.dashboardGift}
+							aria-label="Gift lifetime access"
+							title="Gift lifetime access"
+							className="flex size-10 items-center justify-center rounded-full text-white transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 active:scale-95"
+						>
+							<Gift className="size-6" aria-hidden />
+						</Link>
+					) : null}
 				</div>
 			</div>
 		</header>

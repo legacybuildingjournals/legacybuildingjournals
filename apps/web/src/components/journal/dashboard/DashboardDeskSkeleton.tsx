@@ -1,4 +1,4 @@
-import { assets, dashboardLayout } from "@legacy-building/ui/lib/brand-journal";
+import { dashboardLayout } from "@legacy-building/ui/lib/brand-journal";
 import { cn } from "@legacy-building/ui/lib/utils";
 import { Skeleton } from "@/components/journal/ui/skeleton";
 
@@ -8,10 +8,9 @@ export function DashboardDeskSkeleton() {
 			<header
 				className={cn(
 					"fixed inset-x-0 top-0 z-[1504] flex min-h-[80px] items-center justify-center",
-					"bg-center bg-cover bg-no-repeat shadow-[0_2px_2px_0_#f7f7f7]",
+					"bg-nav-bar shadow-[0_2px_2px_0_#f7f7f7]",
 				)}
 				style={{
-					backgroundImage: `url("${assets.headerBackground}")`,
 					paddingLeft: dashboardLayout.headerPaddingLeft,
 					paddingRight: dashboardLayout.headerPaddingRight,
 				}}

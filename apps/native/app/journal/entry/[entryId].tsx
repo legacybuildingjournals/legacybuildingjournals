@@ -1,3 +1,4 @@
+import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
@@ -39,29 +40,43 @@ export default function JournalEntryDetailScreen() {
 	);
 	const removeEntry = useMutation(api.journal.entries.mutations.remove);
 	const exportJournal = useAction(api.journal.actions.exportJournal);
-	const { guardJournalAction } = useJournalPaywall();
+	const { guardJournalAction: guardOwnAccess } = useJournalPaywall();
 	const [exporting, setExporting] = useState(false);
+	const { user } = useUser();
+	const journal = useQuery(
+		api.journal.queries.getById,
+		entry ? { id: entry.journalId } : "skip",
+	);
+	// Shared journals: only the entry's creator can edit or delete it (spec
+	// #21), and a member exports without their own subscription (spec #23).
+	const isMine = !user?.id || entry?.userId === user.id;
+	const guardJournalAction = (action: () => void) =>
+		journal?.viewerRole === "member" ? action() : guardOwnAccess(action);
 
 	const handleMenu = () => {
 		if (!entry) return;
-		const options: AlertButton[] = [
-			{
-				text: "Edit",
-				onPress: () =>
-					router.push({
-						pathname: "/journal/entry/edit/[entryId]",
-						params: { entryId: entry._id },
-					}),
-			},
-		];
+		const options: AlertButton[] = isMine
+			? [
+					{
+						text: "Edit",
+						onPress: () =>
+							router.push({
+								pathname: "/journal/entry/edit/[entryId]",
+								params: { entryId: entry._id },
+							}),
+					},
+				]
+			: [];
 		// Recordings export too: the template gives their audio a scannable
 		// memory page instead of prose.
 		options.push({ text: "Export to PDF", onPress: () => handleExport() });
-		options.push({
-			text: "Delete entry",
-			style: "destructive",
-			onPress: () => confirmDelete(),
-		});
+		if (isMine) {
+			options.push({
+				text: "Delete entry",
+				style: "destructive",
+				onPress: () => confirmDelete(),
+			});
+		}
 		options.push({ text: "Cancel", style: "cancel" });
 		Alert.alert(entry.title, undefined, options);
 	};

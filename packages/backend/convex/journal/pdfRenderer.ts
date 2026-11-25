@@ -1,6 +1,7 @@
 "use node";
 
 import {
+	type JournalBackCover,
 	JournalDocument,
 	type JournalMemory,
 	type JournalPdfEntry,
@@ -123,10 +124,16 @@ export async function renderJournalPdf({
 	journal,
 	entries,
 	includeFrontMatter,
+	frontCover = false,
+	backCover,
 }: {
 	journal: RenderableJournal;
 	entries: RenderableEntry[];
 	includeFrontMatter: boolean;
+	/** Fixed Legacy Building cover as the first page (exports only). */
+	frontCover?: boolean;
+	/** Closing page from the Export Book flow; omitted for printed orders. */
+	backCover?: JournalBackCover;
 }): Promise<RenderedPdf> {
 	// Must register against *this* module's Font: the bundler gives the shared
 	// pdf package its own copy of react-pdf, and only the copy `renderToBuffer`
@@ -144,6 +151,8 @@ export async function renderJournalPdf({
 		dedication: journal.dedication,
 		entries: pdfEntries,
 		includeFrontMatter,
+		frontCover,
+		backCover,
 	}) as unknown as ReactElement<DocumentProps>;
 
 	const buffer = await renderToBuffer(element);

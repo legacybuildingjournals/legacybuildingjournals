@@ -1,3 +1,5 @@
+import { v } from "convex/values";
+
 import { internalQuery, type QueryCtx, query } from "../_generated/server";
 import { DEFAULT_NOTIFICATION_PREFERENCES } from "./helpers";
 
@@ -108,5 +110,17 @@ export const getExportTargets = internalQuery({
 		}
 
 		return targets;
+	},
+});
+
+/** Push tokens of one user (for one-off pushes like "invite accepted"). */
+export const getPushTokensForUser = internalQuery({
+	args: { clerkUserId: v.string() },
+	handler: async (ctx, { clerkUserId }): Promise<string[]> => {
+		const rows = await ctx.db
+			.query("pushTokens")
+			.withIndex("by_userId", (q) => q.eq("userId", clerkUserId))
+			.collect();
+		return rows.map((row) => row.token);
 	},
 });

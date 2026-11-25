@@ -1,7 +1,3 @@
-import { assets } from "@legacy-building/ui/lib/brand-journal";
-import type { LucideIcon } from "lucide-react";
-import { Clock } from "lucide-react";
-
 import {
 	FacebookIcon,
 	InstagramIcon,
@@ -15,24 +11,10 @@ import {
  * Mirrors `apps/native/lib/community/content.ts` — same destinations, longer
  * copy because the web cards have room for it. Kept as constants so the page
  * ships without a CMS; move it to a Convex table if it starts changing often.
+ *
+ * The "Upcoming Updates" cards that used to live here came out with the
+ * redesign; git history has them if they are wanted back.
  */
-
-export type CommunityUpdate = {
-	id: string;
-	/** Category pill above the title. */
-	badge: string;
-	title: string;
-	description: string;
-	/** Status pill under the description — a ship estimate or a publish date. */
-	meta: string;
-	metaIcon: LucideIcon;
-	/**
-	 * Card artwork. Absent until the images land, in which case the card falls
-	 * back to a teal wash with the meta icon on it.
-	 */
-	imageUrl?: string;
-	url?: string;
-};
 
 export type CommunitySocial = {
 	id: string;
@@ -46,29 +28,6 @@ export type CommunitySocial = {
 	tint: string;
 	url: string;
 };
-
-export const COMMUNITY_UPDATES: CommunityUpdate[] = [
-	{
-		id: "qr-export",
-		badge: "Feature update",
-		title: "Easy export with QR code",
-		description:
-			"Access your exported recording entries with personalized QR codes",
-		meta: "Shipped",
-		metaIcon: Clock,
-		imageUrl: assets.communityQrExport,
-	},
-	{
-		id: "relive-memories",
-		badge: "Feature update",
-		title: "Record videos of your memories",
-		description:
-			"Record videos and save them into your journal to relive them forever",
-		meta: "Shipped",
-		metaIcon: Clock,
-		imageUrl: assets.communityMemories,
-	},
-];
 
 /**
  * Tracking parameters are stripped from the shared links so these stay stable —

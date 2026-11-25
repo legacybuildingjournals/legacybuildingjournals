@@ -9,6 +9,7 @@ import { JournalPaywallProvider } from "@/components/billing/JournalPaywallProvi
 import { DashboardUserGate } from "@/components/dashboard/DashboardUserGate";
 import { DashboardBottomNav } from "@/components/journal/dashboard/DashboardBottomNav";
 import { DashboardHeader } from "@/components/journal/dashboard/DashboardHeader";
+import { ShareInvitePopup } from "@/components/sharing/ShareInvitePopup";
 import { WelcomeGuard } from "@/components/welcome/WelcomeGuard";
 import { ROUTES } from "@/lib/routes";
 
@@ -28,6 +29,7 @@ function DashboardLayout() {
 									<DashboardHeader />
 									<Outlet />
 									<DashboardBottomNav />
+									<ShareInvitePopup />
 								</div>
 							</JournalPaywallProvider>
 						</WelcomeGuard>

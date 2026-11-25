@@ -3,6 +3,7 @@ import { cn } from "@legacy-building/ui/lib/utils";
 import { Link } from "@tanstack/react-router";
 import { Check, Loader2 } from "lucide-react";
 
+import { GiftLegacyCard } from "@/components/gift/GiftLegacyCard";
 import { useBillingCheckout } from "@/hooks/useBillingCheckout";
 import {
 	BILLING_FEATURES,
@@ -189,6 +190,9 @@ export function BillingSubscribePanel() {
 							</PlanCard>
 						</>
 					)}
+					{/* Figma pricing page: "Give the Gift of a Legacy" sits under the
+					    plans and opens Gift Subscription. */}
+					<GiftLegacyCard className="mt-1.5" />
 				</div>
 
 				<div className="flex flex-col gap-5 lg:pt-1">

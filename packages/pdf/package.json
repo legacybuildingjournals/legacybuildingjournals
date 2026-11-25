@@ -4,7 +4,9 @@
 	"private": true,
 	"type": "module",
 	"exports": {
-		".": "./src/index.ts"
+		".": "./src/index.ts",
+		"./fonts/nunito-regular": "./src/fonts/nunito-regular.ts",
+		"./fonts/nunito-bold": "./src/fonts/nunito-bold.ts"
 	},
 	"scripts": {
 		"check-types": "tsc --noEmit"

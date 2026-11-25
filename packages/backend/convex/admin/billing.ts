@@ -61,10 +61,14 @@ export type AdminUserBillingDetail = {
 
 /** Mirror-only paid access (cheap; used in list views). */
 export function mirroredPaidJournalAccess(
-	user: Pick<Doc<"users">, "role" | "subscriptionStatus" | "betaAccess">,
+	user: Pick<
+		Doc<"users">,
+		"role" | "subscriptionStatus" | "betaAccess" | "lifetimeAccess"
+	>,
 ): boolean {
 	if (user.role === "admin") return true;
 	if (user.betaAccess === true) return true;
+	if (user.lifetimeAccess) return true;
 	return (
 		user.subscriptionStatus === "active" ||
 		user.subscriptionStatus === "grace_period"

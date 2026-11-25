@@ -200,6 +200,12 @@ export default function AccountScreen() {
 					chevronColor={accent}
 				/>
 				<AccountRow
+					title="Gift & Invite"
+					subtitle="Gift the app or a subscription to a loved one"
+					onPress={() => router.push("/gift")}
+					chevronColor={accent}
+				/>
+				<AccountRow
 					title="Subscription"
 					subtitle={subscriptionSubtitle}
 					onPress={handleSubscriptionPress}

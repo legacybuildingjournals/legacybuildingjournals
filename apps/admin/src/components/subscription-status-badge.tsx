@@ -33,10 +33,26 @@ const STYLES: Record<NonNullable<SubscriptionStatus>, string> = {
 export function SubscriptionStatusBadge({
 	status,
 	betaAccess,
+	lifetimeAccess,
 }: {
 	status: SubscriptionStatus;
 	betaAccess?: boolean;
+	/** Lifetime membership (redeemed gift); takes precedence over the mirror. */
+	lifetimeAccess?: boolean;
 }) {
+	if (lifetimeAccess) {
+		return (
+			<span
+				className={cn(
+					"inline-flex rounded-full px-2.5 py-0.5 font-medium text-xs",
+					STYLES.active,
+				)}
+			>
+				Lifetime
+			</span>
+		);
+	}
+
 	if (betaAccess) {
 		return (
 			<span

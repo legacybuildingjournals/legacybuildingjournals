@@ -1,3 +1,4 @@
+import { useUser } from "@clerk/react";
 import { api } from "@legacy-building/backend/convex/_generated/api";
 import type { Id } from "@legacy-building/backend/convex/_generated/dataModel";
 import { brand } from "@legacy-building/ui/lib/brand-journal";
@@ -65,6 +66,7 @@ export function JournalEntryDetailView({
 	const [editing, setEditing] = useState(false);
 
 	const entry = useQuery(api.journal.entries.queries.getById, { id: entryId });
+	const { user } = useUser();
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: exit edit mode when viewing a different entry
 	useEffect(() => {
@@ -115,6 +117,8 @@ export function JournalEntryDetailView({
 	}
 
 	const accent = entryAccentColor(enriched.mode);
+	// Shared journals: only the person who wrote an entry can change it.
+	const canManage = !user?.id || enriched.userId === user.id;
 	const isRecording = enriched.mode === "recording";
 	const isVideo = enriched.mode === "video";
 
@@ -172,7 +176,7 @@ export function JournalEntryDetailView({
 							<h3 className="min-w-0 flex-1 font-semibold text-[#1a1a1a] text-base leading-[1.4]">
 								{enriched.title}
 							</h3>
-							<div className="flex shrink-0">
+							<div className={canManage ? "flex shrink-0" : "hidden"}>
 								<SidebarIconButton
 									ariaLabel="Edit entry"
 									onClick={() => setEditing(true)}

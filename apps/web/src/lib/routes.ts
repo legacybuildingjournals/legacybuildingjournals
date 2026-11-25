@@ -1,6 +1,9 @@
 import { env } from "@legacy-building/env/web";
 
-/** Redirect-only entry; use login or dashboard for user-facing navigation. */
+/**
+ * Route paths for the web app. `home` is a redirect-only entry; use login or
+ * dashboard for user-facing navigation.
+ */
 export const ROUTES = {
 	home: "/",
 	dashboard: "/dashboard",
@@ -12,6 +15,17 @@ export const ROUTES = {
 	dashboardBillingCheckout: "/dashboard/billing/checkout",
 	dashboardBillingCompare: "/dashboard/billing/compare",
 	dashboardBillingSuccess: "/dashboard/billing/success",
+	/** Gift Lifetime Access: offer → details form → checkout → success. */
+	dashboardGift: "/dashboard/gift",
+	dashboardGiftDetails: "/dashboard/gift/details",
+	dashboardGiftCheckout: "/dashboard/gift/checkout",
+	dashboardGiftSuccess: "/dashboard/gift/success",
+	/** Share Journal invite page for one journal (`params: { journalId }`). */
+	dashboardShareJournal: "/dashboard/share/$journalId",
+	/** Public gift redeem page; append the token: `${ROUTES.giftRedeem}/<token>`. */
+	giftRedeem: "/gift",
+	/** Public share-invite claim page; append the token: `${ROUTES.shareClaim}/<token>`. */
+	shareClaim: "/share",
 	welcome: "/welcome",
 	/** Invite landing; append the code: `${ROUTES.invite}/ABCD1234`. */
 	invite: "/invite",

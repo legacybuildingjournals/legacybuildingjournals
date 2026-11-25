@@ -22,6 +22,10 @@ import {
 	renderJournalPdf,
 } from "./pdfRenderer";
 
+/** Mirrors the limits in the clients' back cover forms. */
+const BACK_COVER_TITLE_MAX = 60;
+const BACK_COVER_MESSAGE_MAX = 500;
+
 type StoredPdf = {
 	url: string;
 	pageCount: number;
@@ -37,6 +41,8 @@ async function renderAndStore(
 		journal: RenderableJournal;
 		entries: RenderableEntry[];
 		includeFrontMatter: boolean;
+		frontCover?: boolean;
+		backCover?: Parameters<typeof renderJournalPdf>[0]["backCover"];
 	},
 ): Promise<StoredPdf> {
 	let rendered: Awaited<ReturnType<typeof renderJournalPdf>>;
@@ -75,6 +81,18 @@ export const exportJournal = action({
 		journalId: v.id("journals"),
 		/** Optional subset of entry ids; when omitted, exports the whole journal. */
 		entryIds: v.optional(v.array(v.id("journalEntries"))),
+		/**
+		 * Export Book flow: the user's back cover. The photo is uploaded just
+		 * before export and deleted once the PDF is built — the PDF keeps its own
+		 * copy, and the client keeps the picked file for another export.
+		 */
+		backCover: v.optional(
+			v.object({
+				imageStorageId: v.optional(v.id("_storage")),
+				title: v.optional(v.string()),
+				message: v.optional(v.string()),
+			}),
+		),
 	},
 	returns: v.object({ url: v.string() }),
 	handler: async (ctx, args): Promise<{ url: string }> => {
@@ -97,10 +115,12 @@ export const exportJournal = action({
 			});
 		}
 
-		const allEntries = await ctx.runQuery(
-			api.journal.entries.queries.listByJournal,
-			{ journalId: args.journalId },
-		);
+		// Shared journals: someone else's hidden entries are never exported.
+		const allEntries = (
+			await ctx.runQuery(api.journal.entries.queries.listByJournal, {
+				journalId: args.journalId,
+			})
+		).filter((entry) => !entry.locked);
 
 		const selected = args.entryIds
 			? new Set<Id<"journalEntries">>(args.entryIds)
@@ -117,13 +137,54 @@ export const exportJournal = action({
 		}
 
 		// The cover and dedication only make sense for a whole-journal export.
-		const { url } = await renderAndStore(ctx, {
-			journal,
-			entries,
-			includeFrontMatter: selected === null,
-		});
+		//
+		// Measured against what was actually included rather than whether ids were
+		// passed: selecting every entry is the same intent as exporting the
+		// journal, and the clients expressed that differently — web omitted the
+		// ids, native always sent the full list, so native silently lost its
+		// cover and dedication pages.
+		const backCover = args.backCover;
+		if (backCover) {
+			if ((backCover.title?.trim().length ?? 0) > BACK_COVER_TITLE_MAX) {
+				throw new ConvexError({
+					code: "INVALID_BACK_COVER",
+					message: `Keep the back cover title under ${BACK_COVER_TITLE_MAX} characters.`,
+				});
+			}
+			if ((backCover.message?.trim().length ?? 0) > BACK_COVER_MESSAGE_MAX) {
+				throw new ConvexError({
+					code: "INVALID_BACK_COVER",
+					message: `Keep the back cover message under ${BACK_COVER_MESSAGE_MAX} characters.`,
+				});
+			}
+		}
+		const backCoverImageUrl = backCover?.imageStorageId
+			? await ctx.storage.getUrl(backCover.imageStorageId)
+			: null;
 
-		return { url };
+		try {
+			const { url } = await renderAndStore(ctx, {
+				journal,
+				entries,
+				includeFrontMatter: entries.length === allEntries.length,
+				// Every export opens with the fixed Legacy Building cover.
+				frontCover: true,
+				backCover: backCover
+					? {
+							imageUrl: backCoverImageUrl ?? undefined,
+							title: backCover.title?.trim(),
+							message: backCover.message?.trim(),
+						}
+					: undefined,
+			});
+			return { url };
+		} finally {
+			if (backCover?.imageStorageId) {
+				await ctx.storage
+					.delete(backCover.imageStorageId)
+					.catch(() => undefined);
+			}
+		}
 	},
 });
 

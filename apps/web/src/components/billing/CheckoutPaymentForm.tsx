@@ -25,6 +25,8 @@ type CheckoutPaymentFormValues = z.infer<typeof checkoutPaymentFormSchema>;
 
 type CheckoutPaymentFormProps = {
 	amountLabel: string;
+	/** Offer Apple Pay / Google Pay where the device supports them (gift checkout). */
+	allowWallets?: boolean;
 };
 
 const DEFAULT_BILLING_COUNTRY = "US";
@@ -37,7 +39,10 @@ function checkoutBillingAddress(name: string) {
 	};
 }
 
-export function CheckoutPaymentForm({ amountLabel }: CheckoutPaymentFormProps) {
+export function CheckoutPaymentForm({
+	amountLabel,
+	allowWallets = false,
+}: CheckoutPaymentFormProps) {
 	const checkoutState = useCheckoutElements();
 	const { user } = useUser();
 	const { convexUser, isLoading: userLoading } = useCurrentUser();
@@ -299,8 +304,8 @@ export function CheckoutPaymentForm({ amountLabel }: CheckoutPaymentFormProps) {
 							layout: "tabs",
 							paymentMethodOrder: ["card", "us_bank_account"],
 							wallets: {
-								applePay: "never",
-								googlePay: "never",
+								applePay: allowWallets ? "auto" : "never",
+								googlePay: allowWallets ? "auto" : "never",
 								link: "never",
 							},
 							fields: {

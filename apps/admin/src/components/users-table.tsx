@@ -31,6 +31,8 @@ export type AdminUserRow = {
 		| "none"
 		| null;
 	betaAccess: boolean;
+	/** Lifetime membership from a redeemed gift (optional for older rows). */
+	lifetimeAccess?: boolean;
 	hasPaidJournalAccess: boolean;
 };
 
@@ -161,6 +163,7 @@ export function UsersTable({
 									<SubscriptionStatusBadge
 										status={user.subscriptionStatus}
 										betaAccess={user.betaAccess}
+										lifetimeAccess={user.lifetimeAccess}
 									/>
 								</td>
 								<td className="px-4 py-3">

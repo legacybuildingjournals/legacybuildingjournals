@@ -5,6 +5,7 @@ import { httpRouter } from "convex/server";
 import type Stripe from "stripe";
 import { components, internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
+import { isGiftStoreProduct } from "./gifts/helpers";
 import type { ClerkUser } from "./helpers";
 import {
 	getEmailAndName,
@@ -158,6 +159,44 @@ const handleRevenueCatWebhook = httpAction(async (ctx, request) => {
 		return new Response(null, { status: 200 });
 	}
 
+	// Gift purchases are one-off store products, not subscriptions: route them
+	// to the gifts domain and keep them out of the subscriptions table (a gift
+	// refund arrives as CANCELLATION and must not become a subscription row).
+	if (isGiftStoreProduct(event.product_id)) {
+		const transactionId =
+			typeof event.transaction_id === "string"
+				? event.transaction_id
+				: undefined;
+		try {
+			if (
+				event.type === "NON_RENEWING_PURCHASE" &&
+				transactionId &&
+				typeof event.app_user_id === "string"
+			) {
+				await ctx.runAction(
+					internal.gifts.actions.fulfillStoreGiftFromWebhook,
+					{
+						appUserId: event.app_user_id,
+						transactionId,
+						store: typeof event.store === "string" ? event.store : undefined,
+						price: typeof event.price === "number" ? event.price : undefined,
+						currency:
+							typeof event.currency === "string" ? event.currency : undefined,
+					},
+				);
+			} else if (event.type === "CANCELLATION" && transactionId) {
+				// For a non-renewing product, CANCELLATION means a refund.
+				await ctx.runMutation(internal.gifts.mutations.markRefunded, {
+					providerRef: transactionId,
+				});
+			}
+		} catch (err) {
+			console.error("RevenueCat gift handler failed:", err);
+			return new Response("Webhook handler failed", { status: 500 });
+		}
+		return new Response(null, { status: 200 });
+	}
+
 	const provider = storeToProvider(event.store);
 	const status = eventToStatus(event.type, event.period_type);
 	const appUserId = event.app_user_id;
@@ -257,13 +296,57 @@ async function mirrorSubscriptionEvent(
 	}
 }
 
+/**
+ * Gift checkout completed (or a delayed payment method succeeded). Fulfilment
+ * re-reads the session from Stripe and is idempotent, so repeated deliveries
+ * can't create duplicate gifts or emails. Subscription checkouts carry no gift
+ * metadata and are ignored here.
+ */
+async function giftCheckoutEvent(
+	ctx: GenericActionCtx<GenericDataModel>,
+	event:
+		| Stripe.CheckoutSessionCompletedEvent
+		| Stripe.CheckoutSessionAsyncPaymentSucceededEvent,
+) {
+	const session = event.data.object;
+	if (session.metadata?.kind !== "lifetime_gift") return;
+	await ctx.runAction(internal.gifts.actions.fulfillStripeSession, {
+		sessionId: session.id,
+	});
+}
+
+/** Refund or dispute on a gift payment: void the gift / revoke lifetime. */
+async function giftRefundEvent(
+	ctx: GenericActionCtx<GenericDataModel>,
+	event: Stripe.ChargeRefundedEvent | Stripe.ChargeDisputeCreatedEvent,
+) {
+	const object = event.data.object;
+	const paymentIntent =
+		typeof object.payment_intent === "string"
+			? object.payment_intent
+			: object.payment_intent?.id;
+	if (!paymentIntent) return;
+	if (event.type === "charge.refunded" && !event.data.object.refunded) {
+		// Partial refund: leave the gift as is.
+		return;
+	}
+	await ctx.runMutation(internal.gifts.mutations.markRefunded, {
+		providerRef: paymentIntent,
+	});
+}
+
 // Stripe webhook handler at /stripe/webhook (signature verified by the component).
+// The gift events must also be enabled on the Stripe webhook endpoint.
 registerRoutes(http, components.stripe, {
 	webhookPath: "/stripe/webhook",
 	events: {
 		"customer.subscription.created": mirrorSubscriptionEvent,
 		"customer.subscription.updated": mirrorSubscriptionEvent,
 		"customer.subscription.deleted": mirrorSubscriptionEvent,
+		"checkout.session.completed": giftCheckoutEvent,
+		"checkout.session.async_payment_succeeded": giftCheckoutEvent,
+		"charge.refunded": giftRefundEvent,
+		"charge.dispute.created": giftRefundEvent,
 	},
 });
 

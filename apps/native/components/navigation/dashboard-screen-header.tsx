@@ -1,11 +1,17 @@
+import type { ReactNode } from "react";
 import { Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type DashboardScreenHeaderProps = {
 	title: string;
+	/** Optional action in the right slot (e.g. the gift button on Desk/Library). */
+	right?: ReactNode;
 };
 
-export function DashboardScreenHeader({ title }: DashboardScreenHeaderProps) {
+export function DashboardScreenHeader({
+	title,
+	right,
+}: DashboardScreenHeaderProps) {
 	const insets = useSafeAreaInsets();
 
 	return (
@@ -21,7 +27,7 @@ export function DashboardScreenHeader({ title }: DashboardScreenHeaderProps) {
 				>
 					{title}
 				</Text>
-				<View className="size-11" />
+				<View className="size-11 items-center justify-center">{right}</View>
 			</View>
 		</View>
 	);

@@ -181,6 +181,7 @@ function SubscriptionsPage() {
 													<SubscriptionStatusBadge
 														status={user.subscriptionStatus}
 														betaAccess={user.betaAccess}
+														lifetimeAccess={user.lifetimeAccess}
 													/>
 												</td>
 												<td className="px-4 py-3">

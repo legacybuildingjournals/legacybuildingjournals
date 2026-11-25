@@ -11,7 +11,7 @@ import { Button } from "@/components/journal/ui/button";
 import { formatDate } from "@/lib/journal/formatDate";
 
 type JournalCardProps = {
-	journal: Doc<"journals">;
+	journal: Doc<"journals"> & { isShared?: boolean };
 	onOpen: () => void;
 	onAddEntry: () => void;
 };
@@ -29,7 +29,14 @@ export function JournalCard({ journal, onOpen, onAddEntry }: JournalCardProps) {
 				onClick={onOpen}
 				className="flex min-h-0 flex-1 cursor-pointer flex-col text-left"
 			>
-				<div className={cn(journalCardMediaWellClass, "min-h-0 flex-1")}>
+				<div
+					className={cn(journalCardMediaWellClass, "relative min-h-0 flex-1")}
+				>
+					{journal.isShared ? (
+						<span className="absolute top-2 right-2 z-10 rounded-full bg-green-50 px-2.5 py-0.5 font-medium text-green-800 text-xs shadow-sm">
+							Shared Journal
+						</span>
+					) : null}
 					<JournalCoverImage
 						coverImageId={journal.coverImageId}
 						coverImageUrl={journal.coverImageUrl}

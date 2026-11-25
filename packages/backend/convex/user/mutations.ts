@@ -6,10 +6,12 @@ import {
 	type MutationCtx,
 	mutation,
 } from "../_generated/server";
+import { scrubGiftsForDeletedUser } from "../gifts/helpers";
 import {
 	deleteEntryStorageFiles,
 	deleteJournalCoverStorage,
 } from "../journal/storage";
+import { scrubSharesForDeletedUser } from "../sharing/helpers";
 
 async function deleteProfilePictureIfExists(
 	ctx: MutationCtx,
@@ -312,6 +314,10 @@ async function deleteAllDataForClerkUser(
 	ctx: MutationCtx,
 	clerkId: string,
 ): Promise<void> {
+	// Sharing first (spec #29): leave journals shared with this person (their
+	// entries go) and end shares of their own journals (deleted below).
+	await scrubSharesForDeletedUser(ctx, clerkId);
+
 	const journals = await ctx.db
 		.query("journals")
 		.withIndex("by_userId", (q) => q.eq("userId", clerkId))
@@ -341,6 +347,9 @@ async function deleteAllDataForClerkUser(
 		await deleteEntryStorageFiles(ctx, entry);
 		await ctx.db.delete(entry._id);
 	}
+
+	// Gifts: keep purchase records, remove this person's details.
+	await scrubGiftsForDeletedUser(ctx, clerkId);
 
 	// Remove any synced native (Apple/Google) subscription records.
 	const subscriptions = await ctx.db
